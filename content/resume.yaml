@@ -1,0 +1,300 @@
+﻿# 郭睢阳 - 个人简历数据
+
+personal:
+  name: 郭睢阳
+  title: 机器人 Linux 工程师
+  subtitle: 西北工业大学 | 控制工程硕士
+  email: 1327217178@qq.com
+  phone: 15893346463
+  location: 陕西·西安
+  hometown: 河南省南阳市
+  politicalStatus: 共青团员
+  birthday: 2002 年 3 月
+  github: https://github.com/guosuiyang
+  linkedin: https://linkedin.com/in/guosuiyang
+  summary: |
+    专注于机器人系统设计与控制，具备从机械设计、电路设计到嵌入式软件和上位机开发的全流程研发能力。
+    熟悉 ROS 机器人操作系统、Linux 应用开发、深度学习算法，拥有多个完整项目落地经验。
+    参与国家级重点课题，发表多项专利，在机器人导航、智能交互等领域有深入研究。
+
+education:
+  - school: 西北工业大学
+    degree: 硕士
+    major: 控制工程
+    period: "2024.09 - 2027.06"
+    gpa: "89.56/100"
+    rank: "前 30%"
+    direction: 机器人与人工智能
+    tags:
+      - 985 工程
+      - 双一流
+
+  - school: 郑州大学
+    degree: 本科
+    major: 自动化（卓越班）
+    period: "2020.09 - 2024.06"
+    gpa: "3.54/4.0"
+    rank: "前 20%"
+    direction: 机器人与人工智能
+    tags:
+      - 211 工程
+      - 双一流
+
+skills:
+  programming:
+    - name: C/C++
+      level: 精通
+      description: Linux 驱动/应用开发、ROS 系统开发、元胞自动机路径规划
+    - name: Python
+      level: 熟练
+      description: PyTorch 图像处理、语音识别、QT 开发、CNN 网络搭建
+    - name: MATLAB
+      level: 熟练
+      description: 机器人建模、轨迹规划、信号处理仿真
+  embedded:
+    - name: STM32/51/Arduino
+      level: 精通
+      description: 基于 IMX6ULL、STM32F4 等芯片的嵌入式开发
+    - name: PCB 设计
+      level: 熟练
+      description: Altium Designer、嘉立创 PCB、原理图设计
+    - name: 3D 打印
+      level: 熟练
+      description: 建模、切片、打印调试
+  os:
+    - name: Linux
+      level: 熟练
+      description: 驱动开发、应用开发、ROS1/ROS2
+    - name: FreeRTOS
+      level: 熟练
+      description: 实时操作系统开发
+    - name: ROS/ROS2
+      level: 精通
+      description: 导航、SLAM、运动规划、逆运动学求解
+  tools:
+    - name: Git
+      level: 熟练
+      description: 版本控制、协作开发
+    - name: Inventor
+      level: 熟练
+      description: 3D 建模、受力分析
+    - name: PyQt5
+      level: 熟练
+      description: 上位机软件开发
+
+projects:
+  - title: 串并联混合轮式仿人机器人
+    slug: hybrid-robot
+    period: "2024.09 - 至今"
+    role: 关键省重点实验室项目成员
+    level: 国家级重点课题
+    description: |
+      设计并搭建一套串并联混合型轮式仿人机器人系统，包含 AGV 小车、并联机构、
+      两个 6 自由度机械臂（自研 6 轴/JAKA）及 2 自由度头部，已实现农业采摘、
+      实验教学、工业场景应用。
+    technologies:
+      - Ubuntu 20.04
+      - ROS Noetic
+      - STM32F4
+      - 点云处理
+      - 路径规划
+      - 神通数据库
+    achievements:
+      - 实现三维地图构建、路径规划、目标识别和动态空间避障
+      - 编写机器人总控程序，实现点云发布、碰撞检测、逆运动学求解
+      - 设计自研多自由度机械臂可靠性与灵活替代控制方案
+      - 实现六自由度机械臂控制频率提升 100%
+      - 基于 STM32F4 编写下位机控制程序，实现位置控制、键盘控制 AGV 小车
+      - 搭建神通数据库实现高并发数据增删改查
+    detail:
+      images: []
+      videos: []
+      documents: []
+      patents: []
+
+  - title: AI 大模型智能语音交互机器人
+    slug: ai-voice-robot
+    period: "2023.12 - 2024.09"
+    role: 独立开发者
+    level: 校级优秀毕业设计
+    description: |
+      结合前沿自然语言处理技术、AI 大模型和 AI 对口型技术，实现智能家用语音聊天机器人。
+    technologies:
+      - 树莓派 4B
+      - Python
+      - PyQt5
+      - PyTorch
+      - ROS
+      - FreeRTOS
+    achievements:
+      - 设计 AI 大模型智能交互软件，实现录音、语音识别、大模型交互
+      - 实现语音合成、AI 数字人对口型功能
+      - 基于上述功能实现智能家居控制交互
+    detail:
+      images:
+        - /projects/ai-voice-robot/copyright-1.pdf
+        - /projects/ai-voice-robot/copyright-2.pdf
+      videos: []
+      documents:
+        - name: AI 机器人交互控制系统 - 软件著作权证书
+          url: /projects/ai-voice-robot/AI 机器人交互控制系统 - 计算机软件著作权登记证书.pdf
+        - name: 基于 AI 大模型的智能语音控制软件 - 软件著作权证书
+          url: /projects/ai-voice-robot/基于 AI 大模型的智能语音控制软件 - 计算机软件著作权登记证书.pdf
+
+  - title: 中医理疗仪系列产品
+    slug: tcm-therapy-devices
+    period: "2021.03 - 2023.09"
+    role: 核心研发成员
+    level: 挑战杯省级二等奖
+    description: |
+      共三代产品：智能葫芦灸理疗仪（一代）、新型智能化温针理疗仪（二代）、
+      家用可移动灸罐理疗仪（三代）。从机械设计到电路设计到嵌入式和上位机软件全流程自主研发。
+    technologies:
+      - STM32
+      - FreeRTOS
+      - 模糊 PID
+      - 传感器融合
+      - 蓝牙通信
+    achievements:
+      - 主导三代理疗仪全流程开发（智能葫芦灸→温针仪→家用灸罐）
+      - 完成 STM32 嵌入式系统开发（FreeRTOS、模糊 PID 算法、传感器集成）
+      - 设计硬件电路（蓝牙通信、伺服电机驱动、烟雾处理装置）
+      - 负责 STM32 芯片外围电路 PCB 设计
+      - 温度、图像、压力等多种传感器数据接入
+      - 伺服与步进电机驱动开发、蓝牙等多种通信协议开发
+    detail:
+      generations:
+        - name: 第一代 - 智能葫芦灸理疗仪
+          slug: smart-gourd
+          images:
+            - /projects/tcm-therapy/smart-gourd/gen1-product-photo.jpg
+            - /projects/tcm-therapy/smart-gourd/gen1-patent-diagram.jpg
+          videos:
+            - /projects/tcm-therapy/smart-gourd/gen1-product-video.mp4
+        - name: 第二代 - 拔罐温针灸理疗仪
+          slug: warm-needle
+          images:
+            - /projects/tcm-therapy/warm-needle/warm-needle-device.jpg
+            - /projects/tcm-therapy/warm-needle/warm-needle-model.png
+            - /projects/tcm-therapy/warm-needle/warm-needle-pcb.jpg
+            - /projects/tcm-therapy/warm-needle/warm-needle-ui-1.jpg
+            - /projects/tcm-therapy/warm-needle/warm-needle-ui-2.jpg
+            - /projects/tcm-therapy/warm-needle/warm-needle-ui-3.jpg
+            - /projects/tcm-therapy/warm-needle/warm-needle-patent.jpg
+          videos: []
+        - name: 第三代 - 家用可移动灸罐理疗仪
+          slug: mobile-moxa
+          images:
+            - /projects/tcm-therapy/mobile-moxa/mobile-moxa-photo.jpg
+            - /projects/tcm-therapy/mobile-moxa/mobile-moxa-award.jpg
+          videos:
+            - /projects/tcm-therapy/mobile-moxa/mobile-moxa-video.mp4
+      images:
+        - /projects/tcm-therapy/smart-gourd/gen1-product-photo.jpg
+        - /projects/tcm-therapy/warm-needle/warm-needle-model.png
+        - /projects/tcm-therapy/mobile-moxa/mobile-moxa-photo.jpg
+      videos:
+        - /projects/tcm-therapy/smart-gourd/gen1-product-video.mp4
+        - /projects/tcm-therapy/mobile-moxa/mobile-moxa-video.mp4
+      documents: []
+      patents: []
+
+experience:
+  - company: 中秦禾瑞（陕西）科技有限公司
+    role: 导航与建图算法工程师
+    period: "2025.11 - 2026.01"
+    type: 实习
+    description: |
+      开发果园智能巡检小车三维建图与导航算法，处理 LiDAR 原始数据生成栅格地图。
+    achievements:
+      - 负责果园智能巡检小车三维建图和导航算法开发
+      - 负责设备选型、调试、传感器数据开发处理
+      - 接入雷达原始数据实现 3D 建图
+      - 基于三维地图处理为栅格地图进行巡检小车导航
+
+  - company: 华为数字能源实践营
+    role: 学员
+    period: "2025.07"
+    type: 培训
+    description: |
+      学习企业数字能源云微服务 DDD 架构，了解 AI 在能源服务的应用场景和工程化部署。
+    achievements:
+      - 学习数字能源云微服务架构与 AI 应用场景
+      - 掌握提示词工程与 DevOps 部署流程
+      - 参观逆变器与储能设备的研发实验室
+
+  - company: 东风汽车有限公司
+    role: 实习生
+    period: "2023.08"
+    type: 实习
+    description: |
+      学习汽车汽油/柴油发动机内部结构和工作原理，参观汽车全过程工程制造流程。
+
+  - company: 哈尔滨工业大学郑州研究院
+    role: 特训营学员（优秀营员）
+    period: "2022.08"
+    type: 培训
+    description: |
+      参与中原青年工程师特训营，独立设计格斗机器人。
+    achievements:
+      - 以小组形式独立设计并实现格斗机器人
+      - 学习基础机械知识，利用 Inventor 进行建模及受力分析
+      - 学习 3D 打印机、激光切割机等设备的使用
+
+awards:
+  - name: 第十六届挑战杯河南省大学生课外学术科技作品竞赛
+    level: 省级二等奖
+    year: "2023"
+    rank: 2
+    category: 科研竞赛
+
+  - name: 第二届高校电气电子工程师创新大赛
+    level: 华中赛区一等奖
+    year: "2023"
+    rank: 2
+    category: 科研竞赛
+
+  - name: 第十六届西门子杯智能制造挑战赛
+    level: 西部赛区二等奖
+    year: "2022"
+    rank: 2
+    category: 科研竞赛
+
+  - name: 蓝桥杯嵌入式设计与开发组
+    level: 省级三等奖
+    year: "2022"
+    rank: null
+    category: 科研竞赛
+
+honors:
+  - name: 郑州大学二等奖学金
+    year: "2022-2023, 2024-2025"
+    category: 学业荣誉
+
+  - name: 郑州大学三好学生
+    year: "2022-2023"
+    category: 学业荣誉
+
+  - name: 哈尔滨工业大学郑州研究院特训营优秀营员
+    year: "2022"
+    category: 学业荣誉
+
+patents:
+  - name: 发明专利
+    count: 4
+    ranks: [3, 3, 5, 8]
+    category: 发明专利
+
+  - name: 实用新型专利
+    count: 2
+    ranks: [6, 6]
+    category: 实用新型
+
+  - name: 软件著作权
+    count: 2
+    ranks: null
+    category: 软著
+
+certifications:
+  - name: 英语六级
+    score: "473"
