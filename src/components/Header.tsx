@@ -74,6 +74,12 @@ export function Header({ data }: Props) {
                 <span className="hidden text-muted-foreground lg:inline">•</span>
                 <p className="text-lg text-muted-foreground">{data.subtitle}</p>
               </div>
+
+              {data.tagline && (
+                <p className="mt-3 text-sm font-medium tracking-wide text-primary/80 lg:text-base">
+                  {data.tagline}
+                </p>
+              )}
             </motion.div>
 
             {/* 联系方式 */}

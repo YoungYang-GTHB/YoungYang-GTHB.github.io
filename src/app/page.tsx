@@ -1,5 +1,6 @@
 import { getResumeData } from '@/lib/resume';
 import { Header } from '@/components/Header';
+import { StatBand } from '@/components/StatBand';
 import { SkillMatrix } from '@/components/SkillMatrix';
 import { ProjectCard } from '@/components/ProjectCard';
 import { EducationCard } from '@/components/EducationCard';
@@ -61,6 +62,13 @@ export default function Home() {
             <Header data={resumeData.personal} />
           </div>
 
+          {/* 成果数字带 */}
+          <div id="stats">
+            <StatBand data={resumeData} />
+          </div>
+
+          <Separator className="opacity-30" />
+
           {/* 教育背景 */}
           <div id="education">
             <EducationCard data={resumeData.education} />
@@ -71,11 +79,14 @@ export default function Home() {
             <SkillMatrix data={resumeData.skills} />
           </div>
 
-          <Separator className="opacity-30" />
-
           {/* 项目经历 */}
           <div id="projects">
             <ProjectCard data={resumeData.projects} />
+          </div>
+
+          {/* 科研成果 · 专利 */}
+          <div id="patents">
+            <PatentCard data={resumeData.patents} />
           </div>
 
           {/* 实践经历 */}
@@ -91,11 +102,6 @@ export default function Home() {
           {/* 学业荣誉 */}
           <div id="honors">
             <HonorCard data={resumeData.honors} />
-          </div>
-
-          {/* 专利成果 */}
-          <div id="patents">
-            <PatentCard data={resumeData.patents} />
           </div>
         </div>
       </main>
