@@ -6,9 +6,9 @@
 % ============================================================================
 \documentclass{resume-photo}
 
-% 字体
+% 字体（FandolSong 随 TeX Live 分发，无需额外安装；如已装 Noto 可改回 Noto Serif CJK SC）
 \usepackage{xeCJK}
-\setCJKmainfont{Noto Serif CJK SC}
+\setCJKmainfont{FandolSong-Regular.otf}[BoldFont=FandolSong-Bold.otf, ItalicFont=FandolKai-Regular.otf]
 \usepackage{fontspec}
 
 % 二维码 (需安装 qrcode 宏包)
@@ -69,7 +69,7 @@
 \begin{itemize}
   \item \textbf{项目简介}: 设计搭建串并联混合型轮式仿人机器人系统，包含AGV小车、并联机构、两个6自由度机械臂（自研6轴/JAKA）及2自由度头部，实现农业采摘、实验教学、工业场景应用
   \item \textbf{技术栈}: Ubuntu 20.04、ROS Noetic、STM32F4、点云处理、路径规划、神通数据库
-  \item \textbf{工作内容}: 编写机器人总控程序，实现三维地图构建、路径规划、目标识别和动态空间避障；实现点云发布、碰撞检测、逆运动学求解；设计自研多自由度机械臂控制方案，实现六自由度机械臂控制频率提升100%；基于STM32F4编写下位机控制程序，实现位置控制、键盘控制AGV小车；搭建神通数据库实现高并发数据增删改查
+  \item \textbf{工作内容}: 编写机器人总控程序，实现三维地图构建、路径规划、目标识别和动态空间避障；实现点云发布、碰撞检测、逆运动学求解；设计自研多自由度机械臂控制方案，实现六自由度机械臂控制频率提升100\%；基于STM32F4编写下位机控制程序，实现位置控制、键盘控制AGV小车；搭建神通数据库实现高并发数据增删改查
 \end{itemize}
 
 \ResumeItem{AI 大模型智能语音交互机器人}

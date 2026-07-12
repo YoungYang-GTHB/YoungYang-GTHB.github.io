@@ -172,10 +172,13 @@ export function Header({ data }: Props) {
               <Button
                 variant="outline"
                 size="sm"
+                asChild
                 className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
               >
-                <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
-                下载简历
+                <a href="/resume.pdf" download="郭睢阳-具身智能工程师-简历.pdf">
+                  <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  下载简历
+                </a>
               </Button>
             </motion.div>
           </div>
