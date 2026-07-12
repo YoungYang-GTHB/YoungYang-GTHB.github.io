@@ -205,7 +205,7 @@ experience:
   - company: 中秦禾瑞（陕西）科技有限公司
     role: 导航与建图算法工程师
     period: "2025.11 - 2026.01"
-    type: 实习
+    type: 兼职
     description: |
       开发果园智能巡检小车三维建图与导航算法，处理 LiDAR 原始数据生成栅格地图。
     achievements:
