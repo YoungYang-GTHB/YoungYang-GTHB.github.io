@@ -1,0 +1,75 @@
+# offer情报局 API 集成配置
+# 可自由修改筛选条件，token 在 .token 文件中单独管理
+
+api:
+  base_url: "https://offerqingbaoju.cn/api"
+  timeout: 30
+
+# 目标数据源：导航ID和名称
+# 可通过 fetch_jobs.py --list-navigations 查看所有可用数据源
+navigations:
+  - id: 61
+    name: "27届秋招"
+    enabled: true
+  - id: 60
+    name: "信息总表"
+    enabled: true
+  - id: 57
+    name: "实习信息汇总"
+    enabled: false
+
+# 筛选条件（AND 逻辑，留空表示不做限制）
+filters:
+  # 目标城市（包含匹配）
+  cities:
+    - 西安
+    - 深圳
+    - 北京
+    - 上海
+    - 成都
+  # 排除城市（包含匹配）
+  exclude_cities: []
+  # 目标行业关键词（包含匹配）
+  industries:
+    - 机器人
+    - 半导体
+    - 嵌入式
+    - 自动
+    - 汽车
+    - 电子
+    - 通信
+    - 互联网
+    - 高端装备
+    - 国防
+    - AI
+    - 人工
+    - 智能
+    - 控制
+  # 排除行业
+  exclude_industries:
+    - 教育
+    - 金融
+    - 房地产
+    - 医疗
+    - 餐饮
+    - 零售
+  # 学历要求关键词
+  education_keywords:
+    - 硕士
+    - 本科及
+    - 详见公告
+  # 毕业年份
+  graduation_year: "2027"
+  # 公司性质偏好
+  company_types: []  # 留空等于不限，可填: 民企, 央国企, 外企
+
+# 输出配置
+output:
+  directory: "output"
+  format: "jsonl"  # jsonl 用于 Job OK 流程
+  max_per_source: 500  # 每个数据源最多拉取条数
+
+# 缓存配置
+cache:
+  enabled: true
+  ttl_minutes: 60  # 缓存有效期

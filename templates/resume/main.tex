@@ -1,0 +1,143 @@
+% !TeX TS-program = xelatex
+% ============================================================================
+% 郭睢阳 - 个人简历
+% 基于 adongwanai/LLM-Resume-Template (CC BY 4.0)
+% 原始仓库: https://github.com/adongwanai/LLM-Resume-Template
+% ============================================================================
+\documentclass{resume-photo}
+
+% 字体
+\usepackage{xeCJK}
+\setCJKmainfont{Noto Serif CJK SC}
+\usepackage{fontspec}
+
+% 二维码 (需安装 qrcode 宏包)
+% \usepackage{qrcode}
+
+% 紧凑排版
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=2pt, topsep=2pt}
+\newcommand{\ExpItem}[3]{%
+  \noindent\textbf{#1｜#2} \hfill {\footnotesize #3}\\[-2pt]
+}
+
+% ====== 个人信息 ======
+\ResumeName{郭睢阳}
+\ResumePhoto{photo.jpg}  % 替换为你的照片文件名，不想要头像就注释掉
+
+\begin{document}
+
+\ResumeContacts{
+  15893346463,%
+  \ResumeUrl{mailto:1327217178@qq.com}{1327217178@qq.com},%
+  \textnormal{西北工业大学 | 控制工程 · 硕士 | 2024.09—2027.06}%
+}
+
+\ResumeTitle
+
+% ====================== 简介 ======================
+\noindent 西北工业大学控制工程专业硕士在读（2027年6月毕业），方向机器人与人工智能。专注于机器人系统设计与控制，具备从机械设计、电路设计到嵌入式软件和上位机开发的全流程研发能力。熟悉ROS机器人操作系统、Linux应用开发、深度学习算法，拥有多个完整项目落地经验。参与国家级重点课题，发表多项专利。
+
+% ====================== 教育 ======================
+\section{教育背景}
+\ResumeItem{西北工业大学}
+[\textnormal{控制工程 | 硕士 | 机器人与人工智能方向 | GPA: 89.56/100}]
+[2024.09—2027.06]
+
+\ResumeItem{郑州大学}
+[\textnormal{自动化（卓越班）| 学士 | 机器人与人工智能方向 | GPA: 3.54/4.0}]
+[2020.09—2024.06]
+
+% ====================== 技能 ======================
+\section{专业技能}
+\begin{itemize}
+  \item \textbf{编程语言}: C/C++（精通）、Python（熟练）、MATLAB（熟练），熟悉 Linux 驱动/应用开发
+  \item \textbf{机器人}: ROS/ROS2（精通），导航、SLAM、运动规划、逆运动学求解
+  \item \textbf{嵌入式}: STM32/51/Arduino（精通），基于 IMX6ULL、STM32F4 等芯片开发经验
+  \item \textbf{深度学习}: PyTorch 图像处理、语音识别、CNN 网络搭建
+  \item \textbf{硬件}: PCB 设计（Altium Designer、嘉立创），3D 打印建模/切片
+  \item \textbf{工具}: Git、PyQt5 上位机开发、Inventor 3D 建模
+\end{itemize}
+
+% ====================== 项目经历 ======================
+\section{项目经历}
+
+\ResumeItem{串并联混合轮式仿人机器人}
+[\textnormal{国家级重点课题 | 关键省重点实验室项目成员}]
+[2024.09—至今]
+
+\begin{itemize}
+  \item \textbf{项目简介}: 设计搭建串并联混合型轮式仿人机器人系统，包含AGV小车、并联机构、两个6自由度机械臂（自研6轴/JAKA）及2自由度头部，实现农业采摘、实验教学、工业场景应用
+  \item \textbf{技术栈}: Ubuntu 20.04、ROS Noetic、STM32F4、点云处理、路径规划、神通数据库
+  \item \textbf{工作内容}: 编写机器人总控程序，实现三维地图构建、路径规划、目标识别和动态空间避障；实现点云发布、碰撞检测、逆运动学求解；设计自研多自由度机械臂控制方案，实现六自由度机械臂控制频率提升100%；基于STM32F4编写下位机控制程序，实现位置控制、键盘控制AGV小车；搭建神通数据库实现高并发数据增删改查
+\end{itemize}
+
+\ResumeItem{AI 大模型智能语音交互机器人}
+[\textnormal{校优秀毕业设计 | 独立开发者}]
+[2023.12—2024.09]
+
+\begin{itemize}
+  \item \textbf{项目简介}: 结合前沿NLP技术、AI大模型和AI对口型技术，实现智能家用语音聊天机器人
+  \item \textbf{技术栈}: 树莓派4B、Python、PyQt5、PyTorch、ROS、FreeRTOS
+  \item \textbf{工作内容}: 设计AI大模型智能交互软件，实现录音、语音识别、大模型交互；实现语音合成、AI数字人对口型功能；基于上述功能实现智能家居控制交互；获得2项软件著作权
+\end{itemize}
+
+\ResumeItem{中医理疗仪系列产品}
+[\textnormal{挑战杯省级二等奖 | 核心研发成员}]
+[2021.03—2023.09]
+
+\begin{itemize}
+  \item \textbf{三代产品}: 智能葫芦灸理疗仪（一代）→ 新型智能化温针理疗仪（二代）→ 家用可移动灸罐理疗仪（三代）
+  \item \textbf{技术栈}: STM32、FreeRTOS、模糊PID、传感器融合、蓝牙通信
+  \item \textbf{工作内容}: 主导三代理疗仪全流程研发（机械设计→电路设计→嵌入式软件→上位机），完成STM32嵌入式系统开发（FreeRTOS、模糊PID算法、传感器集成），设计硬件电路（蓝牙通信、伺服电机驱动、烟雾处理），负责STM32芯片外围电路PCB设计，温度/图像/压力等多种传感器数据接入，伺服与步进电机驱动开发
+\end{itemize}
+
+% ====================== 实习经历 ======================
+\section{实习经历}
+
+\ResumeItem{中秦禾瑞（陕西）科技有限公司}
+[\textnormal{导航与建图算法工程师（实习）}]
+[2025.11—2026.01]
+
+\begin{itemize}
+  \item 负责果园智能巡检小车三维建图和导航算法开发
+  \item 负责设备选型、调试、传感器数据开发处理
+  \item 接入雷达原始数据实现3D建图，基于三维地图处理为栅格地图进行巡检小车导航
+\end{itemize}
+
+\ResumeItem{华为数字能源实践营}
+[\textnormal{学员（培训）}]
+[2025.07]
+
+\begin{itemize}
+  \item 学习数字能源云微服务DDD架构与AI在能源服务的应用场景和工程化部署
+  \item 掌握提示词工程与DevOps部署流程
+\end{itemize}
+
+\ResumeItem{东风汽车有限公司}
+[\textnormal{实习生}]
+[2023.08]
+
+\begin{itemize}
+  \item 学习汽车汽油/柴油发动机内部结构和工作原理，参观汽车全过程工程制造流程
+\end{itemize}
+
+% ====================== 竞赛与荣誉 ======================
+\section{竞赛与荣誉}
+\begin{itemize}
+  \item 第十六届挑战杯河南省大学生课外学术科技作品竞赛 \hfill 省级二等奖（2023）
+  \item 第二届高校电气电子工程师创新大赛 \hfill 华中赛区一等奖（2023）
+  \item 第十六届西门子杯智能制造挑战赛 \hfill 西部赛区二等奖（2022）
+  \item 蓝桥杯嵌入式设计与开发组 \hfill 省级三等奖（2022）
+  \item 哈尔滨工业大学郑州研究院特训营 \hfill 优秀营员（2022）
+  \item 郑州大学二等奖学金、三好学生 \hfill 2022—2023, 2024—2025
+\end{itemize}
+
+% ====================== 专利 ======================
+\section{专利与证书}
+\begin{itemize}
+  \item 发明专利 4 项、实用新型专利 2 项、软件著作权 2 项
+  \item 英语六级（CET-6）: 473 分
+\end{itemize}
+
+\end{document}

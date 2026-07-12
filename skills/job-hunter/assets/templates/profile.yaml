@@ -1,0 +1,16 @@
+name_or_alias: ""
+education:
+  school: ""
+  degree: ""
+  major: ""
+  graduation_year: ""
+target_city: []
+target_roles: []
+unavailable_roles: []
+constraints:
+  job_type: ""
+  availability: ""
+  salary_floor: ""
+  internship_duration: ""
+preferred_industries: []
+risk_notes: []

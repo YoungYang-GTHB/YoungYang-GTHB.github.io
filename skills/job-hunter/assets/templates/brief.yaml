@@ -1,0 +1,18 @@
+case_id: ""
+created_at: ""
+name_or_alias: ""
+primary_goal: ""
+current_stage: "应届/实习求职"
+operator: "student_self_service"
+privacy_level: "sensitive"
+success_criteria:
+  - "完成个人求职AI记忆库"
+  - "形成3-5个目标岗位簇"
+  - "完成真实岗位匹配清单"
+  - "完成至少1版岗位适配简历"
+  - "完成至少1轮面试表达训练"
+boundaries:
+  - "不伪造经历"
+  - "不自动投递"
+  - "不批量爬取招聘平台"
+  - "不承诺offer"

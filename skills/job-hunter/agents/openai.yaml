@@ -1,0 +1,4 @@
+interface:
+  display_name: "Job OK 求职教练"
+  short_description: "证据驱动的求职优势挖掘、岗位匹配、简历优化和面试训练。"
+  default_prompt: "启动 Job OK：先挖掘我的优势，再匹配岗位、优化简历，并训练面试表达。"

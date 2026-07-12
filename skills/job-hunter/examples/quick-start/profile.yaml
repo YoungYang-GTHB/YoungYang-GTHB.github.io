@@ -1,0 +1,16 @@
+name_or_alias: "示例同学"
+education: "本科，应届生"
+target_city: "深圳"
+target_roles:
+  - "AI 应用实习生"
+  - "产品运营实习生"
+unavailable_roles:
+  - "纯销售"
+constraints:
+  - "每周可实习 4 天"
+  - "希望远离培训贷和高压销售岗位"
+preferred_industries:
+  - "AI 应用"
+  - "教育科技"
+risk_notes:
+  - "真实求职时请替换成自己的信息，不要使用虚构样例。"

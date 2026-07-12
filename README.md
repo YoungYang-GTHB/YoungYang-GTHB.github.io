@@ -1,93 +1,60 @@
-# 郭睢阳个人简历网站
+# YoungYang-Resume
 
-基于 Next.js 16 + TypeScript + Tailwind CSS v4 构建的现代化个人简历网站。
+个人知识管理与校招求职系统。整合个人网站、简历生成、岗位拉取、自动填表等功能。
 
-## 🚀 快速启动
+基于 Next.js 16 + TypeScript + Tailwind CSS v4 构建。
 
-### 1. 安装依赖
+## 项目结构
 
-首次使用需要安装依赖：
+```
+YoungYang-Resume/
+├── src/                        # 个人网站源码 (Next.js)
+├── docs/                       # 个人文档库 (ARA + 三层结构)
+├── templates/resume/           # LaTeX 简历模板
+├── skills/                     # Claude Code Skills
+│   ├── resume-generator/       # 简历生成
+│   └── job-hunter/             # 岗位拉取 + 投递跟踪
+├── tools/form-filler/          # Chrome 扩展：AI 自动填表
+├── output/                     # 生成产物（简历 PDF / 岗位 JSONL）
+├── content/resume.yaml         # 简历结构化数据
+└── public/                     # 静态资源
+```
+
+## 快速启动
 
 ```bash
+# 安装依赖
 npm install
+pip install pyyaml requests
+
+# 启动网站
+npm run dev        # http://localhost:3000
+
+# 编译简历
+cd templates/resume && xelatex main.tex
 ```
 
-### 2. 启动开发服务器
+## 完整部署指南
 
-日常开发使用开发模式（支持热重载）：
+→ **[SETUP.md](SETUP.md)** — 环境安装、插件配置、账号准备、故障排查
 
-```bash
-npm run dev
-```
+## 文档
 
-启动后访问：**http://localhost:3000**
-
-### 3. 生产环境运行
-
-构建并启动生产服务器：
-
-```bash
-npm run build
-npm start
-```
-
----
-
-## 📁 项目结构
-
-```
-resume-website/
-├── content/
-│   └── resume.yaml          # 简历数据配置（修改这里更新内容）
-├── public/
-│   ├── profile/             # 个人照片
-│   └── projects/            # 项目图片/视频/PDF
-├── src/
-│   ├── app/                 # 页面路由
-│   ├── components/          # React 组件
-│   ├── lib/                 # 工具函数
-│   └── types/               # TypeScript 类型
-├── package.json
-└── README.md
-```
-
----
-
-## ✏️ 修改简历内容
-
-编辑 `content/resume.yaml` 文件即可更新简历信息，无需修改代码。
-
-添加项目资料时，将文件放入 `public/projects/` 目录，然后在 YAML 中引用路径。
-
----
-
-## 🛠️ 常用命令
-
-| 命令 | 说明 |
+| 文档 | 说明 |
 |------|------|
-| `npm run dev` | 启动开发服务器（日常使用） |
-| `npm run build` | 生产构建 |
-| `npm start` | 启动生产服务器 |
-| `npm run lint` | 代码检查 |
+| [SETUP.md](SETUP.md) | 环境部署与配置指南 |
+| [PLAN.md](PLAN.md) | 项目计划与进度 |
+| [docs/INDEX.md](docs/INDEX.md) | 个人文档库导航 |
+| [skills/job-hunter/SKILL.md](skills/job-hunter/SKILL.md) | 求职工具使用说明 |
 
----
+## 环境要求
 
-## 📦 环境要求
+- Node.js ≥20.9.0
+- Python ≥3.9
+- TeX Live ≥2021（XeLaTeX）
+- Chrome/Edge 浏览器
 
-- Node.js 18+
-- npm 或 pnpm
+## 许可证
 
----
-
-## 🌐 部署
-
-推荐部署到 **Vercel**：
-
-1. 在 [vercel.com](https://vercel.com) 导入此仓库
-2. 自动构建部署
-
----
-
-## 📄 许可证
-
-MIT
+- 项目代码：MIT
+- LaTeX 简历模板：CC BY 4.0（基于 [LLM-Resume-Template](https://github.com/adongwanai/LLM-Resume-Template)）
