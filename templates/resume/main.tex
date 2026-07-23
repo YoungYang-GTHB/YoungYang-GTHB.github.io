@@ -22,6 +22,19 @@
 % 紧凑排版
 \usepackage{enumitem}
 \setlist[itemize]{itemsep=2pt, topsep=2pt}
+
+% 重排条目：第一行「标题(粗) + 右对齐日期」，副标题另起一行 —— 日期严格右对齐、永不换行，更整齐
+\RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \par\vspace{3pt}\noindent
+  {\heiti\zihao{-4} #2}%
+  \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
+  \par\nopagebreak
+  \IfValueT{#3}{{\zihao{5} #3}\par}%
+  \vspace{1.5pt}%
+}
+
+% 章节标题前后留白略增，分组更清晰
+\ctexset{section/beforeskip=0.6em, section/afterskip=0.5em}
 \newcommand{\ExpItem}[3]{%
   \noindent\textbf{#1｜#2} \hfill {\footnotesize #3}\\[-2pt]
 }

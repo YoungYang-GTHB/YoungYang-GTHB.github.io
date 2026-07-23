@@ -13,7 +13,18 @@
 \usepackage{qrcode}
 
 \usepackage{enumitem}
-\setlist[itemize]{itemsep=2pt, topsep=2pt}
+\setlist[itemize]{itemsep=1pt, topsep=1pt, parsep=1pt}
+\linespread{1.06}
+
+% 重排条目：第一行「标题(粗) + 右对齐日期」，副标题另起一行 —— 日期严格右对齐、永不换行
+\RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \par\vspace{2pt}\noindent
+  {\heiti\zihao{-4} #2}%
+  \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
+  \par\nopagebreak
+  \IfValueT{#3}{{\zihao{5} #3}\par}%
+}
+\ctexset{section/beforeskip=0.5em, section/afterskip=0.4em}
 
 % ====== Personal info ======
 \ResumeName{Suiyang Guo}
