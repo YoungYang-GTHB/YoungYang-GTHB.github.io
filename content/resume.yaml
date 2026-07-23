@@ -212,7 +212,7 @@ experience:
       训练、实时推理优化与真机部署，覆盖数据、训练、部署全链路。
     achievements:
       - 以开源 π0.5（openpi）为基座训练双臂叠衣策略，通过数据精选 + 两阶段初始化做出新 SOTA 配方，动作误差 MAE@50 较原 SOTA 降低约 77%，并完成真机部署上机
-      - 主导 VLA 推理实时化：实现 RTC 实时分块推理 + Triton kernel 优化，单步推理延迟 P50 由 256ms 降至 32ms（约 8×），末端抖动降低 81%
+      - 主导 VLA 推理实时化：实现 RTC 实时分块推理 + Triton kernel 优化，单步推理耗时由约 256ms 优化至 32ms（约 8×），末端抖动降低 81%
       - 实现 AWBC / RECAP advantage 离线策略改进流水线，开展 cross-embodiment 混训与权重空间模型合并等系统实验
       - 完成清华 X-VLA 架构在自有双臂平台的真机 bring-up，用固件级 IK 将推理周期由 1.4s 压至 0.33s；建立离线视觉消融门禁，定位并修复模型"视觉失明"根因缺陷
       - 自研里程碑世界模型（LMVLA）：零训练挖掘 milestone 子目标并注入 π0.5 动作专家，在 LIBERO / RoboTwin 仿真基准上系统评测

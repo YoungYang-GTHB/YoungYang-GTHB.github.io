@@ -101,7 +101,7 @@
 
 \begin{itemize}
   \item 以开源 \(\pi\)0.5（openpi）为基座训练双臂机器人叠衣策略，经数据精选与两阶段初始化做出新 SOTA 配方，动作误差 MAE@50 较原 SOTA 降低约 77\%，并完成真机部署上机
-  \item 主导 VLA 推理实时化：实现 RTC 实时分块推理与 Triton kernel 优化，单步推理延迟由 256ms 降至 32ms（约 8 倍），末端抖动降低 81\%
+  \item 主导 VLA 推理实时化：实现 RTC 实时分块推理与 Triton kernel 优化，单步推理耗时由约 256ms 优化至 32ms（约 8 倍），末端抖动降低 81\%
   \item 实现 AWBC / RECAP advantage 离线策略改进流水线，开展 cross-embodiment 混训与权重空间模型合并等系统实验
   \item 完成清华 X-VLA 架构在自有双臂平台真机 bring-up，用固件级 IK 将推理周期由 1.4s 压至 0.33s；建立离线视觉消融门禁，定位并修复模型“视觉失明”根因缺陷
   \item 自研里程碑世界模型（LMVLA），零训练挖掘 milestone 子目标并注入 \(\pi\)0.5 动作专家，在 LIBERO / RoboTwin 仿真基准上系统评测
