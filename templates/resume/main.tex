@@ -16,6 +16,9 @@
 \definecolor{hlred}{RGB}{192,0,0}
 \newcommand{\hl}[1]{\textbf{\textcolor{hlred}{#1}}}
 
+% 个人主页二维码
+\usepackage{qrcode}
+
 % 紧凑排版
 \usepackage{enumitem}
 \setlist[itemize]{itemsep=2pt, topsep=2pt}
@@ -151,5 +154,11 @@
   \item \hl{发明专利 4 项}、\hl{实用新型专利 2 项}、\hl{软件著作权 2 项}
   \item 英语六级（CET-6）: 473 分
 \end{itemize}
+
+\vfill
+\begin{center}
+  \qrcode[height=2cm]{https://youngyang-gthb.github.io/}\\[4pt]
+  {\footnotesize 扫码访问\hl{个人主页}（作品 / 项目详情）：\ResumeUrl{https://youngyang-gthb.github.io/}{youngyang-gthb.github.io}}
+\end{center}
 
 \end{document}
