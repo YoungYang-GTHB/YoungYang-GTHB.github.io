@@ -180,6 +180,17 @@ export function Header({ data }: Props) {
                   下载简历
                 </a>
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
+              >
+                <a href="/resume-en.pdf" download="Suiyang-Guo-Embodied-AI-Engineer-CV.pdf">
+                  <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  English CV
+                </a>
+              </Button>
             </motion.div>
           </div>
         </div>

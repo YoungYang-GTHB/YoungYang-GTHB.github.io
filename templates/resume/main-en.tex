@@ -1,0 +1,147 @@
+% !TeX TS-program = xelatex
+% ============================================================================
+% Suiyang Guo (YoungYang) - Resume (English)
+% Based on adongwanai/LLM-Resume-Template (CC BY 4.0)
+% ============================================================================
+\documentclass{resume-photo}
+
+% Fonts (FandolSong ships with TeX Live; used only for any CJK glyphs)
+\usepackage{xeCJK}
+\setCJKmainfont{FandolSong-Regular.otf}[BoldFont=FandolSong-Bold.otf, ItalicFont=FandolKai-Regular.otf]
+\usepackage{fontspec}
+
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=2pt, topsep=2pt}
+
+% ====== Personal info ======
+\ResumeName{Suiyang Guo}
+\ResumePhoto{photo.jpg}
+
+\begin{document}
+
+\ResumeContacts{
+  +86 158-9334-6463,%
+  \ResumeUrl{mailto:1327217178@qq.com}{1327217178@qq.com},%
+  \textnormal{Northwestern Polytechnical Univ. | MSc, Control Eng. | 2024.09—2027.06}%
+}
+
+\ResumeTitle
+
+% ====================== Summary ======================
+\noindent MSc student in Control Engineering at Northwestern Polytechnical University (NPU), specializing in robotics and AI (graduating Jun 2027). Full-stack robotics engineer with end-to-end capability from mechanical/PCB design and STM32 firmware to ROS/ROS2, deep learning and host software. Currently a VLA (Vision-Language-Action) \& World-Model algorithm intern at 视启未来 (incubated by IDEA Research / International Digital Economy Academy), training and deploying manipulation policies for a dual-arm robot. Participated in a national key research project; holds 6 patents (4 invention, 2 utility-model) and 2 software copyrights.
+
+% ====================== Education ======================
+\section{Education}
+\ResumeItem{Northwestern Polytechnical University (NPU)}
+[\textnormal{MSc, Control Engineering | Robotics \& AI | GPA: 89.56/100}]
+[2024.09—2027.06]
+
+\ResumeItem{Zhengzhou University}
+[\textnormal{BEng, Automation (Elite Class) | Robotics \& AI | GPA: 3.54/4.0}]
+[2020.09—2024.06]
+
+% ====================== Skills ======================
+\section{Technical Skills}
+\begin{itemize}
+  \item \textbf{Programming}: C/C++ (proficient), Python (fluent), MATLAB (fluent); Linux driver/application development
+  \item \textbf{Robotics}: ROS/ROS2 (proficient); navigation, SLAM, motion planning, inverse kinematics
+  \item \textbf{Embedded}: STM32/51/Arduino (proficient); development on IMX6ULL, STM32F4
+  \item \textbf{Deep Learning}: PyTorch — image processing, speech recognition, CNN design
+  \item \textbf{Hardware}: PCB design (Altium Designer, JLCPCB), 3D-printing modeling/slicing
+  \item \textbf{Tools}: Git, PyQt5 (host software), Autodesk Inventor (3D modeling)
+\end{itemize}
+
+% ====================== Experience ======================
+\section{Experience}
+
+\ResumeItem{视启未来 (incubated by IDEA Research)}
+[\textnormal{VLA \& World-Model Algorithm Intern}]
+[2026.04—Present]
+
+\begin{itemize}
+  \item Trained a dual-arm cloth-folding policy on the open-source \(\pi\)0.5 (openpi) VLA; a curated-data + two-stage-init recipe cut action error (offline MAE@50) by about 77\% vs. the prior best, and shipped to real-robot deployment
+  \item Led VLA inference real-time optimization (RTC real-time chunking + Triton kernel autotuning), cutting single-step inference latency from about 256 ms to 32 ms (roughly 8x) and end-effector jitter by 81\%; drove the ROS1 to ROS2 migration for on-robot serving
+  \item Built an AWBC / RECAP-advantage offline policy-improvement pipeline; ran cross-embodiment co-training and weight-space model-merging experiments
+  \item Brought up Tsinghua's X-VLA architecture on our platform, using firmware-level IK to cut the control cycle from 1.4 s to 0.33 s; built an offline vision-ablation gate that root-caused and fixed a dataloader bug which had made the model vision-blind
+  \item Explored a self-supervised latent-milestone world model (LMVLA), injecting predicted sub-goals into the \(\pi\)0.5 action expert; evaluated on LIBERO / RoboTwin
+\end{itemize}
+
+\ResumeItem{Zhongqin Herui (Shaanxi) Technology Co., Ltd.}
+[\textnormal{Navigation \& Mapping Algorithm Engineer (Part-time)}]
+[2025.11—2026.01]
+
+\begin{itemize}
+  \item Developed 3D mapping and navigation for an orchard autonomous inspection vehicle
+  \item Owned equipment/sensor selection, calibration, and sensor-data processing
+  \item Built 3D maps from raw LiDAR, then occupancy grids for vehicle navigation
+\end{itemize}
+
+\ResumeItem{Huawei Digital Energy Bootcamp}
+[\textnormal{Trainee (Training)}]
+[2025.07]
+
+\begin{itemize}
+  \item Studied digital-energy cloud microservice (DDD) architecture and AI applications/engineering in energy services
+  \item Practiced prompt engineering and DevOps deployment workflows
+\end{itemize}
+
+\ResumeItem{Dongfeng Motor Co., Ltd.}
+[\textnormal{Intern}]
+[2023.08]
+
+\begin{itemize}
+  \item Studied gasoline/diesel engine structure and principles; toured the full vehicle manufacturing process
+\end{itemize}
+
+% ====================== Projects ======================
+\section{Projects}
+
+\ResumeItem{Series-Parallel Hybrid Wheeled Humanoid Robot}
+[\textnormal{National Key Research Project | Key Provincial Lab — team member}]
+[2024.09—Present]
+
+\begin{itemize}
+  \item \textbf{Overview}: designed and built a series-parallel hybrid wheeled humanoid system — AGV base, parallel mechanism, two 6-DoF arms (in-house 6-axis / JAKA) and a 2-DoF head — for agricultural picking, teaching and industrial use
+  \item \textbf{Stack}: Ubuntu 20.04, ROS Noetic, STM32F4, point-cloud processing, path planning, ShenTong DB
+  \item \textbf{Work}: wrote the robot master-control program (3D mapping, path planning, object recognition, dynamic obstacle avoidance); point-cloud publishing, collision detection, IK; designed an in-house multi-DoF arm control scheme, doubling (100\%) the 6-DoF arm control frequency; STM32F4 lower-level control; built a ShenTong database for high-concurrency CRUD
+\end{itemize}
+
+\ResumeItem{AI-LLM Voice-Interaction Robot}
+[\textnormal{Outstanding Undergraduate Thesis | Solo developer}]
+[2023.12—2024.09]
+
+\begin{itemize}
+  \item \textbf{Overview}: a smart-home voice-chat robot combining NLP, LLMs and AI lip-sync
+  \item \textbf{Stack}: Raspberry Pi 4B, Python, PyQt5, PyTorch, ROS, FreeRTOS
+  \item \textbf{Work}: built the LLM interaction software (recording, speech recognition, LLM dialogue); speech synthesis + digital-human lip-sync; smart-home control; earned 2 software copyrights
+\end{itemize}
+
+\ResumeItem{TCM Therapy Device Series (3 generations)}
+[\textnormal{"Challenge Cup" Provincial 2nd Prize | Core R\&D member}]
+[2021.03—2023.09]
+
+\begin{itemize}
+  \item \textbf{Products}: smart gourd-moxibustion (gen 1) → warm-needle therapy (gen 2) → home mobile moxibustion (gen 3)
+  \item \textbf{Stack}: STM32, FreeRTOS, fuzzy PID, sensor fusion, Bluetooth
+  \item \textbf{Work}: led full-stack R\&D across three generations (mechanical → circuit → embedded → host software); STM32 firmware (FreeRTOS, fuzzy-PID, sensor integration); hardware circuits (Bluetooth, servo drive, smoke handling); PCB design; multi-sensor (temperature/image/pressure) integration; servo \& stepper motor drivers
+\end{itemize}
+
+% ====================== Awards ======================
+\section{Awards \& Honors}
+\begin{itemize}
+  \item "Challenge Cup" Henan Collegiate Academic Sci-Tech Works Competition (16th) \hfill Provincial 2nd Prize (2023)
+  \item 2nd Collegiate Electrical \& Electronic Engineer Innovation Contest \hfill Central-China 1st Prize (2023)
+  \item 16th "Siemens Cup" Intelligent Manufacturing Challenge \hfill Western Region 2nd Prize (2022)
+  \item Lanqiao Cup — Embedded Design \& Development \hfill Provincial 3rd Prize (2022)
+  \item HIT Zhengzhou Research Institute Training Camp \hfill Outstanding Camper (2022)
+  \item Zhengzhou Univ. 2nd-Class Scholarship \& Merit Student \hfill 2022—2023, 2024—2025
+\end{itemize}
+
+% ====================== Patents ======================
+\section{Patents \& Certificates}
+\begin{itemize}
+  \item 4 invention patents, 2 utility-model patents, 2 software copyrights
+  \item CET-6 (College English Test Band 6): 473
+\end{itemize}
+
+\end{document}
