@@ -34,6 +34,7 @@ export interface SkillItem {
 }
 
 export interface Skills {
+  ai: SkillItem[];
   programming: SkillItem[];
   embedded: SkillItem[];
   os: SkillItem[];

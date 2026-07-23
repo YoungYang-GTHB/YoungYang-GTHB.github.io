@@ -44,16 +44,39 @@ education:
       - 双一流
 
 skills:
+  ai:
+    - name: VLA / 具身智能
+      level: 熟练
+      description: π0.5、X-VLA 训练与真机部署；flow-matching policy、action chunking、RTC 实时推理
+    - name: 世界模型
+      level: 熟练
+      description: 里程碑世界模型、latent 子目标注入；RoboTwin / LIBERO 仿真评测
+    - name: PyTorch / JAX
+      level: 熟练
+      description: DDP / FSDP 分布式训练、EMA；DINOv3 / SigLIP 视觉表征
+    - name: 推理优化
+      level: 熟练
+      description: Triton kernel autotune、CUDA Graphs、torch.compile、RTC 实时化
   programming:
     - name: C/C++
       level: 精通
-      description: Linux 驱动/应用开发、ROS 系统开发、元胞自动机路径规划
+      description: Linux 驱动/应用开发、ROS 系统开发、机器人总控
     - name: Python
-      level: 熟练
-      description: PyTorch 图像处理、语音识别、QT 开发、CNN 网络搭建
+      level: 精通
+      description: PyTorch / JAX 深度学习、VLA 训练、PyQt5 上位机、图像/语音处理
     - name: MATLAB
       level: 熟练
       description: 机器人建模、轨迹规划、信号处理仿真
+  os:
+    - name: ROS/ROS2
+      level: 精通
+      description: 导航、SLAM、运动规划、逆运动学求解、点云处理
+    - name: Linux
+      level: 熟练
+      description: 驱动开发、应用开发、多机分布式训练
+    - name: FreeRTOS
+      level: 熟练
+      description: 实时操作系统开发
   embedded:
     - name: STM32/51/Arduino
       level: 精通
@@ -64,26 +87,19 @@ skills:
     - name: 3D 打印
       level: 熟练
       description: 建模、切片、打印调试
-  os:
-    - name: Linux
-      level: 熟练
-      description: 驱动开发、应用开发、ROS1/ROS2
-    - name: FreeRTOS
-      level: 熟练
-      description: 实时操作系统开发
-    - name: ROS/ROS2
-      level: 精通
-      description: 导航、SLAM、运动规划、逆运动学求解
   tools:
+    - name: Vibecoding
+      level: 熟练
+      description: Claude Code / Cursor 等 AI 辅助编程，agentic 开发工作流
     - name: Git
       level: 熟练
       description: 版本控制、协作开发
-    - name: Inventor
-      level: 熟练
-      description: 3D 建模、受力分析
     - name: PyQt5
       level: 熟练
       description: 上位机软件开发
+    - name: Inventor
+      level: 熟练
+      description: 3D 建模、受力分析
 
 projects:
   - title: 串并联混合轮式仿人机器人
@@ -241,11 +257,11 @@ experience:
       - 参观逆变器与储能设备的研发实验室
 
   - company: 东风汽车有限公司
-    role: 实习生
+    role: 参观学习
     period: "2023.08"
-    type: 实习
+    type: 参观
     description: |
-      学习汽车汽油/柴油发动机内部结构和工作原理，参观汽车全过程工程制造流程。
+      参观学习汽车汽油/柴油发动机内部结构和工作原理，了解汽车全过程工程制造流程。
 
   - company: 哈尔滨工业大学郑州研究院
     role: 特训营学员（优秀营员）

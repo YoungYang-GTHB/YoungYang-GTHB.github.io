@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Skills } from '@/types/resume';
-import { Code2, Cpu, Monitor, Wrench } from 'lucide-react';
+import { Code2, Cpu, Monitor, Wrench, Brain } from 'lucide-react';
 
 interface Props {
   data: Skills;
 }
 
 const categoryIcons = {
+  ai: Brain,
   programming: Code2,
   embedded: Cpu,
   os: Monitor,
@@ -18,13 +19,15 @@ const categoryIcons = {
 };
 
 const categoryNames = {
+  ai: 'AI · 具身智能',
   programming: '编程语言',
   embedded: '嵌入式开发',
-  os: '操作系统',
+  os: '机器人与系统',
   tools: '开发工具',
 };
 
 const categoryGradients = {
+  ai: 'from-violet-500 to-fuchsia-500',
   programming: 'from-blue-500 to-cyan-500',
   embedded: 'from-purple-500 to-pink-500',
   os: 'from-orange-500 to-red-500',
