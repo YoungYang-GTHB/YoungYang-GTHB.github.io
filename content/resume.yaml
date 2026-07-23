@@ -20,6 +20,50 @@ personal:
     聚焦机器人导航、SLAM 与智能交互。参与国家级重点课题，累计 6 项专利（4 项发明 / 2 项
     实用新型）与 2 项软件著作权，擅长将算法工程化为可稳定运行的机器人系统。
 
+featured:
+  title: 双臂机器人叠衣 · 具身智能 VLA 系统
+  org: 视启未来（IDEA 研究院孵化）
+  role: VLA 与世界模型算法实习生 · 具身智能团队
+  period: "2026.04 - 至今"
+  tagline: 从数据、训练、实时推理到真机部署的全链路具身智能落地
+  summary: |
+    以开源 π0.5 / X-VLA 为基座，为双臂 Agilex Piper 机器人构建"看图叠衣"的视觉-语言-动作
+    （VLA）策略；覆盖数据采集、策略训练、离线评测、实时推理优化与真机部署全链路，并探索用
+    里程碑世界模型为策略注入子目标先验。当前实习中的核心主项目。
+  highlights:
+    - title: 训练配方 SOTA
+      desc: 数据精选 + 两阶段初始化做出新 SOTA 训练配方，动作误差 MAE@50 较原基线显著下降，并完成真机上机
+    - title: 实时推理优化 8×
+      desc: RTC 实时分块推理 + Triton kernel 优化，单步推理耗时约 256ms→32ms（约 8×），末端抖动降低 81%；主导 ROS1→ROS2 迁移
+    - title: X-VLA 真机 bring-up
+      desc: 将清华 X-VLA 迁到自有双臂平台，固件级 IK 把控制周期 1.4s→0.33s；建立离线视觉消融门禁，定位并修复"视觉失明"根因缺陷
+    - title: 里程碑世界模型
+      desc: 自研世界模型，零训练挖掘 milestone 子目标注入 VLA 动作专家，在 LIBERO / RoboTwin 仿真基准系统评测
+  stack:
+    - π0.5 / openpi
+    - X-VLA
+    - PyTorch
+    - JAX / Flax
+    - ROS2
+    - Triton
+    - RTC
+    - AWBC
+    - RoboTwin
+    - LIBERO
+  links:
+    - name: openpi (π0.5)
+      url: https://github.com/Physical-Intelligence/openpi
+      desc: 策略基座 · Physical Intelligence
+    - name: X-VLA
+      url: https://thu-air-dream.github.io/X-VLA/
+      desc: 对照架构 · 清华 AIR
+    - name: RoboTwin 2.0
+      url: https://robotwin-platform.github.io/
+      desc: 双臂仿真基准
+    - name: LIBERO
+      url: https://github.com/Lifelong-Robot-Learning/LIBERO
+      desc: 操作学习基准
+
 education:
   - school: 西北工业大学
     degree: 硕士

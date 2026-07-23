@@ -103,8 +103,32 @@ export interface Certification {
   score: string;
 }
 
+export interface FeaturedLink {
+  name: string;
+  url: string;
+  desc?: string;
+}
+
+export interface FeaturedHighlight {
+  title: string;
+  desc: string;
+}
+
+export interface Featured {
+  title: string;
+  org: string;
+  role: string;
+  period: string;
+  tagline?: string;
+  summary: string;
+  highlights: FeaturedHighlight[];
+  stack: string[];
+  links: FeaturedLink[];
+}
+
 export interface ResumeData {
   personal: PersonalInfo;
+  featured?: Featured;
   education: Education[];
   skills: Skills;
   projects: Project[];

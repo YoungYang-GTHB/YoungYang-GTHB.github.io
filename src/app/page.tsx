@@ -1,6 +1,7 @@
 import { getResumeData } from '@/lib/resume';
 import { Header } from '@/components/Header';
 import { StatBand } from '@/components/StatBand';
+import { FeaturedProject } from '@/components/FeaturedProject';
 import { SkillMatrix } from '@/components/SkillMatrix';
 import { ProjectCard } from '@/components/ProjectCard';
 import { EducationCard } from '@/components/EducationCard';
@@ -66,6 +67,15 @@ export default function Home() {
           <div id="stats">
             <StatBand data={resumeData} />
           </div>
+
+          <Separator className="opacity-30" />
+
+          {/* 旗舰主项目 · 实习工作 */}
+          {resumeData.featured && (
+            <div id="featured" className="scroll-mt-20">
+              <FeaturedProject data={resumeData.featured} />
+            </div>
+          )}
 
           <Separator className="opacity-30" />
 
