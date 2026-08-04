@@ -106,6 +106,22 @@ git clone https://github.com/GresonKwan/JobOK.git .agents/skills/job-ok
 
 ## Usage Examples
 
+### 云端服务器 / 纯终端登录
+
+服务器无需安装或打开 Chrome。先在 SSH 终端显示微信二维码并扫码：
+
+```bash
+python3 scripts/fetch_jobs.py --wechat-login
+```
+
+登录会话以 `0600` 权限保存在本地 `.session.json`（已加入 `.gitignore`）。随后只拉取当前提前批：
+
+```bash
+python3 scripts/fetch_jobs.py --nav 61 --phase 提前批 --full-sync
+```
+
+短期 access token 过期时工具会自动调用平台当前使用的刷新接口；整个微信会话失效后才需要重新扫码。
+
 ### 1. 挖掘优势
 
 ```text

@@ -53,6 +53,7 @@ templates/**/*.xdv
 # 求职工具 — 本地运行时数据（含个人隐私）
 # ============================================================
 skills/job-hunter/.token
+skills/job-hunter/.session.json
 skills/job-hunter/state.json
 skills/job-hunter/records/
 skills/job-hunter/imports/

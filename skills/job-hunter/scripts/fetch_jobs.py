@@ -8,6 +8,8 @@ fetch_jobs — 从 offer情报局 增量拉取校招岗位。
   python3 fetch_jobs.py --list-navigations # 列出可用数据源
   python3 fetch_jobs.py --dry-run          # 预览，不写入文件
   python3 fetch_jobs.py --nav 61           # 只拉取指定导航
+  python3 fetch_jobs.py --phase 提前批      # 只保留当前招聘阶段
+  python3 fetch_jobs.py --wechat-login     # 纯终端微信扫码登录
   python3 fetch_jobs.py --save-token <TK>  # 保存 token
   python3 fetch_jobs.py --check-token      # 检查 token 状态
   python3 fetch_jobs.py --stats            # 查看抓取状态摘要
@@ -38,6 +40,25 @@ from scripts.api import OfferAPI
 from scripts.state import FetcherState
 from scripts.tracker import ApplicationTracker
 
+
+PHASE_KEYWORDS = {
+    "提前批": ("提前批", "提前招聘", "抢先批", "早鸟批", "优招", "先行批"),
+    "秋招": ("秋招", "秋季招聘", "秋季校园招聘"),
+    "春招": ("春招", "春季招聘", "春季校园招聘"),
+}
+
+
+def detect_phase(record: dict) -> str:
+    batch_text = " ".join(
+        str(record.get(field, ""))
+        for field in ("招聘批次", "招聘阶段", "批次", "职位", "公告标题")
+    ).lower()
+    # “秋招提前批”必须优先归入提前批。
+    for phase in ("提前批", "春招", "秋招"):
+        if any(keyword.lower() in batch_text for keyword in PHASE_KEYWORDS[phase]):
+            return phase
+    return "未知"
+
 # ============================================================
 # 筛选模块
 # ============================================================
@@ -60,8 +81,9 @@ class JobFilter:
         "updated": "更新时间",
     }
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, phase: str | None = None):
         self._filters = config.get("filters", {})
+        self._phase = phase
 
     def passes(self, job: dict) -> bool:
         return all([
@@ -71,6 +93,7 @@ class JobFilter:
             self._match_none(job, "exclude_industries", "industry"),
             self._match_any(job, "education_keywords", "education"),
             self._match_graduation(job),
+            not self._phase or detect_phase(job) == self._phase,
         ])
 
     def score(self, job: dict) -> int:
@@ -295,6 +318,7 @@ def run_fetch(
     nav_id: int | None = None,
     force_full: bool = False,
     dry_run: bool = False,
+    phase: str | None = None,
 ) -> dict:
     api_cfg = config.get("api", {})
     output_cfg = config.get("output", {})
@@ -305,7 +329,7 @@ def run_fetch(
         timeout=api_cfg.get("timeout", 30),
     )
     state = FetcherState()
-    job_filter = JobFilter(config)
+    job_filter = JobFilter(config, phase=phase)
     tracker = ApplicationTracker()
 
     navigations = config.get("navigations", [])
@@ -351,7 +375,11 @@ def run_fetch(
     if not dry_run and all_records:
         date_str = datetime.now().strftime("%Y-%m-%d")
         output_dir = PROJECT_ROOT / output_cfg.get("directory", "output")
-        output_path = output_dir / f"{date_str}-jobs.jsonl"
+        if phase:
+            phase_file = {"提前批": "advance", "秋招": "autumn", "春招": "spring"}[phase]
+            output_path = output_dir / f"{date_str}-offer-{phase_file}-jobs.jsonl"
+        else:
+            output_path = output_dir / f"{date_str}-jobs.jsonl"
         write_jsonl(all_records, output_path)
         print(f"[fetch] ✔ 已写入: {output_path} ({len(all_records)} 条)", file=sys.stderr)
     elif dry_run:
@@ -418,6 +446,10 @@ def main():
     parser.add_argument("--save-token", type=str, help="保存 Bearer token")
     parser.add_argument("--check-token", action="store_true",
                         help="检查当前 token 状态")
+    parser.add_argument("--wechat-login", action="store_true",
+                        help="在终端显示二维码并完成微信扫码登录")
+    parser.add_argument("--phase", choices=tuple(PHASE_KEYWORDS),
+                        help="只保留指定招聘阶段；当前阶段使用 提前批")
     args = parser.parse_args()
 
     # token 操作
@@ -429,6 +461,9 @@ def main():
         mgr = TokenManager()
         print("[fetch] Token 有效" if mgr.get_token() else "[fetch] Token 无效或已过期")
         return
+    if args.wechat_login:
+        from scripts.wechat_login import terminal_login
+        raise SystemExit(terminal_login())
 
     config = load_config()
 
@@ -443,11 +478,16 @@ def main():
     # 权限检查
     mgr = TokenManager()
     if mgr.get_token() is None:
-        print("[fetch] 请先用 --save-token <TOKEN> 保存 token", file=sys.stderr)
+        print("[fetch] 请先运行 --wechat-login 完成终端扫码登录", file=sys.stderr)
         sys.exit(1)
 
-    stats = run_fetch(config, nav_id=args.nav, force_full=args.full_sync,
-                      dry_run=args.dry_run)
+    stats = run_fetch(
+        config,
+        nav_id=args.nav,
+        force_full=args.full_sync,
+        dry_run=args.dry_run,
+        phase=args.phase,
+    )
 
     # 汇总
     print(f"\n{'='*50}")

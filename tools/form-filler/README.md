@@ -176,6 +176,8 @@
 
 ### 5. 同步 Offer 情报局岗位（可选）
 
+> 如果项目只运行在云端服务器、主要通过 SSH 终端操作，请不要使用这一浏览器扩展流程。直接运行 `python3 skills/job-hunter/scripts/fetch_jobs.py --wechat-login`，在终端扫码登录即可。
+
 1. 在浏览器打开 `https://offerqingbaoju.cn`，用微信扫码正常登录
 2. 打开扩展侧边栏的“岗位同步”页签
 3. 首次使用点击“选择项目目录”，选择 `YoungYang-Resume` 根目录

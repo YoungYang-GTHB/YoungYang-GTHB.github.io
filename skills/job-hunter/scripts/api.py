@@ -79,5 +79,14 @@ class OfferAPI:
         resp = requests.get(
             url, headers=self._headers(), params=params, timeout=self._timeout
         )
+        if resp.status_code == 401:
+            refreshed = self._token_mgr.refresh_access_token()
+            if refreshed:
+                resp = requests.get(
+                    url,
+                    headers={"Authorization": f"Bearer {refreshed}"},
+                    params=params,
+                    timeout=self._timeout,
+                )
         resp.raise_for_status()
         return resp.json()

@@ -67,7 +67,7 @@ filters:
 output:
   directory: "output"
   format: "jsonl"  # jsonl 用于 Job OK 流程
-  max_per_source: 500  # 每个数据源最多拉取条数
+  max_per_source: 1000  # 单个用户选择的数据源上限，覆盖当前 719 条导航
 
 # 缓存配置
 cache:

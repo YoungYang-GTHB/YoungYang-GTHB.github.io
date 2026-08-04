@@ -15,14 +15,7 @@ SKILL_ROOT = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = SKILL_ROOT.parent.parent
 sys.path.insert(0, str(SKILL_ROOT))
 
-from scripts.fetch_jobs import JobFilter, write_jsonl
-
-
-PHASE_KEYWORDS = {
-    "提前批": ("提前批", "提前招聘", "抢先批", "早鸟批", "优招", "先行批"),
-    "秋招": ("秋招", "秋季招聘", "秋季校园招聘"),
-    "春招": ("春招", "春季招聘", "春季校园招聘"),
-}
+from scripts.fetch_jobs import PHASE_KEYWORDS, JobFilter, detect_phase, write_jsonl
 
 PHASE_FILE_NAMES = {
     "提前批": "advance",
@@ -43,19 +36,6 @@ def load_jsonl(path: Path) -> list[dict]:
         if isinstance(value, dict):
             records.append(value)
     return records
-
-
-def detect_phase(record: dict) -> str:
-    batch_text = " ".join(
-        str(record.get(field, ""))
-        for field in ("招聘批次", "招聘阶段", "批次", "职位", "公告标题")
-    ).lower()
-
-    # “秋招提前批”应归入提前批，因此提前批的判断必须最先执行。
-    for phase in ("提前批", "春招", "秋招"):
-        if any(keyword.lower() in batch_text for keyword in PHASE_KEYWORDS[phase]):
-            return phase
-    return "未知"
 
 
 def record_identity(record: dict) -> str:
