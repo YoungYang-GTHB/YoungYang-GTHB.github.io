@@ -41,9 +41,12 @@ The visual language comes from the real workbench: graphite robot hardware, blue
 
 The real-robot video is framed as a calibrated experiment viewport with corner reticles, a live status line, task identity, and measured metadata. This is the only deliberately cinematic element; the rest of the interface stays quiet.
 
+Supporting resume sections use one shared structured-record frame: cool-white surfaces, blue section markers, thin steel dividers, and teal evidence dots. Education, skills, projects, experience, patents, and awards should read as one continuous engineering dossier rather than separate promotional cards.
+
 ## Guardrails
 
 - No ambient pulsing gradient blobs.
+- No category-by-category rainbow gradients; hierarchy comes from structure and type.
 - Avoid nested rounded cards; use dividers and layout hierarchy first.
 - Motion is limited to one entrance sequence and purposeful hover feedback.
 - Respect `prefers-reduced-motion`.

@@ -62,6 +62,7 @@ export function VideoPlayer({
               src={poster}
               alt={title || '视频封面'}
               fill
+              loading="eager"
               sizes="(min-width: 1024px) 60vw, 100vw"
               className="h-full w-full object-cover opacity-85 transition-transform duration-700 group-hover:scale-[1.01]"
             />

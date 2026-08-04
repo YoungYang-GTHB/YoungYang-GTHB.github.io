@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Skills } from '@/types/resume';
-import { Code2, Cpu, Monitor, Wrench, Brain } from 'lucide-react';
+import { Brain, Code2, Cpu, Monitor, Wrench } from 'lucide-react';
+import { SectionHeading } from '@/components/SectionHeading';
 
 interface Props {
   data: Skills;
@@ -26,78 +27,53 @@ const categoryNames = {
   tools: '开发工具',
 };
 
-const categoryGradients = {
-  ai: 'from-violet-500 to-fuchsia-500',
-  programming: 'from-blue-500 to-cyan-500',
-  embedded: 'from-purple-500 to-pink-500',
-  os: 'from-orange-500 to-red-500',
-  tools: 'from-green-500 to-emerald-500',
-};
-
 export function SkillMatrix({ data }: Props) {
   const categories = Object.entries(data) as Array<[keyof Skills, Skills[keyof Skills]]>;
 
   return (
-    <Card className="overflow-hidden border-0 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl">
-      <CardHeader className="border-b bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 pb-6">
-        <CardTitle className="flex items-center gap-3 text-2xl">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
-            <Code2 className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <span className="text-gradient text-gradient-primary">专业技能</span>
-        </CardTitle>
+    <Card className="overflow-hidden rounded-none border-foreground/15 bg-card shadow-none">
+      <CardHeader className="border-b border-foreground/12 bg-secondary/45 px-5 py-4 md:px-7">
+        <SectionHeading code="03" title="专业技能" icon={Code2} />
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="grid gap-6 md:grid-cols-2">
+      <CardContent className="p-0">
+        <div className="grid gap-px bg-border md:grid-cols-2">
           {categories.map(([category, skills], index) => {
             const Icon = categoryIcons[category];
-            const gradient = categoryGradients[category];
             return (
-              <motion.div
+              <motion.section
                 key={category}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
+                transition={{ delay: index * 0.06, duration: 0.35 }}
                 viewport={{ once: true }}
-                className="group relative overflow-hidden rounded-2xl border bg-card/50 p-5 backdrop-blur-sm transition-all hover:shadow-lg card-hover"
+                className="bg-card p-5 last:md:col-span-2 md:p-6"
               >
-                {/* 渐变装饰条 */}
-                <div className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${gradient}`} />
-                
-                {/* 角标装饰 */}
-                <div className={`absolute -right-6 -top-6 h-20 w-20 rounded-full bg-gradient-to-br ${gradient} opacity-10 blur-xl transition-opacity group-hover:opacity-20`} />
-                
-                <div className="relative">
-                  <div className="mb-4 flex items-center gap-2">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${gradient} shadow-md`}>
-                      <Icon className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-lg font-semibold">{categoryNames[category]}</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center border border-primary/20 bg-primary/5 text-primary">
+                    <Icon className="h-4.5 w-4.5" />
                   </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    {skills.map((skill, skillIndex) => (
-                      <motion.div
-                        key={skill.name}
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        whileInView={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: index * 0.1 + skillIndex * 0.05, duration: 0.2 }}
-                        viewport={{ once: true }}
-                      >
-                        <Badge
-                          variant="secondary"
-                          className={`cursor-default px-3 py-2 text-sm transition-all hover:scale-105 hover:shadow-md bg-gradient-to-r ${gradient} text-white border-0`}
-                          title={skill.description}
-                        >
-                          <span className="font-medium">{skill.name}</span>
-                          <span className="ml-1.5 opacity-80">·</span>
-                          <span className="ml-1.5 opacity-90">{skill.level}</span>
-                        </Badge>
-                      </motion.div>
-                    ))}
+                  <div>
+                    <div className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">
+                      CAPABILITY / {String(index + 1).padStart(2, '0')}
+                    </div>
+                    <h3 className="mt-0.5 font-bold">{categoryNames[category]}</h3>
                   </div>
                 </div>
-              </motion.div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {skills.map((skill) => (
+                    <Badge
+                      key={skill.name}
+                      variant="secondary"
+                      className="cursor-default rounded-none border border-foreground/8 px-3 py-2 text-xs font-normal transition-colors hover:border-primary/30 hover:bg-primary/5"
+                      title={skill.description}
+                    >
+                      <span className="font-semibold text-foreground">{skill.name}</span>
+                      <span className="mx-1.5 text-muted-foreground">·</span>
+                      <span className="font-mono text-[9px] text-primary">{skill.level}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </motion.section>
             );
           })}
         </div>

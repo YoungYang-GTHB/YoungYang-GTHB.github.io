@@ -76,37 +76,37 @@ export default function Home() {
           </div>
 
           {/* 教育背景 */}
-          <div id="education">
+          <div id="education" className="scroll-mt-20">
             <EducationCard data={resumeData.education} />
           </div>
 
           {/* 专业技能 */}
-          <div id="skills">
+          <div id="skills" className="scroll-mt-20">
             <SkillMatrix data={resumeData.skills} />
           </div>
 
           {/* 项目经历 */}
-          <div id="projects">
+          <div id="projects" className="scroll-mt-20">
             <ProjectCard data={resumeData.projects} />
           </div>
 
           {/* 科研成果 · 专利 */}
-          <div id="patents">
+          <div id="patents" className="scroll-mt-20">
             <PatentCard data={resumeData.patents} />
           </div>
 
           {/* 实践经历 */}
-          <div id="experience">
+          <div id="experience" className="scroll-mt-20">
             <ExperienceCard data={resumeData.experience} />
           </div>
 
           {/* 荣誉奖项 */}
-          <div id="awards">
+          <div id="awards" className="scroll-mt-20">
             <AwardCard data={resumeData.awards} />
           </div>
 
           {/* 学业荣誉 */}
-          <div id="honors">
+          <div id="honors" className="scroll-mt-20">
             <HonorCard data={resumeData.honors} />
           </div>
         </div>
