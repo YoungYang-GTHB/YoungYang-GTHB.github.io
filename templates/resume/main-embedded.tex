@@ -1,0 +1,143 @@
+% !TeX TS-program = xelatex
+% ============================================================================
+% 郭睢阳 - 嵌入式开发方向简历
+% 基于 adongwanai/LLM-Resume-Template (CC BY 4.0)
+% ============================================================================
+\documentclass{resume-photo}
+
+\usepackage{xeCJK}
+\setCJKmainfont{FandolSong-Regular.otf}[BoldFont=FandolSong-Bold.otf, ItalicFont=FandolKai-Regular.otf]
+\usepackage{fontspec}
+
+\usepackage{xcolor}
+\definecolor{hlred}{RGB}{192,0,0}
+\newcommand{\hl}[1]{\textbf{\textcolor{hlred}{#1}}}
+
+\usepackage{qrcode}
+\usepackage{enumitem}
+\usepackage{needspace}
+\setlist[itemize]{itemsep=2pt, topsep=2pt}
+
+% 第一行保持「标题 + 日期」严格对齐，副标题另起一行
+\RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \par\vspace{3pt}\noindent
+  {\heiti\zihao{-4} #2}%
+  \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
+  \par\nopagebreak
+  \IfValueT{#3}{{\zihao{5} #3}\par}%
+  \vspace{1.5pt}%
+}
+
+\ctexset{section/beforeskip=0.6em, section/afterskip=0.5em}
+
+\ResumeName{郭睢阳}
+\ResumePhoto{photo.jpg}
+
+\begin{document}
+
+\ResumeContacts{
+  15893346463,%
+  \ResumeUrl{mailto:1327217178@qq.com}{1327217178@qq.com},%
+  \textnormal{西北工业大学 | 控制工程 · 硕士 | 2024.09—2027.06}%
+}
+
+\ResumeTitle
+
+% ====================== 简介 ======================
+\noindent 西北工业大学控制工程专业硕士在读（2027年6月毕业），求职方向为\hl{嵌入式开发 / 机器人系统研发}。熟练使用 \hl{C/C++、STM32、FreeRTOS、Linux 与 ROS/ROS2}，具备从机械与电路设计、PCB、传感器/电机接入、下位机控制到上位机软件的\hl{软硬件全流程研发能力}。参与国家级重点机器人课题，并在具身智能实习中完成双臂机器人 ROS2 系统、固件级 IK 与实时推理部署；累计 \hl{6 项专利（4 发明 / 2 实用新型）}与 \hl{2 项软件著作权}。
+
+% ====================== 教育 ======================
+\section{教育背景}
+\ResumeItem{西北工业大学\hl{（985）}}
+[\textnormal{控制工程 | 硕士 | 机器人与人工智能方向 | GPA: 89.56/100（前 30\%）}]
+[2024.09—2027.06]
+
+\ResumeItem{郑州大学\hl{（211）}}
+[\textnormal{自动化（卓越班）| 学士 | 机器人与人工智能方向 | GPA: 3.54/4.0（前 20\%）}]
+[2020.09—2024.06]
+
+% ====================== 技能 ======================
+\section{专业技能}
+\begin{itemize}
+  \item \textbf{编程与系统}: \hl{C/C++（精通）}、Python（精通）、MATLAB（熟练）；熟悉 \hl{Linux 驱动 / 应用开发}、Git 与多模块系统联调
+  \item \textbf{MCU / RTOS}: \hl{STM32F4、51、Arduino、IMX6ULL}，熟悉 \hl{FreeRTOS}、下位机控制、传感器接入、伺服 / 步进电机驱动与蓝牙通信
+  \item \textbf{机器人系统}: \hl{ROS/ROS2（精通）}，掌握导航、SLAM、运动规划、逆运动学、点云处理、碰撞检测与模糊 PID 控制
+  \item \textbf{硬件与上位机}: \hl{Altium Designer / 嘉立创 PCB}、外围电路设计、3D 打印；\hl{PyQt5} 上位机、树莓派应用与神通数据库
+  \item \textbf{端侧 AI / 性能}: PyTorch / JAX 模型部署，\hl{Triton kernel、CUDA Graphs、RTC} 实时推理优化，具备机器人 AI 算法到真机系统落地经验
+  \item \textbf{工程工具}: Git、Inventor 3D 建模、Vibecoding（Claude Code 等 AI 辅助编程）
+\end{itemize}
+
+% ====================== 嵌入式项目 ======================
+\section{嵌入式与机器人项目}
+
+\ResumeItem{中医理疗仪系列产品（3 代）}
+[\textnormal{\hl{挑战杯省级二等奖} | 核心研发成员}]
+[2021.03—2023.09]
+
+\begin{itemize}
+  \item 主导智能葫芦灸、温针理疗仪、家用移动灸罐三代产品的\hl{机械设计 → 电路 / PCB → 嵌入式软件 → 上位机}全流程研发
+  \item 基于 \hl{STM32 + FreeRTOS} 开发控制系统，实现\hl{模糊 PID}、温度 / 图像 / 压力传感器采集、蓝牙通信及多任务协同
+  \item 完成 STM32 外围电路与 PCB 设计，开发伺服 / 步进电机驱动及烟雾处理装置，持续完成三代产品工程迭代与联调
+\end{itemize}
+
+\ResumeItem{串并联混合轮式仿人机器人}
+[\textnormal{\hl{国家级重点课题} | 关键省重点实验室项目成员}]
+[2024.09—至今]
+
+\begin{itemize}
+  \item 参与搭建 AGV、并联机构、双 6 自由度机械臂与 2 自由度头部组成的轮式仿人机器人系统
+  \item 使用 \hl{C++ / ROS Noetic} 编写机器人总控程序，实现三维建图、路径规划、目标识别、动态避障、点云发布、碰撞检测与\hl{逆运动学求解}
+  \item 基于 \hl{STM32F4} 开发下位机位置 / 键盘控制与 AGV 控制，优化多自由度机械臂控制方案，使\hl{六自由度机械臂控制频率提升 100\%}
+  \item 搭建神通数据库完成机器人运行数据的高并发增删改查，参与自研机械臂、传感器与上位系统联调
+\end{itemize}
+
+\Needspace{7\baselineskip}
+\ResumeItem{AI 大模型智能语音交互机器人}
+[\textnormal{\hl{校优秀毕业设计} | 独立开发者}]
+[2023.12—2024.09]
+
+\begin{itemize}
+  \item 基于\hl{树莓派 4B、Python / PyQt5、ROS / FreeRTOS} 独立开发智能家用语音机器人及上位交互软件
+  \item 打通录音、语音识别、大模型对话、语音合成、数字人对口型与智能家居控制链路，获得 \hl{2 项软件著作权}
+\end{itemize}
+
+% ====================== 实践经历 ======================
+\section{工程实践经历}
+
+\ResumeItem{IDEA 研究院：视启未来}
+[\textnormal{VLA 与世界模型算法实习生 · 机器人系统与端侧 AI}]
+[2026.04—至今]
+
+\begin{itemize}
+  \item 参与双臂机器人 VLA 策略训练与真机部署，主导推理服务 \hl{ROS1 → ROS2} 迁移，构建 30Hz 指令发布 / 3Hz 模型推理双时钟实时控制链路
+  \item 实现 \hl{RTC、CUDA Graphs 与 Triton kernel} 优化，单步推理耗时由约 256ms 降至 32ms（\hl{约 8 倍}），末端抖动降低 81\%
+  \item 完成 X-VLA 在自有双臂平台 bring-up，使用\hl{机械臂固件 EndPoseCtrl 实现 IK}，将控制周期由 \hl{1.4s 压至 0.33s}
+  \item 建立离线视觉消融与系统排障流程，定位 dataloader 路径错误导致的黑图问题，完成数据链路修复与真机验证
+\end{itemize}
+
+\ResumeItem{中秦禾瑞（陕西）科技有限公司}
+[\textnormal{导航与建图算法工程师（兼职）}]
+[2025.11—2026.01]
+
+\begin{itemize}
+  \item 负责果园智能巡检小车设备 / 传感器选型、调试及三维建图与导航算法开发
+  \item 接入雷达原始数据完成 3D 建图，并转换为\hl{栅格地图}支撑巡检小车导航
+\end{itemize}
+
+% ====================== 竞赛与成果 ======================
+\section{竞赛与成果}
+\begin{itemize}
+  \item 第十六届挑战杯河南省大学生课外学术科技作品竞赛 \hfill \hl{省级二等奖（2023）}
+  \item 第二届高校电气电子工程师创新大赛 \hfill \hl{华中赛区一等奖（2023）}
+  \item 第十六届西门子杯智能制造挑战赛 \hfill 西部赛区二等奖（2022）
+  \item 蓝桥杯嵌入式设计与开发组 \hfill \hl{省级三等奖（2022）}
+  \item \hl{发明专利 4 项、实用新型专利 2 项、软件著作权 2 项}；CET-6：473 分
+\end{itemize}
+
+\vfill
+\begin{center}
+  \qrcode[height=2cm]{https://youngyang-gthb.github.io/}\\[4pt]
+  {\footnotesize 扫码访问\hl{个人主页}（作品 / 项目详情）：\ResumeUrl{https://youngyang-gthb.github.io/}{youngyang-gthb.github.io}}
+\end{center}
+
+\end{document}

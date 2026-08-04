@@ -14,7 +14,9 @@
 
 | 文件 | 说明 |
 |------|------|
-| `main.tex` | **当前工作版本**，基于 resume-photo 定制 |
+| `main.tex` | **具身智能主线中文版**，VLA / 世界模型 / 真机部署优先 |
+| `main-embedded.tex` | **嵌入式开发支线中文版**，C/C++ / STM32 / FreeRTOS / ROS/Linux 优先 |
+| `main-en.tex` | 具身智能英文版 |
 | `resume-photo.cls` | 带头像版文档类，基于 ctexart |
 | `fontawesome5/` | FontAwesome 5 图标字体 |
 | `_originals/` | 原始模板备份（未修改） |
@@ -29,6 +31,8 @@
 ```bash
 xelatex main.tex
 xelatex main.tex  # 编译两次
+xelatex main-embedded.tex
+xelatex main-embedded.tex  # 编译两次
 ```
 
 Overleaf: 上传整个 `templates/resume/` 目录，主文件选 `main.tex`，编译器选 `XeLaTeX`。

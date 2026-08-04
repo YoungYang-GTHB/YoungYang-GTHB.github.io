@@ -177,7 +177,18 @@ export function Header({ data }: Props) {
               >
                 <a href="/resume.pdf" download="郭睢阳-具身智能工程师-简历.pdf">
                   <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
-                  下载简历
+                  具身智能简历
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
+              >
+                <a href="/resume-embedded.pdf" download="郭睢阳-嵌入式开发工程师-简历.pdf">
+                  <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  嵌入式简历
                 </a>
               </Button>
               <Button
