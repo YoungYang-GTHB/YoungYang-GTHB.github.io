@@ -30,6 +30,16 @@ featured:
     以开源 π0.5 / X-VLA 为基座，为双臂 Agilex Piper 机器人构建"看图叠衣"的视觉-语言-动作
     （VLA）策略；覆盖数据采集、策略训练、离线评测、实时推理优化与真机部署全链路，并探索用
     里程碑世界模型为策略注入子目标先验。当前实习中的核心主项目。
+  demo:
+    src: /projects/embodied-ai/folding-demo.mp4
+    poster: /projects/embodied-ai/folding-demo-poster.jpg
+    eyebrow: REAL-ROBOT DEMO
+    title: 双臂机器人真机叠衣 Demo
+    description: 从视觉观测与自然语言任务指令出发，由 VLA 策略输出双臂动作序列，完成柔性衣物的协同抓取、展开与折叠。
+    model: 双臂 VLA 策略
+    task: 柔性物体操作 · 衣物折叠
+    platform: Agilex Piper 双臂机器人
+    note: 真机连续执行效果；页面仅展示可公开的任务画面，不包含内部数据与训练环境。
   highlights:
     - title: 训练配方 SOTA
       desc: 数据精选 + 两阶段初始化做出新 SOTA 训练配方，动作误差 MAE@50 较原基线显著下降，并完成真机上机

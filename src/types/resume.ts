@@ -114,6 +114,18 @@ export interface FeaturedHighlight {
   desc: string;
 }
 
+export interface FeaturedDemo {
+  src: string;
+  poster?: string;
+  eyebrow?: string;
+  title: string;
+  description: string;
+  model?: string;
+  task?: string;
+  platform?: string;
+  note?: string;
+}
+
 export interface Featured {
   title: string;
   org: string;
@@ -121,6 +133,7 @@ export interface Featured {
   period: string;
   tagline?: string;
   summary: string;
+  demo?: FeaturedDemo;
   highlights: FeaturedHighlight[];
   stack: string[];
   links: FeaturedLink[];

@@ -13,8 +13,12 @@ import {
   ExternalLink,
   Sparkles,
   CalendarDays,
+  Cpu,
+  ScanEye,
+  Workflow,
 } from 'lucide-react';
 import type { Featured } from '@/types/resume';
+import { VideoPlayer } from '@/components/VideoPlayer';
 
 interface Props {
   data: Featured;
@@ -70,6 +74,75 @@ export function FeaturedProject({ data }: Props) {
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base">
           {data.summary}
         </p>
+
+        {/* 真机演示：媒体存在时才由数据层启用 */}
+        {data.demo && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08, duration: 0.45 }}
+            viewport={{ once: true }}
+            className="mt-7 grid overflow-hidden rounded-2xl border border-primary/20 bg-slate-950/[0.04] shadow-xl lg:grid-cols-[minmax(0,1.55fr)_minmax(17rem,0.8fr)] dark:bg-white/[0.04]"
+          >
+            <div className="bg-slate-950 p-2 md:p-3">
+              <VideoPlayer
+                src={data.demo.src}
+                poster={data.demo.poster}
+                title={data.demo.title}
+                className="rounded-xl"
+              />
+            </div>
+
+            <div className="flex flex-col justify-center p-5 md:p-6">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-emerald-700 dark:text-emerald-300">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                {data.demo.eyebrow || 'REAL-ROBOT DEMO'}
+              </div>
+              <h3 className="mt-4 text-xl font-bold tracking-tight md:text-2xl">
+                {data.demo.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {data.demo.description}
+              </p>
+
+              <div className="mt-5 space-y-3 text-sm">
+                {data.demo.model && (
+                  <div className="flex items-start gap-3">
+                    <Cpu className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <div className="text-xs text-muted-foreground">策略模型</div>
+                      <div className="font-medium">{data.demo.model}</div>
+                    </div>
+                  </div>
+                )}
+                {data.demo.task && (
+                  <div className="flex items-start gap-3">
+                    <ScanEye className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <div className="text-xs text-muted-foreground">任务</div>
+                      <div className="font-medium">{data.demo.task}</div>
+                    </div>
+                  </div>
+                )}
+                {data.demo.platform && (
+                  <div className="flex items-start gap-3">
+                    <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <div className="text-xs text-muted-foreground">真机平台</div>
+                      <div className="font-medium">{data.demo.platform}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {data.demo.note && (
+                <p className="mt-5 border-t border-primary/10 pt-4 text-xs leading-relaxed text-muted-foreground">
+                  {data.demo.note}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* 全链路 pipeline 示意图 */}
         <div className="mt-7">

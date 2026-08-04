@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import Image from 'next/image';
 import { Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -8,20 +9,15 @@ interface VideoPlayerProps {
   src: string;
   poster?: string;
   title?: string;
+  className?: string;
 }
 
-export function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
+export function VideoPlayer({ src, poster, title, className = '' }: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlay = () => {
     setHasStarted(true);
-    setIsPlaying(true);
-    if (videoRef.current) {
-      videoRef.current.play();
-    }
   };
 
   const handleLoadedData = () => {
@@ -33,28 +29,33 @@ export function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
   };
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-lg bg-black group">
+    <div
+      className={`group relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-slate-950 via-slate-900 to-primary/30 ${className}`}
+    >
       {/* 视频元素 */}
       {hasStarted ? (
         <video
-          ref={videoRef}
           src={src}
           controls
-          className="h-full w-full"
+          autoPlay
+          playsInline
+          preload="metadata"
+          aria-label={title || '项目演示视频'}
+          className="h-full w-full object-contain"
           poster={poster}
           onLoadedData={handleLoadedData}
           onWaiting={handleWaiting}
           onPlaying={() => setIsLoading(false)}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
         />
       ) : (
         <>
           {/* 封面图 */}
           {poster && (
-            <img
+            <Image
               src={poster}
               alt={title || '视频封面'}
+              fill
+              sizes="(min-width: 1024px) 60vw, 100vw"
               className="h-full w-full object-cover opacity-60"
             />
           )}
@@ -63,7 +64,9 @@ export function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
           <div className="absolute inset-0 flex items-center justify-center">
             <Button
               size="lg"
-              className="h-16 w-16 rounded-full bg-primary/90 hover:bg-primary transition-all group-hover:scale-110"
+              type="button"
+              aria-label={`播放${title || '项目演示视频'}`}
+              className="h-16 w-16 rounded-full bg-primary/90 transition-all hover:bg-primary group-hover:scale-110"
               onClick={handlePlay}
             >
               <Play className="h-8 w-8 fill-current" />
@@ -72,8 +75,8 @@ export function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
           
           {/* 视频信息 */}
           {title && (
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-              <p className="text-white text-sm font-medium">{title}</p>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+              <p className="text-sm font-medium text-white">{title}</p>
             </div>
           )}
         </>
