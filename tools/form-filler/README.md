@@ -64,6 +64,7 @@
 - 运行诊断日志：侧边栏展示关键日志，支持把完整会话自动导出到 `debug-logs/`
 - 独立简历配置页：复杂简历字段不挤在侧边栏里，支持打开宽页面编辑
 - 多模型配置：内置 DeepSeek，也可以配置任意 OpenAI 兼容接口
+- Offer 情报局岗位同步：复用网页当前微信登录会话，手动同步到本地项目，不复制或长期保存 token
 
 ## 🧩 适合什么场景
 
@@ -172,6 +173,29 @@
 - `选区填入`
 
 填充完成后，请自己检查并手动提交。
+
+### 5. 同步 Offer 情报局岗位（可选）
+
+1. 在浏览器打开 `https://offerqingbaoju.cn`，用微信扫码正常登录
+2. 打开扩展侧边栏的“岗位同步”页签
+3. 首次使用点击“选择项目目录”，选择 `YoungYang-Resume` 根目录
+4. 点击“同步并落档”
+
+扩展会使用网页当前会话读取“27届秋招”，并把原始记录写入：
+
+- `skills/job-hunter/imports/YYYY-MM-DD_offer-nav61_raw.jsonl`
+
+登录令牌不会写入项目文件或扩展存储。短期访问令牌过期时会沿用网站自身的刷新接口；微信登录会话整体失效后，重新扫码即可。
+
+当前处于提前批阶段，生成候选池时运行：
+
+```bash
+python3 skills/job-hunter/scripts/import_offer_export.py \
+  --input skills/job-hunter/imports/YYYY-MM-DD_offer-nav61_raw.jsonl \
+  --phase 提前批
+```
+
+脚本会同时应用 `skills/job-hunter/config.yaml` 中的城市、行业、学历和毕业年份条件，只把提前批岗位写入 `output/YYYY-MM-DD-offer-advance-jobs.jsonl`。原始 `截止时间` 字段会保留；平台未提供截止时间时会标记 `_deadline_status=平台未提供`。
 
 ## 🧠 当前实现里值得注意的设计点
 

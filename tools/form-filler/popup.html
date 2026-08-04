@@ -47,6 +47,7 @@
         <div class="tabs" id="tabs">
           <button class="tab active" data-tab="fill">自动填充</button>
           <button class="tab" data-tab="resume">标准简历</button>
+          <button class="tab" data-tab="jobs">岗位同步</button>
         </div>
 
         <section class="tab-panel active" id="tab-fill">
@@ -93,6 +94,37 @@
               清理映射缓存
             </button>
             <div class="tip" id="fillTip" hidden></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="tab-jobs">
+          <div class="section-block offer-sync-card">
+            <div class="section-header section-header-normal">
+              <span>Offer 情报局岗位同步</span>
+            </div>
+            <div class="tip">
+              当前阶段固定为“提前批”。先在 Offer 情报局用微信扫码登录，再回到这里手动同步；扩展不会保存或导出登录令牌，也不会自动投递。
+            </div>
+            <div class="offer-sync-grid">
+              <div class="offer-sync-field">
+                <span class="offer-sync-label">数据源</span>
+                <strong>27届秋招（导航 61）</strong>
+              </div>
+              <div class="offer-sync-field">
+                <span class="offer-sync-label">当前投递阶段</span>
+                <strong>提前批</strong>
+              </div>
+            </div>
+            <div class="tip" id="offerSyncStatus">
+              尚未同步。首次使用请先选择 YoungYang-Resume 项目目录。
+            </div>
+            <div class="action-row offer-sync-actions">
+              <button class="btn btn-outline" id="selectOfferProjectBtn">选择项目目录</button>
+              <button class="btn btn-primary" id="syncOfferJobsBtn">同步并落档</button>
+            </div>
+            <div class="tip">
+              原始岗位将写入 skills/job-hunter/imports/；本地筛选命令只会把“提前批”记录放进当前候选池，截止时间会原样保留。
+            </div>
           </div>
         </section>
 
@@ -307,6 +339,7 @@
     <script src="shared/log-export.js"></script>
     <script src="shared/log-visibility.js"></script>
     <script src="shared/content-bridge.js"></script>
+    <script src="shared/offer-sync.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

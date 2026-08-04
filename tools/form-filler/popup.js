@@ -6,6 +6,7 @@ const statusText = document.getElementById("statusText");
 const tabsEl = document.getElementById("tabs");
 const tabFillEl = document.getElementById("tab-fill");
 const tabResumeEl = document.getElementById("tab-resume");
+const tabJobsEl = document.getElementById("tab-jobs");
 const openResumeEditorBtn = document.getElementById("openResumeEditorBtn");
 const resumeSummaryGridEl = document.getElementById("resumeSummaryGrid");
 
@@ -39,6 +40,9 @@ const logContent = document.getElementById("logContent");
 const clearLogBtn = document.getElementById("clearLog");
 const selectLogDirectoryBtn = document.getElementById("selectLogDirectoryBtn");
 const logExportStatusEl = document.getElementById("logExportStatus");
+const selectOfferProjectBtn = document.getElementById("selectOfferProjectBtn");
+const syncOfferJobsBtn = document.getElementById("syncOfferJobsBtn");
+const offerSyncStatusEl = document.getElementById("offerSyncStatus");
 
 const settingsModal = document.getElementById("settingsModal");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
@@ -77,6 +81,11 @@ if (!logVisibility) {
 const contentBridge = window.ResumeContentBridge;
 if (!contentBridge) {
   throw new Error("Resume content bridge is not available");
+}
+
+const offerSync = window.OfferJobSync;
+if (!offerSync) {
+  throw new Error("Offer job sync helpers are not available");
 }
 
 const RESUME_PROFILE_KEY = "resumeProfile";
@@ -136,6 +145,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTabs();
   initModalEvents();
   initLogExportEvents();
+  initOfferSyncEvents();
   initResumeEditorEvents();
   await initModels();
   await refreshLogExportStatus();
@@ -184,6 +194,7 @@ function switchTab(tabKey) {
   });
   tabFillEl.classList.toggle("active", tabKey === "fill");
   tabResumeEl.classList.toggle("active", tabKey === "resume");
+  tabJobsEl.classList.toggle("active", tabKey === "jobs");
 }
 
 function initModalEvents() {
@@ -203,43 +214,250 @@ function initModalEvents() {
 
 function initLogExportEvents() {
   selectLogDirectoryBtn.addEventListener("click", async () => {
-    if (!logExport.supportsDirectoryPicker()) {
-      addLog("error", "当前浏览器不支持项目目录写入");
-      return;
-    }
-
-    selectLogDirectoryBtn.disabled = true;
-    try {
-      const rootHandle = await window.showDirectoryPicker({
-        id: "resume-log-project-root",
-        mode: "readwrite",
-      });
-
-      const permission = await logExport.getPermissionState(rootHandle, {
-        request: true,
-      });
-      if (permission !== "granted") {
-        throw new Error("目录写入权限未授予");
-      }
-
-      await logExport.ensureLogsDirectoryHandle(rootHandle);
-      await logExport.saveProjectRootHandle(rootHandle);
-      logProjectRootHandle = rootHandle;
-      await refreshLogExportStatus();
-      addLog(
-        "success",
-        `诊断日志将自动保存到 ${rootHandle.name}/${logExport.LOGS_DIR_NAME}/`
-      );
-    } catch (error) {
-      if (error?.name === "AbortError") {
-        addLog("info", "已取消选择项目目录");
-      } else {
-        addLog("error", `设置日志目录失败：${error.message}`);
-      }
-    } finally {
-      selectLogDirectoryBtn.disabled = false;
-    }
+    await selectProjectDirectory();
   });
+}
+
+async function selectProjectDirectory() {
+  if (!logExport.supportsDirectoryPicker()) {
+    addLog("error", "当前浏览器不支持项目目录写入");
+    return null;
+  }
+
+  selectLogDirectoryBtn.disabled = true;
+  if (selectOfferProjectBtn) selectOfferProjectBtn.disabled = true;
+  try {
+    const rootHandle = await window.showDirectoryPicker({
+      id: "resume-log-project-root",
+      mode: "readwrite",
+    });
+
+    const permission = await logExport.getPermissionState(rootHandle, {
+      request: true,
+    });
+    if (permission !== "granted") {
+      throw new Error("目录写入权限未授予");
+    }
+
+    await logExport.ensureLogsDirectoryHandle(rootHandle);
+    await logExport.saveProjectRootHandle(rootHandle);
+    logProjectRootHandle = rootHandle;
+    await refreshLogExportStatus();
+    addLog(
+      "success",
+      `诊断日志将自动保存到 ${rootHandle.name}/${logExport.LOGS_DIR_NAME}/`
+    );
+    if (offerSyncStatusEl) {
+      offerSyncStatusEl.textContent = `项目目录已就绪：${rootHandle.name}`;
+    }
+    return rootHandle;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      addLog("info", "已取消选择项目目录");
+    } else {
+      addLog("error", `设置项目目录失败：${error.message}`);
+    }
+    return null;
+  } finally {
+    selectLogDirectoryBtn.disabled = false;
+    if (selectOfferProjectBtn) selectOfferProjectBtn.disabled = false;
+  }
+}
+
+function initOfferSyncEvents() {
+  selectOfferProjectBtn?.addEventListener("click", selectProjectDirectory);
+  syncOfferJobsBtn?.addEventListener("click", syncOfferJobs);
+}
+
+async function validateOfferProjectRoot(rootHandle) {
+  try {
+    const skillsHandle = await rootHandle.getDirectoryHandle("skills");
+    await skillsHandle.getDirectoryHandle("job-hunter");
+  } catch (_) {
+    throw new Error("所选目录不是 YoungYang-Resume 项目根目录，请重新选择");
+  }
+}
+
+async function getOfferProjectRoot() {
+  let rootHandle = logProjectRootHandle;
+  if (!rootHandle) {
+    rootHandle = await logExport.loadProjectRootHandle();
+  }
+  if (!rootHandle) {
+    throw new Error("请先选择 YoungYang-Resume 项目目录");
+  }
+
+  const permission = await logExport.getPermissionState(rootHandle, {
+    request: true,
+  });
+  if (permission !== "granted") {
+    throw new Error("项目目录写入权限已失效，请重新选择项目目录");
+  }
+
+  await validateOfferProjectRoot(rootHandle);
+  logProjectRootHandle = rootHandle;
+  return rootHandle;
+}
+
+async function syncOfferJobs() {
+  const navigation = { id: 61, name: "27届秋招" };
+  syncOfferJobsBtn.disabled = true;
+  selectOfferProjectBtn.disabled = true;
+  updateStatus("running", "岗位同步中");
+  offerSyncStatusEl.textContent = "正在读取当前网页会话并同步岗位，请保持页面打开…";
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id || !offerSync.isOfferSiteUrl(tab.url)) {
+      throw new Error("请先打开 offerqingbaoju.cn 并完成微信扫码登录");
+    }
+
+    const rootHandle = await getOfferProjectRoot();
+    const executionResults = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      world: "MAIN",
+      func: fetchOfferJobsFromPageSession,
+      args: [
+        {
+          navigationId: navigation.id,
+          pageSize: 100,
+          maxRecords: 1000,
+        },
+      ],
+    });
+
+    const syncResult = executionResults?.[0]?.result;
+    if (!syncResult?.success) {
+      throw new Error(syncResult?.message || "岗位同步失败");
+    }
+
+    const observedAt = new Date().toISOString();
+    const exportRecords = offerSync.createExportRecords(syncResult.records, {
+      observedAt,
+      navigationId: navigation.id,
+      navigationName: navigation.name,
+    });
+    const written = await offerSync.writeImportFile(rootHandle, {
+      records: exportRecords,
+      observedAt,
+      navigationId: navigation.id,
+    });
+
+    offerSyncStatusEl.textContent =
+      `已落档 ${exportRecords.length} 条（平台总数 ${syncResult.totalRows || exportRecords.length}），` +
+      `文件：${written.relativePath}`;
+    updateStatus("ready", "岗位已落档");
+    addLog("success", `Offer 情报局岗位已落档：${written.relativePath}`);
+  } catch (error) {
+    const message = error?.message || String(error);
+    offerSyncStatusEl.textContent = `同步失败：${message}`;
+    updateStatus("error", "同步失败");
+    addLog("error", `Offer 情报局同步失败：${message}`);
+  } finally {
+    syncOfferJobsBtn.disabled = false;
+    selectOfferProjectBtn.disabled = false;
+  }
+}
+
+async function fetchOfferJobsFromPageSession(options) {
+  const API_BASE = "https://offerqingbaoju.cn/api";
+  const navigationId = Number(options?.navigationId);
+  const pageSize = Math.min(100, Math.max(1, Number(options?.pageSize) || 100));
+  const maxRecords = Math.min(1000, Math.max(1, Number(options?.maxRecords) || 1000));
+
+  if (location.origin !== "https://offerqingbaoju.cn") {
+    return { success: false, message: "当前页面不是 Offer 情报局" };
+  }
+
+  function getAccessToken() {
+    return localStorage.getItem("token") || localStorage.getItem("access_token") || "";
+  }
+
+  async function parseResponse(response) {
+    try {
+      return await response.json();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function refreshAccessToken(expiredToken) {
+    const response = await fetch(`${API_BASE}/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${expiredToken}`,
+        Accept: "application/json",
+      },
+    });
+    const payload = await parseResponse(response);
+    const nextToken = payload?.access_token || "";
+    if (!response.ok || !nextToken) {
+      throw new Error("微信登录会话已失效，请在网页重新扫码登录后再试");
+    }
+    localStorage.setItem("token", nextToken);
+    localStorage.setItem("access_token", nextToken);
+    return nextToken;
+  }
+
+  let accessToken = getAccessToken();
+  if (!accessToken) {
+    return { success: false, message: "网页尚未登录，请先完成微信扫码登录" };
+  }
+
+  async function requestPage(page, allowRefresh = true) {
+    const query = new URLSearchParams({
+      page: String(page),
+      page_size: String(pageSize),
+    });
+    const response = await fetch(
+      `${API_BASE}/simple/navigation/${navigationId}/data?${query}`,
+      {
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (response.status === 401 && allowRefresh) {
+      accessToken = await refreshAccessToken(accessToken);
+      return requestPage(page, false);
+    }
+    if (!response.ok) {
+      throw new Error(`岗位接口返回 HTTP ${response.status}`);
+    }
+    const payload = await parseResponse(response);
+    if (!payload || !Array.isArray(payload.data)) {
+      throw new Error("岗位接口返回了无法识别的数据格式");
+    }
+    return payload;
+  }
+
+  try {
+    const records = [];
+    let page = 1;
+    let totalRows = 0;
+
+    while (records.length < maxRecords) {
+      const payload = await requestPage(page);
+      records.push(...payload.data);
+      const pagination = payload.pagination || {};
+      totalRows = Number(pagination.total_rows) || totalRows || records.length;
+      if (!pagination.has_next || payload.data.length === 0) break;
+      page += 1;
+    }
+
+    return {
+      success: true,
+      records: records.slice(0, maxRecords),
+      totalRows,
+      pages: page,
+    };
+  } catch (error) {
+    return { success: false, message: error?.message || "岗位同步失败" };
+  }
 }
 
 async function refreshLogExportStatus() {

@@ -122,6 +122,16 @@ $job-ok
 低于 60 分的岗位只放观察池，不建议投递。
 ```
 
+浏览器已经把 Offer 情报局当前可见导航落档后，可以只导入当前招聘阶段：
+
+```bash
+python3 scripts/import_offer_export.py \
+  --input imports/YYYY-MM-DD_offer-nav61_raw.jsonl \
+  --phase 提前批
+```
+
+该流程不要求把网页 token 复制到本地；它只处理用户在浏览器中主动同步的岗位文件。阶段不明确的岗位不会进入提前批候选池。
+
 ### 3. 优化简历
 
 ```text

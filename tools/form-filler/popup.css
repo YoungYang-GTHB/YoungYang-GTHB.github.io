@@ -149,6 +149,39 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+.offer-sync-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.offer-sync-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.offer-sync-field {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.offer-sync-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.offer-sync-actions .btn {
+  flex: 1;
+  padding: 10px 12px;
+}
+
 .tab-panel {
   display: none;
   flex-direction: column;

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AI简历填表助手",
-  "version": "1.0.0",
-  "description": "粘贴简历文本，AI解析并自动填写网页表单（不自动提交）",
+  "version": "1.1.0",
+  "description": "维护标准简历、辅助填写网页表单，并按用户操作同步岗位（不自动提交）",
   "permissions": [
     "activeTab",
     "storage",

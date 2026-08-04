@@ -55,6 +55,7 @@ templates/**/*.xdv
 skills/job-hunter/.token
 skills/job-hunter/state.json
 skills/job-hunter/records/
+skills/job-hunter/imports/
 skills/job-hunter/*.log
 
 # ============================================================
@@ -81,4 +82,3 @@ __pycache__/
 # 测试覆盖率
 # ============================================================
 /coverage/
-
