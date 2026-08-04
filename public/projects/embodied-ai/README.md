@@ -6,3 +6,5 @@
 - `folding-demo-poster.jpg`：可选封面图；缺失时仍可播放视频
 
 建议使用 H.264 编码的 MP4、1080p 或 720p，并删除视频中的内部界面、敏感数据和无关音轨。模型名称在 `content/resume.yaml` 的 `featured.demo.model` 中维护。
+
+当前首页版截取自完整真机测试合集的 `05:41–06:29`，并移除了现场音轨及画面右侧的无关工作区。完整原片保存在仓库外发范围之外的 `media-source/embodied-ai/`，不会进入静态网站构建产物。
