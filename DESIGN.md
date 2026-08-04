@@ -6,16 +6,16 @@ This is the portfolio of an embodied-AI and robotics engineer. Its first job is 
 
 ## Direction: Lab Console
 
-The visual language comes from the real workbench: graphite robot hardware, blue grippers, an olive garment, a muted yellow calibration wall, camera overlays, experiment labels, and engineering field notes. It should feel precise and authored, not futuristic for its own sake.
+The visual language comes from the real workbench: graphite robot hardware, blue grippers, teal telemetry, camera overlays, experiment labels, and engineering field notes. The palette is cool and controlled so the full-color portrait and real-robot video remain the visual evidence. It should feel precise and authored, not futuristic for its own sake.
 
 ## Tokens
 
-- Paper: `#F2F5F0`
-- Ink: `#101816`
-- Servo blue: `#2857E5`
-- Garment olive: `#66724C`
-- Calibration yellow: `#CBC64C`
-- Steel: `#D9E0DA`
+- Frost: `#F7F9FC`
+- Ink: `#111827`
+- Servo blue: `#315EFB`
+- Signal teal: `#2DD4BF`
+- Console: `#0D1418`
+- Steel: `#D9E2EC`
 - Display: restrained CJK serif stack for research-note headings
 - Body: Geist/system CJK sans-serif
 - Utility: Geist Mono for labels, metadata, and measurements

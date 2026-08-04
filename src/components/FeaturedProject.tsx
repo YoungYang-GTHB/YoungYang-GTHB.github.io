@@ -35,7 +35,7 @@ export function FeaturedProject({ data }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, ease: [0.2, 0.8, 0.2, 1] }}
       viewport={{ once: true, margin: '-60px' }}
-      className="relative overflow-hidden bg-[#101816] text-[#f2f5f0] shadow-[0_28px_80px_rgba(10,18,16,0.2)]"
+      className="relative overflow-hidden bg-[#0d1418] text-[#f5f8fb] shadow-[0_28px_80px_rgba(13,20,24,0.2)]"
     >
       <div className="absolute inset-0 bg-[linear-gradient(rgba(242,245,240,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(242,245,240,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
 
@@ -43,7 +43,7 @@ export function FeaturedProject({ data }: Props) {
         <header className="flex flex-col gap-6 border-b border-white/15 pb-7 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] tracking-[0.17em] text-white/55">
-              <span className="bg-lab-yellow px-2 py-1 font-bold text-[#101816]">FIELD NOTE / 01</span>
+              <span className="bg-signal px-2 py-1 font-bold text-[#071419]">FIELD NOTE / 01</span>
               <span>FLAGSHIP REAL-ROBOT SYSTEM</span>
             </div>
             <h2 className="mt-5 max-w-4xl font-display text-3xl font-bold leading-tight tracking-[-0.035em] sm:text-4xl lg:text-5xl">
@@ -54,7 +54,7 @@ export function FeaturedProject({ data }: Props) {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2 font-mono text-[10px] tracking-[0.12em] text-white/55">
-            <CalendarDays className="h-4 w-4 text-lab-yellow" />
+            <CalendarDays className="h-4 w-4 text-signal" />
             {data.period}
           </div>
         </header>
@@ -62,8 +62,8 @@ export function FeaturedProject({ data }: Props) {
         {data.demo && (
           <div className="mt-7">
             <div className="flex items-center justify-between border-x border-t border-white/15 bg-black/25 px-3 py-2 font-mono text-[9px] tracking-[0.14em] text-white/55 md:px-4">
-              <span className="flex items-center gap-2 text-[#d8d36a]">
-                <span className="h-1.5 w-1.5 animate-pulse bg-[#d8d36a]" />
+              <span className="flex items-center gap-2 text-signal">
+                <span className="h-1.5 w-1.5 animate-pulse bg-signal" />
                 REAL ROBOT / VERIFIED
               </span>
               <span className="hidden sm:inline">TASK: GARMENT FOLDING · 00:48 · RGB</span>
@@ -76,10 +76,10 @@ export function FeaturedProject({ data }: Props) {
                 showCaption={false}
                 className="rounded-none"
               />
-              <span className="pointer-events-none absolute left-4 top-4 h-7 w-7 border-l-2 border-t-2 border-[#d8d36a]" />
-              <span className="pointer-events-none absolute right-4 top-4 h-7 w-7 border-r-2 border-t-2 border-[#d8d36a]" />
-              <span className="pointer-events-none absolute bottom-4 left-4 h-7 w-7 border-b-2 border-l-2 border-[#d8d36a]" />
-              <span className="pointer-events-none absolute bottom-4 right-4 h-7 w-7 border-b-2 border-r-2 border-[#d8d36a]" />
+              <span className="pointer-events-none absolute left-4 top-4 h-7 w-7 border-l-2 border-t-2 border-signal" />
+              <span className="pointer-events-none absolute right-4 top-4 h-7 w-7 border-r-2 border-t-2 border-signal" />
+              <span className="pointer-events-none absolute bottom-4 left-4 h-7 w-7 border-b-2 border-l-2 border-signal" />
+              <span className="pointer-events-none absolute bottom-4 right-4 h-7 w-7 border-b-2 border-r-2 border-signal" />
             </div>
           </div>
         )}
@@ -91,7 +91,7 @@ export function FeaturedProject({ data }: Props) {
               {data.summary}
             </p>
             {data.tagline && (
-              <p className="mt-4 border-l-2 border-lab-yellow pl-4 text-sm font-semibold text-white/90">
+              <p className="mt-4 border-l-2 border-signal pl-4 text-sm font-semibold text-white/90">
                 {data.tagline}
               </p>
             )}
@@ -106,7 +106,7 @@ export function FeaturedProject({ data }: Props) {
               ].map(({ icon: Icon, label, value }) =>
                 value ? (
                   <div key={label} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0 md:px-4 md:first:pl-0 md:last:pr-0 lg:px-0">
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#d8d36a]" />
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-signal" />
                     <div>
                       <dt className="font-mono text-[9px] tracking-[0.12em] text-white/42">{label}</dt>
                       <dd className="mt-1 text-sm font-semibold text-white/88">{value}</dd>
@@ -133,7 +133,7 @@ export function FeaturedProject({ data }: Props) {
                 return (
                   <div key={stage.label} className="relative border-r border-white/15 p-4 last:border-r-0 md:p-5">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-[10px] text-[#d8d36a]">0{index + 1}</span>
+                      <span className="font-mono text-[10px] text-signal">0{index + 1}</span>
                       <Icon className="h-4 w-4 text-white/45" />
                     </div>
                     <div className="mt-5 text-sm font-bold">{stage.label}</div>
@@ -152,7 +152,7 @@ export function FeaturedProject({ data }: Props) {
               className={`p-5 md:p-6 ${index % 2 === 1 ? 'sm:border-l sm:border-white/15' : ''} ${index >= 2 ? 'border-t border-white/15' : ''}`}
             >
               <div className="flex items-baseline gap-3">
-                <span className="font-mono text-[10px] text-[#d8d36a]">R{String(index + 1).padStart(2, '0')}</span>
+                <span className="font-mono text-[10px] text-signal">R{String(index + 1).padStart(2, '0')}</span>
                 <h3 className="font-bold">{highlight.title}</h3>
               </div>
               <p className="mt-3 text-sm leading-6 text-white/58">{highlight.desc}</p>
@@ -178,7 +178,7 @@ export function FeaturedProject({ data }: Props) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 border border-white/18 px-3 py-2 text-xs text-white/65 transition-colors hover:border-[#d8d36a] hover:text-[#d8d36a]"
+                  className="inline-flex items-center gap-1.5 border border-white/18 px-3 py-2 text-xs text-white/65 transition-colors hover:border-signal hover:text-signal"
                 >
                   {link.name}
                   <ArrowUpRight className="h-3.5 w-3.5" />

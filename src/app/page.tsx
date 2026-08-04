@@ -25,7 +25,7 @@ export default function Home() {
       {/* 实验记录纸背景 */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 lab-grid opacity-55" />
-        <div className="absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(203,198,76,0.16),transparent_68%)]" />
+        <div className="absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(49,94,251,0.11),transparent_68%)]" />
       </div>
 
       {/* 顶部导航 */}

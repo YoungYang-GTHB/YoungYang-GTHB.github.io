@@ -73,7 +73,7 @@ export function VideoPlayer({
               size="lg"
               type="button"
               aria-label={`播放${title || '项目演示视频'}`}
-              className="h-16 w-16 rounded-none border border-white/35 bg-[#d8d36a] text-[#101816] shadow-[0_10px_40px_rgba(0,0,0,0.35)] transition-transform hover:bg-[#ebe67b] group-hover:scale-105"
+              className="h-16 w-16 rounded-none border border-white/35 bg-signal text-[#071419] shadow-[0_10px_40px_rgba(0,0,0,0.35)] transition-transform hover:bg-[#5eead4] group-hover:scale-105"
               onClick={handlePlay}
             >
               <Play className="h-8 w-8 fill-current" />

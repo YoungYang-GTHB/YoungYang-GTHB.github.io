@@ -32,10 +32,10 @@ export function Header({ data }: Props) {
         <span className="hidden sm:inline">XI&apos;AN · CN / UTC+8</span>
       </div>
 
-      <div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-14">
+      <div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-start lg:gap-14">
         <div>
           <div className="flex items-center gap-3 text-sm font-semibold text-primary">
-            <span className="h-2 w-2 bg-lab-yellow" />
+            <span className="h-2 w-2 bg-signal" />
             {data.title}
           </div>
 
@@ -103,25 +103,25 @@ export function Header({ data }: Props) {
           transition={{ delay: 0.18, duration: 0.55 }}
           className="hidden lg:block"
         >
-          <div className="relative border border-foreground/15 bg-card p-2">
-            <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+          <div className="relative">
+            <div className="absolute -inset-3 rounded-[1.75rem] bg-gradient-to-br from-primary/18 via-signal/12 to-transparent blur-[1px]" />
+            <div className="relative overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-card p-2 shadow-[0_22px_55px_rgba(40,59,92,0.16)] dark:shadow-[0_22px_55px_rgba(0,0,0,0.38)]">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] bg-muted">
               {/* 公开站点使用 ASCII 资源名，避免 React 预加载响应头编码问题。 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/profile/profile.jpg"
-                alt={data.name}
-                className="h-full w-full object-cover grayscale-[0.15]"
-              />
+                <img
+                  src="/profile/profile.jpg"
+                  alt={data.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-between px-1 pb-1 pt-2 font-mono text-[9px] tracking-[0.12em] text-muted-foreground">
-              <span>ID / GSY-27</span>
-              <span>AVAILABLE</span>
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-primary-foreground shadow-[0_8px_22px_rgba(49,94,251,0.28)]">
+              VLA · ROBOTICS
             </div>
-            <span className="absolute -right-px -top-px h-5 w-5 border-r-2 border-t-2 border-lab-yellow" />
-            <span className="absolute -bottom-px -left-px h-5 w-5 border-b-2 border-l-2 border-primary" />
           </div>
 
-          <dl className="mt-4 space-y-2 border-l border-foreground/15 pl-4 text-xs">
+          <dl className="mt-7 space-y-2 border-l border-primary/30 pl-4 text-xs">
             <div>
               <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">EDUCATION</dt>
               <dd className="mt-0.5 font-semibold">西北工业大学 · 控制工程</dd>
