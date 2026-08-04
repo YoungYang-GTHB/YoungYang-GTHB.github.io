@@ -1,19 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Badge } from '@/components/ui/badge';
 import {
-  Rocket,
-  Database,
-  Brain,
-  LineChart,
-  Gauge,
+  ArrowUpRight,
   Bot,
-  ChevronRight,
-  ExternalLink,
-  Sparkles,
+  Brain,
   CalendarDays,
   Cpu,
+  Database,
+  Gauge,
+  LineChart,
   ScanEye,
   Workflow,
 } from 'lucide-react';
@@ -24,13 +20,12 @@ interface Props {
   data: Featured;
 }
 
-// 全链路 pipeline 示意（自制，通用示意图，不含任何内部真实数据/画面）
 const pipeline = [
-  { icon: Database, label: '数据采集 · 遥操作', sub: 'DAgger / 双臂遥操' },
-  { icon: Brain, label: 'VLA 策略训练', sub: 'π0.5 · JAX / PyTorch' },
-  { icon: LineChart, label: '离线评测 · AWBC', sub: 'advantage 加权' },
-  { icon: Gauge, label: '实时推理优化', sub: 'RTC · Triton' },
-  { icon: Bot, label: '真机部署', sub: 'ROS2 · 双臂 Piper' },
+  { icon: Database, label: '数据采集', sub: 'DAgger / 双臂遥操' },
+  { icon: Brain, label: '策略训练', sub: 'π0.5 · JAX / PyTorch' },
+  { icon: LineChart, label: '离线评测', sub: 'AWBC · advantage' },
+  { icon: Gauge, label: '实时推理', sub: 'RTC · Triton' },
+  { icon: Bot, label: '真机部署', sub: 'ROS2 · Piper' },
 ];
 
 export function FeaturedProject({ data }: Props) {
@@ -38,144 +33,111 @@ export function FeaturedProject({ data }: Props) {
     <motion.section
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      viewport={{ once: true }}
-      className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/10 shadow-2xl"
+      transition={{ duration: 0.65, ease: [0.2, 0.8, 0.2, 1] }}
+      viewport={{ once: true, margin: '-60px' }}
+      className="relative overflow-hidden bg-[#101816] text-[#f2f5f0] shadow-[0_28px_80px_rgba(10,18,16,0.2)]"
     >
-      {/* 光晕装饰 */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(242,245,240,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(242,245,240,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
 
-      <div className="relative p-6 md:p-9">
-        {/* 旗舰标签 */}
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-4 py-1.5 text-sm font-semibold text-white shadow-lg">
-            <Rocket className="h-4 w-4" />
-            旗舰主项目
+      <div className="relative p-4 sm:p-6 md:p-9 lg:p-11">
+        <header className="flex flex-col gap-6 border-b border-white/15 pb-7 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] tracking-[0.17em] text-white/55">
+              <span className="bg-lab-yellow px-2 py-1 font-bold text-[#101816]">FIELD NOTE / 01</span>
+              <span>FLAGSHIP REAL-ROBOT SYSTEM</span>
+            </div>
+            <h2 className="mt-5 max-w-4xl font-display text-3xl font-bold leading-tight tracking-[-0.035em] sm:text-4xl lg:text-5xl">
+              {data.title}
+            </h2>
+            <p className="mt-3 text-sm text-white/62 md:text-base">
+              {data.org} · {data.role}
+            </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-xs text-muted-foreground">
-            <CalendarDays className="h-3.5 w-3.5 text-primary" />
+          <div className="flex shrink-0 items-center gap-2 font-mono text-[10px] tracking-[0.12em] text-white/55">
+            <CalendarDays className="h-4 w-4 text-lab-yellow" />
             {data.period}
-          </span>
-        </div>
+          </div>
+        </header>
 
-        {/* 标题 / 机构 / 角色 */}
-        <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-          <span className="text-gradient text-gradient-primary">{data.title}</span>
-        </h2>
-        <p className="mt-2 text-sm font-medium text-primary/90 md:text-base">
-          {data.org} · {data.role}
-        </p>
-        {data.tagline && (
-          <p className="mt-1 text-sm text-muted-foreground">{data.tagline}</p>
-        )}
-
-        {/* 项目简介 */}
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base">
-          {data.summary}
-        </p>
-
-        {/* 真机演示：媒体存在时才由数据层启用 */}
         {data.demo && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08, duration: 0.45 }}
-            viewport={{ once: true }}
-            className="mt-7 grid overflow-hidden rounded-2xl border border-primary/20 bg-slate-950/[0.04] shadow-xl lg:grid-cols-[minmax(0,1.55fr)_minmax(17rem,0.8fr)] dark:bg-white/[0.04]"
-          >
-            <div className="bg-slate-950 p-2 md:p-3">
+          <div className="mt-7">
+            <div className="flex items-center justify-between border-x border-t border-white/15 bg-black/25 px-3 py-2 font-mono text-[9px] tracking-[0.14em] text-white/55 md:px-4">
+              <span className="flex items-center gap-2 text-[#d8d36a]">
+                <span className="h-1.5 w-1.5 animate-pulse bg-[#d8d36a]" />
+                REAL ROBOT / VERIFIED
+              </span>
+              <span className="hidden sm:inline">TASK: GARMENT FOLDING · 00:48 · RGB</span>
+            </div>
+            <div className="relative border border-white/15 bg-black p-1.5 md:p-2.5">
               <VideoPlayer
                 src={data.demo.src}
                 poster={data.demo.poster}
                 title={data.demo.title}
-                className="rounded-xl"
+                showCaption={false}
+                className="rounded-none"
               />
+              <span className="pointer-events-none absolute left-4 top-4 h-7 w-7 border-l-2 border-t-2 border-[#d8d36a]" />
+              <span className="pointer-events-none absolute right-4 top-4 h-7 w-7 border-r-2 border-t-2 border-[#d8d36a]" />
+              <span className="pointer-events-none absolute bottom-4 left-4 h-7 w-7 border-b-2 border-l-2 border-[#d8d36a]" />
+              <span className="pointer-events-none absolute bottom-4 right-4 h-7 w-7 border-b-2 border-r-2 border-[#d8d36a]" />
             </div>
-
-            <div className="flex flex-col justify-center p-5 md:p-6">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-emerald-700 dark:text-emerald-300">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                {data.demo.eyebrow || 'REAL-ROBOT DEMO'}
-              </div>
-              <h3 className="mt-4 text-xl font-bold tracking-tight md:text-2xl">
-                {data.demo.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {data.demo.description}
-              </p>
-
-              <div className="mt-5 space-y-3 text-sm">
-                {data.demo.model && (
-                  <div className="flex items-start gap-3">
-                    <Cpu className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">策略模型</div>
-                      <div className="font-medium">{data.demo.model}</div>
-                    </div>
-                  </div>
-                )}
-                {data.demo.task && (
-                  <div className="flex items-start gap-3">
-                    <ScanEye className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">任务</div>
-                      <div className="font-medium">{data.demo.task}</div>
-                    </div>
-                  </div>
-                )}
-                {data.demo.platform && (
-                  <div className="flex items-start gap-3">
-                    <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <div>
-                      <div className="text-xs text-muted-foreground">真机平台</div>
-                      <div className="font-medium">{data.demo.platform}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {data.demo.note && (
-                <p className="mt-5 border-t border-primary/10 pt-4 text-xs leading-relaxed text-muted-foreground">
-                  {data.demo.note}
-                </p>
-              )}
-            </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* 全链路 pipeline 示意图 */}
-        <div className="mt-7">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <Sparkles className="h-4 w-4 text-primary" />
-            全链路方案（数据 → 训练 → 评测 → 实时推理 → 真机）
+        <div className="grid border-x border-b border-white/15 lg:grid-cols-[minmax(0,1.45fr)_minmax(17rem,0.55fr)]">
+          <div className="p-5 md:p-7 lg:border-r lg:border-white/15">
+            <div className="font-mono text-[9px] tracking-[0.16em] text-white/45">PROJECT THESIS</div>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-white/72 md:text-base md:leading-8">
+              {data.summary}
+            </p>
+            {data.tagline && (
+              <p className="mt-4 border-l-2 border-lab-yellow pl-4 text-sm font-semibold text-white/90">
+                {data.tagline}
+              </p>
+            )}
           </div>
-          <div className="overflow-x-auto pb-2">
-            <div className="flex min-w-max items-stretch gap-2 md:gap-3">
-              {pipeline.map((stage, i) => {
+
+          {data.demo && (
+            <dl className="grid grid-cols-1 divide-y divide-white/10 p-5 md:grid-cols-3 md:divide-x md:divide-y-0 lg:grid-cols-1 lg:divide-x-0 lg:divide-y lg:p-7">
+              {[
+                { icon: Cpu, label: '策略模型', value: data.demo.model },
+                { icon: ScanEye, label: '任务', value: data.demo.task },
+                { icon: Workflow, label: '真机平台', value: data.demo.platform },
+              ].map(({ icon: Icon, label, value }) =>
+                value ? (
+                  <div key={label} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0 md:px-4 md:first:pl-0 md:last:pr-0 lg:px-0">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#d8d36a]" />
+                    <div>
+                      <dt className="font-mono text-[9px] tracking-[0.12em] text-white/42">{label}</dt>
+                      <dd className="mt-1 text-sm font-semibold text-white/88">{value}</dd>
+                    </div>
+                  </div>
+                ) : null
+              )}
+            </dl>
+          )}
+        </div>
+
+        <div className="mt-10">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.16em] text-white/42">SYSTEM PATH</div>
+              <h3 className="mt-1 text-sm font-semibold">从数据到真机的完整闭环</h3>
+            </div>
+            <span className="hidden font-mono text-[9px] tracking-[0.12em] text-white/35 sm:inline">LEFT → RIGHT</span>
+          </div>
+          <div className="overflow-x-auto border-y border-white/15">
+            <div className="grid min-w-[760px] grid-cols-5">
+              {pipeline.map((stage, index) => {
                 const Icon = stage.icon;
                 return (
-                  <div key={stage.label} className="flex items-center gap-2 md:gap-3">
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }}
-                      viewport={{ once: true }}
-                      className="flex w-32 flex-col items-center gap-2 rounded-2xl border bg-card/70 p-3 text-center backdrop-blur-sm md:w-36"
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-md">
-                        <Icon className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="text-xs font-semibold leading-tight md:text-sm">
-                        {stage.label}
-                      </div>
-                      <div className="text-[11px] leading-tight text-muted-foreground">
-                        {stage.sub}
-                      </div>
-                    </motion.div>
-                    {i < pipeline.length - 1 && (
-                      <ChevronRight className="h-5 w-5 flex-shrink-0 text-primary/50" />
-                    )}
+                  <div key={stage.label} className="relative border-r border-white/15 p-4 last:border-r-0 md:p-5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[10px] text-[#d8d36a]">0{index + 1}</span>
+                      <Icon className="h-4 w-4 text-white/45" />
+                    </div>
+                    <div className="mt-5 text-sm font-bold">{stage.label}</div>
+                    <div className="mt-1 font-mono text-[9px] leading-4 text-white/42">{stage.sub}</div>
                   </div>
                 );
               })}
@@ -183,65 +145,53 @@ export function FeaturedProject({ data }: Props) {
           </div>
         </div>
 
-        {/* 核心成果亮点 */}
-        <div className="mt-7 grid gap-3 sm:grid-cols-2">
-          {data.highlights.map((h, i) => (
-            <motion.div
-              key={h.title}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }}
-              viewport={{ once: true }}
-              className="group rounded-2xl border bg-card/60 p-4 backdrop-blur-sm transition-all hover:border-primary/40 hover:shadow-lg"
+        <div className="mt-10 grid border-y border-white/15 sm:grid-cols-2">
+          {data.highlights.map((highlight, index) => (
+            <div
+              key={highlight.title}
+              className={`p-5 md:p-6 ${index % 2 === 1 ? 'sm:border-l sm:border-white/15' : ''} ${index >= 2 ? 'border-t border-white/15' : ''}`}
             >
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary to-accent text-xs font-bold text-white">
-                  {i + 1}
-                </span>
-                <h3 className="text-sm font-bold md:text-base">{h.title}</h3>
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-[10px] text-[#d8d36a]">R{String(index + 1).padStart(2, '0')}</span>
+                <h3 className="font-bold">{highlight.title}</h3>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{h.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* 技术栈 */}
-        <div className="mt-6 flex flex-wrap gap-2">
-          {data.stack.map((tech) => (
-            <Badge
-              key={tech}
-              variant="secondary"
-              className="border-0 bg-gradient-to-r from-primary/15 to-accent/15 px-3 py-1 text-xs font-medium text-foreground/80"
-            >
-              {tech}
-            </Badge>
-          ))}
-        </div>
-
-        {/* 深入了解 · 公开参考项目跳转 */}
-        {data.links?.length > 0 && (
-          <div className="mt-7 border-t border-primary/10 pt-5">
-            <div className="mb-3 text-sm font-semibold text-muted-foreground">
-              深入了解技术背景（公开参考项目）
+              <p className="mt-3 text-sm leading-6 text-white/58">{highlight.desc}</p>
             </div>
-            <div className="flex flex-wrap gap-2.5">
+          ))}
+        </div>
+
+        <div className="mt-7 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-3 font-mono text-[9px] tracking-[0.16em] text-white/42">TOOLCHAIN</div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 font-mono text-[10px] text-white/62">
+              {data.stack.map((tech) => (
+                <span key={tech} className="border-b border-white/20 pb-1">{tech}</span>
+              ))}
+            </div>
+          </div>
+
+          {data.links?.length > 0 && (
+            <div className="flex flex-wrap gap-2">
               {data.links.map((link) => (
                 <a
                   key={link.name}
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 rounded-xl border bg-card/70 px-3.5 py-2 text-sm transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-md"
+                  className="inline-flex items-center gap-1.5 border border-white/18 px-3 py-2 text-xs text-white/65 transition-colors hover:border-[#d8d36a] hover:text-[#d8d36a]"
                 >
-                  <ExternalLink className="h-4 w-4 transition-transform group-hover:scale-110" />
-                  <span className="font-medium">{link.name}</span>
-                  {link.desc && (
-                    <span className="text-xs opacity-70">· {link.desc}</span>
-                  )}
+                  {link.name}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
                 </a>
               ))}
             </div>
-          </div>
+          )}
+        </div>
+
+        {data.demo?.note && (
+          <p className="mt-6 font-mono text-[9px] leading-5 tracking-[0.08em] text-white/35">
+            DISCLOSURE / {data.demo.note}
+          </p>
         )}
       </div>
     </motion.section>

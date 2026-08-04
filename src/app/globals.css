@@ -9,6 +9,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: "Noto Serif CJK SC", "Songti SC", "STSong", Georgia, serif;
+  --color-lab-yellow: var(--lab-yellow);
+  --color-lab-olive: var(--lab-olive);
+  --color-lab-blue: var(--lab-blue);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,43 +50,36 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   
-  /* 自定义渐变色 */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-cyan: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
-  --gradient-sunset: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-ocean: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  --gradient-aurora: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --gradient-primary: linear-gradient(135deg, #2857e5 0%, #66724c 100%);
+  --gradient-cyan: linear-gradient(135deg, #2857e5 0%, #4f7df0 100%);
+  --gradient-sunset: linear-gradient(135deg, #cbc64c 0%, #66724c 100%);
+  --gradient-ocean: linear-gradient(135deg, #2857e5 0%, #68a4a0 100%);
+  --gradient-aurora: linear-gradient(135deg, #66724c 0%, #a8b075 100%);
 }
 
 :root {
-  --radius: 0.75rem;
-  
-  /* 浅色主题 - 科技蓝调 */
-  --background: oklch(0.98 0.01 250);
-  --foreground: oklch(0.2 0.02 250);
-  
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 250);
-  
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 250);
-  
-  --primary: oklch(0.55 0.25 260);
-  --primary-foreground: oklch(0.98 0 0);
-  
-  --secondary: oklch(0.95 0.02 250);
-  --secondary-foreground: oklch(0.3 0.02 250);
-  
-  --muted: oklch(0.95 0.01 250);
-  --muted-foreground: oklch(0.5 0.02 250);
-  
-  --accent: oklch(0.65 0.2 190);
-  --accent-foreground: oklch(0.98 0 0);
-  
+  --radius: 0.5rem;
+  --background: #f2f5f0;
+  --foreground: #101816;
+  --card: #fbfcf8;
+  --card-foreground: #101816;
+  --popover: #fbfcf8;
+  --popover-foreground: #101816;
+  --primary: #2857e5;
+  --primary-foreground: #f8faf7;
+  --secondary: #e3e8e1;
+  --secondary-foreground: #1c2825;
+  --muted: #e7ebe5;
+  --muted-foreground: #5c6864;
+  --accent: #66724c;
+  --accent-foreground: #fbfcf8;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.02 250);
-  --input: oklch(0.92 0.02 250);
-  --ring: oklch(0.55 0.25 260);
+  --border: #d4dbd2;
+  --input: #dce2da;
+  --ring: #2857e5;
+  --lab-yellow: #cbc64c;
+  --lab-olive: #66724c;
+  --lab-blue: #2857e5;
   
   --chart-1: oklch(0.65 0.25 260);
   --chart-2: oklch(0.65 0.2 190);
@@ -101,34 +98,28 @@
 }
 
 .dark {
-  --radius: 0.75rem;
-  
-  /* 深色主题 - 科技未来风 */
-  --background: oklch(0.12 0.03 260);
-  --foreground: oklch(0.95 0.01 250);
-  
-  --card: oklch(0.16 0.03 260);
-  --card-foreground: oklch(0.95 0.01 250);
-  
-  --popover: oklch(0.16 0.03 260);
-  --popover-foreground: oklch(0.95 0.01 250);
-  
-  --primary: oklch(0.7 0.25 200);
-  --primary-foreground: oklch(0.1 0.02 260);
-  
-  --secondary: oklch(0.22 0.03 260);
-  --secondary-foreground: oklch(0.95 0.01 250);
-  
-  --muted: oklch(0.22 0.02 260);
-  --muted-foreground: oklch(0.65 0.02 250);
-  
-  --accent: oklch(0.7 0.25 160);
-  --accent-foreground: oklch(0.1 0.02 260);
-  
+  --radius: 0.5rem;
+  --background: #0b100f;
+  --foreground: #edf1eb;
+  --card: #121917;
+  --card-foreground: #edf1eb;
+  --popover: #121917;
+  --popover-foreground: #edf1eb;
+  --primary: #7da2ff;
+  --primary-foreground: #0b100f;
+  --secondary: #1b2522;
+  --secondary-foreground: #edf1eb;
+  --muted: #1a2321;
+  --muted-foreground: #9ca8a3;
+  --accent: #aab478;
+  --accent-foreground: #0b100f;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.3 0.03 260);
-  --input: oklch(0.25 0.03 260);
-  --ring: oklch(0.7 0.25 200);
+  --border: #2a3531;
+  --input: #24302c;
+  --ring: #7da2ff;
+  --lab-yellow: #d8d36a;
+  --lab-olive: #aab478;
+  --lab-blue: #7da2ff;
   
   --chart-1: oklch(0.75 0.2 190);
   --chart-2: oklch(0.7 0.25 260);
@@ -152,8 +143,37 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), "PingFang SC", "Microsoft YaHei", sans-serif;
     font-feature-settings: "cv11", "ss01";
-    font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.lab-grid {
+  background-image:
+    linear-gradient(rgba(16, 24, 22, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 24, 22, 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.dark .lab-grid {
+  background-image:
+    linear-gradient(rgba(237, 241, 235, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(237, 241, 235, 0.035) 1px, transparent 1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

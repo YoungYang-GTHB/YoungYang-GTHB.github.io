@@ -1,9 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, MapPin, Github, Linkedin, Download, Sparkles, Home, Flag, Calendar, User } from 'lucide-react';
+import {
+  ArrowDownRight,
+  Download,
+  Github,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react';
 import type { PersonalInfo } from '@/types/resume';
 
 interface Props {
@@ -11,217 +17,123 @@ interface Props {
 }
 
 export function Header({ data }: Props) {
+  const heroSummary =
+    '面向具身智能的机器人研发工程师，具备从机械、电路到嵌入式与上位机的全流程落地能力。现于 IDEA 研究院：视启未来从事 VLA 与世界模型研发，覆盖策略训练、实时推理优化与双臂真机部署。';
+
   return (
     <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      className="relative overflow-hidden rounded-3xl border bg-card/50 backdrop-blur-xl"
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+      className="relative border-y border-foreground/15 py-9 md:py-12"
     >
-      {/* 动态渐变背景 */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute -left-1/4 -top-1/4 h-[70%] w-[70%] animate-pulse rounded-full bg-gradient-to-br from-primary/40 to-accent/40 blur-3xl" />
-        <div className="absolute -right-1/4 -bottom-1/4 h-[70%] w-[70%] animate-pulse rounded-full bg-gradient-to-tl from-cyan-500/30 to-blue-500/30 blur-3xl" style={{ animationDelay: '1s' }} />
+      <div className="mb-8 flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-muted-foreground">
+        <span>PROFILE / ROBOTICS ENGINEER</span>
+        <span className="hidden sm:inline">XI&apos;AN · CN / UTC+8</span>
       </div>
 
-      {/* 网格装饰 */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+      <div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-14">
+        <div>
+          <div className="flex items-center gap-3 text-sm font-semibold text-primary">
+            <span className="h-2 w-2 bg-lab-yellow" />
+            {data.title}
+          </div>
 
-      <div className="relative p-8 md:p-12 lg:p-16">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
-          {/* 头像区域 */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="flex justify-center lg:flex-shrink-0"
-          >
-            <div className="relative">
-              {/* 头像光晕 */}
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary via-accent to-primary opacity-70 blur-lg animate-pulse" />
+          <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl md:text-7xl lg:text-[5.5rem]">
+            {data.name}
+            <span className="mt-3 block text-[0.42em] font-semibold leading-tight tracking-[-0.025em] text-muted-foreground">
+              让模型从训练集走到真实机器人。
+            </span>
+          </h1>
 
-              {/* 头像容器 - 圆形裁剪 */}
-              <div className="relative h-48 w-48 overflow-hidden rounded-full border-4 border-background shadow-2xl lg:h-56 lg:w-56">
-                <img
-                  src="/profile/个人照片白底.jpg"
-                  alt={data.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
+          <p className="mt-7 max-w-3xl text-base leading-8 text-muted-foreground md:text-lg">
+            {heroSummary}
+          </p>
 
-              {/* 状态指示器 */}
-              <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-background bg-green-500 shadow-lg">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
-            </div>
-          </motion.div>
+          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 text-sm">
+            <a href={`mailto:${data.email}`} className="inline-flex items-center gap-2 transition-colors hover:text-primary">
+              <Mail className="h-4 w-4 text-primary" />
+              {data.email}
+            </a>
+            <a href={`tel:${data.phone}`} className="inline-flex items-center gap-2 transition-colors hover:text-primary">
+              <Phone className="h-4 w-4 text-primary" />
+              {data.phone}
+            </a>
+            <span className="inline-flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4 text-primary" />
+              {data.location}
+            </span>
+          </div>
 
-          {/* 信息区域 */}
-          <div className="flex-1 text-center lg:text-left">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-                <span className="text-gradient text-gradient-primary">{data.name}</span>
-              </h1>
-              
-              <div className="mt-4 flex flex-col items-center gap-2 lg:flex-row lg:justify-center lg:gap-4">
-                <Badge variant="secondary" className="px-4 py-2 text-base font-medium">
-                  {data.title}
-                </Badge>
-                <span className="hidden text-muted-foreground lg:inline">•</span>
-                <p className="text-lg text-muted-foreground">{data.subtitle}</p>
-              </div>
-
-              {data.tagline && (
-                <p className="mt-3 text-sm font-medium tracking-wide text-primary/80 lg:text-base">
-                  {data.tagline}
-                </p>
-              )}
-            </motion.div>
-
-            {/* 联系方式 */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              className="mt-6 flex flex-wrap justify-center gap-4 lg:justify-start"
-            >
-              <a
-                href={`mailto:${data.email}`}
-                className="group flex items-center gap-2 rounded-full bg-secondary/50 px-4 py-2 text-sm transition-all hover:bg-primary hover:text-primary-foreground"
-              >
-                <Mail className="h-4 w-4 transition-transform group-hover:scale-110" />
-                {data.email}
+          <div className="mt-8 flex flex-wrap gap-2.5">
+            <Button asChild className="h-10 rounded-none px-5 shadow-none">
+              <a href="#featured">
+                真机 Demo
+                <ArrowDownRight className="h-4 w-4" />
               </a>
-              <a
-                href={`tel:${data.phone}`}
-                className="group flex items-center gap-2 rounded-full bg-secondary/50 px-4 py-2 text-sm transition-all hover:bg-primary hover:text-primary-foreground"
-              >
-                <Phone className="h-4 w-4 transition-transform group-hover:scale-110" />
-                {data.phone}
+            </Button>
+            {data.github && (
+              <Button variant="outline" asChild className="h-10 rounded-none border-foreground/20 bg-transparent px-4 shadow-none">
+                <a href={data.github} target="_blank" rel="noopener noreferrer">
+                  <Github className="h-4 w-4" /> GitHub
+                </a>
+              </Button>
+            )}
+            <Button variant="outline" asChild className="h-10 rounded-none border-foreground/20 bg-transparent px-4 shadow-none">
+              <a href="/resume.pdf" download="郭睢阳-具身智能工程师-简历.pdf">
+                <Download className="h-4 w-4" /> 下载简历
               </a>
-              <span className="flex items-center gap-2 rounded-full bg-secondary/50 px-4 py-2 text-sm">
-                <MapPin className="h-4 w-4" />
-                {data.location}
-              </span>
-            </motion.div>
-
-            {/* 详细信息 */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="mt-4 flex flex-wrap justify-center gap-3 lg:justify-start"
-            >
-              {data.hometown && (
-                <span className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm border border-primary/20">
-                  <Home className="h-4 w-4 text-primary" />
-                  {data.hometown}
-                </span>
-              )}
-              {data.politicalStatus && (
-                <span className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm border border-primary/20">
-                  <Flag className="h-4 w-4 text-primary" />
-                  {data.politicalStatus}
-                </span>
-              )}
-              {data.birthday && (
-                <span className="flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm border border-primary/20">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  {data.birthday}
-                </span>
-              )}
-            </motion.div>
-
-            {/* 社交链接和按钮 */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start"
-            >
-              {data.github && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
-                >
-                  <a href={data.github} target="_blank" rel="noopener noreferrer">
-                    <Github className="h-4 w-4 transition-transform group-hover:scale-110" />
-                    GitHub
-                  </a>
-                </Button>
-              )}
-              {data.linkedin && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
-                >
-                  <a href={data.linkedin} target="_blank" rel="noopener noreferrer">
-                    <Linkedin className="h-4 w-4 transition-transform group-hover:scale-110" />
-                    LinkedIn
-                  </a>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
-              >
-                <a href="/resume.pdf" download="郭睢阳-具身智能工程师-简历.pdf">
-                  <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
-                  具身智能简历
-                </a>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
-              >
-                <a href="/resume-embedded.pdf" download="郭睢阳-嵌入式开发工程师-简历.pdf">
-                  <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
-                  嵌入式简历
-                </a>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="group gap-2 transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground hover:shadow-lg"
-              >
-                <a href="/resume-en.pdf" download="Suiyang-Guo-Embodied-AI-Engineer-CV.pdf">
-                  <Download className="h-4 w-4 transition-transform group-hover:scale-110" />
-                  English CV
-                </a>
-              </Button>
-            </motion.div>
+            </Button>
+            <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
+              <a href="/resume-embedded.pdf" download="郭睢阳-嵌入式开发工程师-简历.pdf">
+                嵌入式简历
+              </a>
+            </Button>
+            <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
+              <a href="/resume-en.pdf" download="Suiyang-Guo-Embodied-AI-Engineer-CV.pdf">
+                English CV
+              </a>
+            </Button>
           </div>
         </div>
 
-        {/* 个人简介 */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-          className="relative mx-auto mt-10 max-w-3xl"
+        <motion.aside
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.18, duration: 0.55 }}
+          className="hidden lg:block"
         >
-          <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 p-6 backdrop-blur-sm">
-            <div className="absolute -left-10 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
-            <div className="absolute -right-10 -bottom-10 h-32 w-32 rounded-full bg-accent/10 blur-2xl" />
-            
-            <p className="relative text-center text-lg leading-relaxed text-muted-foreground">
-              {data.summary}
-            </p>
+          <div className="relative border border-foreground/15 bg-card p-2">
+            <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+              {/* 公开站点使用 ASCII 资源名，避免 React 预加载响应头编码问题。 */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/profile/profile.jpg"
+                alt={data.name}
+                className="h-full w-full object-cover grayscale-[0.15]"
+              />
+            </div>
+            <div className="flex items-center justify-between px-1 pb-1 pt-2 font-mono text-[9px] tracking-[0.12em] text-muted-foreground">
+              <span>ID / GSY-27</span>
+              <span>AVAILABLE</span>
+            </div>
+            <span className="absolute -right-px -top-px h-5 w-5 border-r-2 border-t-2 border-lab-yellow" />
+            <span className="absolute -bottom-px -left-px h-5 w-5 border-b-2 border-l-2 border-primary" />
           </div>
-        </motion.div>
+
+          <dl className="mt-4 space-y-2 border-l border-foreground/15 pl-4 text-xs">
+            <div>
+              <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">EDUCATION</dt>
+              <dd className="mt-0.5 font-semibold">西北工业大学 · 控制工程</dd>
+            </div>
+            {data.tagline && (
+              <div>
+                <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">FOCUS</dt>
+                <dd className="mt-0.5 leading-5">{data.tagline}</dd>
+              </div>
+            )}
+          </dl>
+        </motion.aside>
       </div>
     </motion.section>
   );

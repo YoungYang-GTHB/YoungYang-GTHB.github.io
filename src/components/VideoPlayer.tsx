@@ -10,9 +10,16 @@ interface VideoPlayerProps {
   poster?: string;
   title?: string;
   className?: string;
+  showCaption?: boolean;
 }
 
-export function VideoPlayer({ src, poster, title, className = '' }: VideoPlayerProps) {
+export function VideoPlayer({
+  src,
+  poster,
+  title,
+  className = '',
+  showCaption = true,
+}: VideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -30,7 +37,7 @@ export function VideoPlayer({ src, poster, title, className = '' }: VideoPlayerP
 
   return (
     <div
-      className={`group relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-slate-950 via-slate-900 to-primary/30 ${className}`}
+      className={`group relative aspect-video overflow-hidden rounded-lg bg-black ${className}`}
     >
       {/* 视频元素 */}
       {hasStarted ? (
@@ -56,7 +63,7 @@ export function VideoPlayer({ src, poster, title, className = '' }: VideoPlayerP
               alt={title || '视频封面'}
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
-              className="h-full w-full object-cover opacity-60"
+              className="h-full w-full object-cover opacity-85 transition-transform duration-700 group-hover:scale-[1.01]"
             />
           )}
           
@@ -66,7 +73,7 @@ export function VideoPlayer({ src, poster, title, className = '' }: VideoPlayerP
               size="lg"
               type="button"
               aria-label={`播放${title || '项目演示视频'}`}
-              className="h-16 w-16 rounded-full bg-primary/90 transition-all hover:bg-primary group-hover:scale-110"
+              className="h-16 w-16 rounded-none border border-white/35 bg-[#d8d36a] text-[#101816] shadow-[0_10px_40px_rgba(0,0,0,0.35)] transition-transform hover:bg-[#ebe67b] group-hover:scale-105"
               onClick={handlePlay}
             >
               <Play className="h-8 w-8 fill-current" />
@@ -74,7 +81,7 @@ export function VideoPlayer({ src, poster, title, className = '' }: VideoPlayerP
           </div>
           
           {/* 视频信息 */}
-          {title && (
+          {title && showCaption && (
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
               <p className="text-sm font-medium text-white">{title}</p>
             </div>

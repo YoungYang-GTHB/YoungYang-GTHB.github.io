@@ -2,37 +2,52 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+
+type Theme = 'light' | 'dark';
+
+const THEME_CHANGE_EVENT = 'portfolio-theme-change';
+
+function subscribeToTheme(callback: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, callback);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, callback);
+}
+
+function getThemeSnapshot(): Theme {
+  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+}
+
+function getServerThemeSnapshot(): Theme {
+  return 'light';
+}
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [mounted, setMounted] = useState(false);
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot
+  );
 
   useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const savedTheme = localStorage.getItem('theme') as Theme | null;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-    setTheme(initialTheme);
     document.documentElement.classList.toggle('dark', initialTheme === 'dark');
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   };
-
-  if (!mounted) {
-    return <Button variant="ghost" size="icon" className="h-9 w-9" disabled />;
-  }
 
   return (
     <Button
       variant="outline"
       size="sm"
-      className="group relative h-9 w-9 overflow-hidden transition-all hover:border-primary hover:shadow-md"
+      className="group relative h-9 w-9 overflow-hidden text-foreground transition-all hover:border-primary hover:shadow-md"
       onClick={toggleTheme}
     >
       {/* 背景渐变 */}

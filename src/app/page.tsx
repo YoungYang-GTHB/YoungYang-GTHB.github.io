@@ -11,64 +11,57 @@ import { HonorCard } from '@/components/HonorCard';
 import { PatentCard } from '@/components/PatentCard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MobileNav } from '@/components/MobileNav';
-import { Separator } from '@/components/ui/separator';
 import { JsonLd } from '@/components/JsonLd';
-import { Sparkles, Zap } from 'lucide-react';
+import { ArrowUpRight, Bot } from 'lucide-react';
 
 export default function Home() {
   const resumeData = getResumeData();
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-clip bg-background">
       {/* JSON-LD 结构化数据 */}
       <JsonLd data={resumeData.personal} />
       
-      {/* 动态背景装饰 */}
+      {/* 实验记录纸背景 */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        {/* 渐变光斑 */}
-        <div className="absolute -left-1/4 top-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-primary/20 to-accent/20 blur-3xl" style={{ animationDuration: '4s' }} />
-        <div className="absolute -right-1/4 bottom-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-tl from-cyan-500/15 to-blue-500/15 blur-3xl" style={{ animationDuration: '5s', animationDelay: '1s' }} />
-        <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-3xl" style={{ animationDuration: '6s', animationDelay: '2s' }} />
-        
-        {/* 网格装饰 */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
+        <div className="absolute inset-0 lab-grid opacity-55" />
+        <div className="absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(203,198,76,0.16),transparent_68%)]" />
       </div>
 
       {/* 顶部导航 */}
-      <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2">
+      <nav className="sticky top-0 z-50 w-full border-b border-foreground/10 bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+          <div className="flex items-center gap-3">
             <MobileNav />
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
-              <Zap className="h-4 w-4 text-primary-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center bg-foreground text-background">
+              <Bot className="h-4 w-4" />
             </div>
-            <span className="text-sm font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {resumeData.personal.name}
-            </span>
+            <div className="leading-none">
+              <span className="block text-sm font-bold tracking-tight">{resumeData.personal.name}</span>
+              <span className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">EMBODIED AI / 2027</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden text-xs text-muted-foreground md:inline-block">
-              {resumeData.personal.title}
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="hidden items-center gap-5 text-xs font-medium md:flex">
+              <a href="#featured" className="transition-colors hover:text-primary">真机项目</a>
+              <a href="#experience" className="transition-colors hover:text-primary">经历</a>
+              <a href="#projects" className="transition-colors hover:text-primary">项目</a>
+              <a href={`mailto:${resumeData.personal.email}`} className="inline-flex items-center gap-1 text-primary">
+                联系我 <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
             <ThemeToggle />
           </div>
         </div>
       </nav>
 
       {/* 主要内容 */}
-      <main className="container mx-auto px-4 py-8 md:py-12 md:px-6">
-        <div className="mx-auto max-w-6xl space-y-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+        <div className="space-y-12 md:space-y-16">
           {/* 个人信息头部 */}
           <div id="header">
             <Header data={resumeData.personal} />
           </div>
-
-          {/* 成果数字带 */}
-          <div id="stats">
-            <StatBand data={resumeData} />
-          </div>
-
-          <Separator className="opacity-30" />
 
           {/* 旗舰主项目 · 实习工作 */}
           {resumeData.featured && (
@@ -77,7 +70,10 @@ export default function Home() {
             </div>
           )}
 
-          <Separator className="opacity-30" />
+          {/* 成果数字带 */}
+          <div id="stats">
+            <StatBand data={resumeData} />
+          </div>
 
           {/* 教育背景 */}
           <div id="education">
@@ -117,16 +113,13 @@ export default function Home() {
       </main>
 
       {/* 页脚 */}
-      <footer className="relative border-t bg-background/50 backdrop-blur-sm py-8">
-        <div className="container mx-auto px-4 md:px-6">
+      <footer className="relative mt-20 border-t border-foreground/10 py-8">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-center text-sm text-muted-foreground">
               © {new Date().getFullYear()} {resumeData.personal.name}. All rights reserved.
             </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Sparkles className="h-4 w-4" />
-              <span>Built with Next.js & Tailwind CSS</span>
-            </div>
+            <div className="font-mono text-[10px] tracking-[0.16em] text-muted-foreground">ROBOTS · VLA · EMBEDDED SYSTEMS</div>
           </div>
         </div>
       </footer>
