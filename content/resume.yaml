@@ -122,9 +122,9 @@ skills:
       level: 熟练
       description: 实时操作系统开发
   embedded:
-    - name: STM32/51/Arduino
+    - name: Yocto / i.MX6ULL / STM32
       level: 精通
-      description: 基于 IMX6ULL、STM32F4 等芯片的嵌入式开发
+      description: Yocto 构建 i.MX6ULL Linux 系统，板端运行 roscore；STM32F4 / FreeRTOS 下位机开发
     - name: PCB 设计
       level: 熟练
       description: Altium Designer、嘉立创 PCB、原理图设计
@@ -165,6 +165,7 @@ projects:
     achievements:
       - 实现三维地图构建、路径规划、目标识别和动态空间避障
       - 编写机器人总控程序，实现点云发布、碰撞检测、逆运动学求解
+      - 基于 Yocto 为 i.MX6ULL 构建嵌入式 Linux 系统，在板端运行 roscore 与 AGV 底盘控制，并通过有线以太网实现与上位机 ROS 多机通信
       - 设计自研多自由度机械臂可靠性与灵活替代控制方案
       - 实现六自由度机械臂控制频率提升 100%
       - 基于 STM32F4 编写下位机控制程序，实现位置控制、键盘控制 AGV 小车
