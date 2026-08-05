@@ -5,6 +5,8 @@ offer情报局 REST API 客户端。
 """
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from .auth import TokenManager
 
 
@@ -15,6 +17,19 @@ class OfferAPI:
         self._base = base_url.rstrip("/")
         self._timeout = timeout
         self._token_mgr = TokenManager()
+        self._session = requests.Session()
+        retry = Retry(
+            total=4,
+            connect=4,
+            read=4,
+            status=4,
+            backoff_factor=0.8,
+            status_forcelist=(429, 500, 502, 503, 504),
+            allowed_methods=frozenset({"GET"}),
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        self._session.mount("https://", adapter)
+        self._session.mount("http://", adapter)
 
     # ---- public: navigation metadata ----
 
@@ -76,13 +91,13 @@ class OfferAPI:
 
     def _get(self, path: str, params: dict | None = None) -> dict:
         url = f"{self._base}{path}"
-        resp = requests.get(
+        resp = self._session.get(
             url, headers=self._headers(), params=params, timeout=self._timeout
         )
         if resp.status_code == 401:
             refreshed = self._token_mgr.refresh_access_token()
             if refreshed:
-                resp = requests.get(
+                resp = self._session.get(
                     url,
                     headers={"Authorization": f"Bearer {refreshed}"},
                     params=params,
