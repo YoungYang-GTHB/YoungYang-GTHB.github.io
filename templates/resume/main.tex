@@ -54,7 +54,7 @@
 \ResumeTitle
 
 % ====================== 简介 ======================
-\noindent 西北工业大学控制工程专业硕士在读（2027年6月毕业），方向机器人与人工智能。具备从机械设计、电路设计到嵌入式软件和上位机开发的\hl{全流程研发能力}。现于 IDEA 研究院：视启未来从事 \hl{VLA（视觉-语言-动作模型）与世界模型}算法研发，推动双臂机器人柔性操作策略的\hl{训练、实时推理优化与真机部署}。熟悉 ROS、Linux 应用开发与深度学习，参与\hl{国家级重点课题}，累计 \hl{6 项专利（4 发明 / 2 实用新型）}与 \hl{2 项软件著作权}。
+\noindent 西北工业大学控制工程专业硕士在读（2027年6月毕业），方向机器人与人工智能。具备从机械设计、电路设计到嵌入式软件和上位机开发的\hl{全流程研发能力}。现于 IDEA 研究院：视启未来从事 \hl{VLA（视觉-语言-动作模型）与世界动作模型（WAM）}算法研发，推动双臂机器人柔性操作策略的\hl{训练、实时推理优化与真机部署}。熟悉 ROS、Linux 应用开发与深度学习，参与\hl{国家级重点课题}，累计 \hl{6 项专利（4 发明 / 2 实用新型）}与 \hl{2 项软件著作权}。
 
 % ====================== 教育 ======================
 \section{教育背景}
@@ -69,7 +69,7 @@
 % ====================== 技能 ======================
 \section{专业技能}
 \begin{itemize}
-  \item \textbf{AI / 具身智能}: \hl{VLA}（\hl{\(\pi\)0.5}、\hl{X-VLA}）训练与\hl{真机部署}、\hl{flow-matching policy}、action chunking、\hl{RTC 实时推理}、\hl{里程碑世界模型}；\hl{PyTorch（DDP）}/ \hl{JAX-Flax（FSDP）}分布式训练
+  \item \textbf{AI / 具身智能}: \hl{VLA}（\hl{\(\pi\)0.5}、\hl{X-VLA}）训练与\hl{真机部署}、\hl{FastWAM / LMWAM 世界动作模型}、flow-matching policy、action chunking、\hl{RTC 实时推理}；\hl{PyTorch（DDP）}/ \hl{JAX-Flax（FSDP）}分布式训练
   \item \textbf{深度学习}: PyTorch / JAX 训练全流程、\hl{DINOv3 / SigLIP} 视觉表征、CNN、语音识别；\hl{Triton kernel}、\hl{CUDA Graphs} 推理加速
   \item \textbf{编程语言}: \hl{C/C++}（精通）、\hl{Python}（精通）、MATLAB（熟练），熟悉 Linux 驱动/应用开发
   \item \textbf{机器人}: \hl{ROS/ROS2}（精通），\hl{导航、SLAM、运动规划、逆运动学求解}、点云处理
@@ -114,7 +114,7 @@
 \section{实习经历}
 
 \ResumeItem{IDEA 研究院：视启未来}
-[\textnormal{VLA 与世界模型算法实习生 · 具身智能团队}]
+[\textnormal{VLA 与世界动作模型算法实习生 · 具身智能团队}]
 [2026.04—至今]
 
 \begin{itemize}
@@ -122,7 +122,8 @@
   \item 主导 \hl{VLA 推理实时化}：实现 \hl{RTC 实时分块推理}与 \hl{Triton kernel 优化}，单步推理耗时由约 256ms 优化至 32ms（\hl{约 8 倍}），末端抖动\hl{降低 81\%}
   \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 \hl{cross-embodiment 跨本体混训}与权重空间模型合并等系统实验
   \item 完成清华 \hl{X-VLA} 架构在自有双臂平台真机 bring-up，用固件级 IK 将推理周期由 \hl{1.4s 压至 0.33s}；建立离线视觉消融门禁，\hl{定位并修复模型“视觉失明”根因缺陷}
-  \item 自研\hl{里程碑世界模型（LMVLA）}，零训练挖掘 milestone 子目标并注入 \(\pi\)0.5 动作专家，在 \hl{LIBERO / RoboTwin} 仿真基准上系统评测
+  \item 复现并适配\hl{FastWAM 世界动作模型}，完成 Task\_A1 叠衣配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
+  \item 构建\hl{里程碑世界动作模型（LMWAM）}，挖掘 milestone latent 并作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上系统评测
 \end{itemize}
 
 \ResumeItem{中秦禾瑞（陕西）科技有限公司}

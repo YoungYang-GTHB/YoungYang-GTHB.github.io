@@ -1,0 +1,128 @@
+% !TeX TS-program = xelatex
+% 郭睢阳｜DJI 端到端决策规划算法工程师定制简历
+\documentclass{resume-photo}
+
+\usepackage{xeCJK}
+\setCJKmainfont{FandolSong-Regular.otf}[BoldFont=FandolSong-Bold.otf, ItalicFont=FandolKai-Regular.otf]
+\usepackage{fontspec}
+\usepackage{xcolor}
+\definecolor{djiRed}{RGB}{188,32,38}
+\newcommand{\hl}[1]{\textbf{\textcolor{djiRed}{#1}}}
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=1.5pt, topsep=2pt, leftmargin=1.5em}
+
+\RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \par\vspace{2.5pt}\noindent
+  {\heiti\zihao{-4} #2}%
+  \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
+  \par\nopagebreak
+  \IfValueT{#3}{{\zihao{5} #3}\par}%
+  \vspace{1pt}%
+}
+
+\ctexset{section/beforeskip=0.45em, section/afterskip=0.35em}
+
+\ResumeName{郭睢阳}
+\ResumePhoto{photo.jpg}
+
+\begin{document}
+
+\ResumeContacts{
+  15893346463,%
+  \ResumeUrl{mailto:1327217178@qq.com}{1327217178@qq.com},%
+  \ResumeUrl{https://youngyang-gthb.github.io/}{youngyang-gthb.github.io},%
+  \textnormal{2027 届硕士}%
+}
+\ResumeTitle
+
+\begin{center}
+  {\heiti\zihao{-4}\hl{目标岗位：端到端决策规划算法工程师｜VLA · 世界动作模型（WAM）· 真机策略部署}}
+\end{center}
+
+\noindent 西北工业大学控制工程硕士，聚焦机器人端到端策略学习。现于 IDEA 研究院孵化企业视启未来从事
+\hl{VLA 与世界动作模型（WAM）研发}，完成双臂柔性物体操作的\hl{数据、训练、实时推理、真机部署与失效归因}闭环；
+具备 PyTorch/JAX、ROS2、Triton/CUDA Graphs 与机器人系统工程经验。
+
+% ====================== 教育 ======================
+\section{教育背景}
+\ResumeItem{西北工业大学\hl{（985 / 双一流）}}
+[\textnormal{控制工程｜硕士｜机器人与人工智能方向｜GPA：89.56/100（前 30\%）}]
+[2024.09—2027.06]
+
+\ResumeItem{郑州大学\hl{（211 / 双一流）}}
+[\textnormal{自动化（卓越班）｜学士｜GPA：3.54/4.0（前 20\%）}]
+[2020.09—2024.06]
+
+% ====================== 岗位能力 ======================
+\section{岗位相关能力}
+\begin{itemize}
+  \item \textbf{端到端策略：}熟悉 \hl{VLA（\(\pi\)0.5 / openpi、X-VLA）}、flow matching、action chunking，具备模仿学习、离线策略改进与\hl{世界动作模型（FastWAM / LMWAM）}实践
+  \item \textbf{训练与部署：}PyTorch / JAX-Flax 分布式训练；\hl{RTC、Triton kernel、CUDA Graphs} 推理优化；ROS/ROS2 真机系统集成
+  \item \textbf{评测与诊断：}建立离线视觉消融门禁、动作误差与真机控制指标，能够定位数据链路、视觉输入和控制周期中的失效根因
+  \item \textbf{工程基础：}熟练使用 Python、C/C++、Linux、Git；掌握 Transformer、Diffusion Policy、机器人运动学、导航与嵌入式控制
+\end{itemize}
+
+% ====================== 核心经历 ======================
+\section{核心实习经历}
+\ResumeItem{IDEA 研究院孵化企业：视启未来}
+[\textnormal{VLA 与世界动作模型算法实习生｜具身智能团队}]
+[2026.04—至今]
+
+\begin{itemize}
+  \item 面向 Agilex Piper 双臂机器人叠衣任务，以开源 \hl{\(\pi\)0.5（openpi）}训练端到端 VLA 策略；通过数据精选与两阶段初始化，使动作误差 \hl{MAE@50 相对原有最优配方降低约 77\%}，完成真机部署
+  \item 主导 VLA 推理实时化：实现 \hl{RTC 实时分块推理、Triton kernel 与 CUDA Graphs 优化}，单步推理耗时由约 \hl{256ms 降至 32ms（约 8 倍）}，末端抖动降低 81\%
+  \item 完成清华 \hl{X-VLA} 在自有双臂平台的真机 bring-up，以固件级 IK 将推理控制周期由 \hl{1.4s 压至 0.33s}，打通模型输出到机器人执行链路
+  \item 建立离线 \hl{vision-ablation 视觉消融门禁}，定位 X-VLA 黑图数据链路导致的“视觉失明”根因并完成修复，形成训练前输入检查与失效归因流程
+  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 DAgger 失败接管、cross-embodiment 混训及权重空间模型合并实验
+  \item 复现并适配 \hl{FastWAM 世界动作模型}（Wan2.2 Video Expert + ActionDiT），完成 Task\_A1 叠衣数据/训练配置、WebSocket/ROS2 真机部署链与连续夹爪支持；实现相机分辨率、夹爪闭锁和起始位姿 \hl{preflight 安全门禁}
+  \item 构建\hl{里程碑世界动作模型（LMWAM）}：从冻结视觉特征中挖掘 milestone latent，经递归预测作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上完成系统评测与边界分析
+\end{itemize}
+
+% ====================== 机器人项目 ======================
+\newpage
+\section{机器人系统项目}
+\ResumeItem{串并联混合轮式仿人机器人}
+[\textnormal{国家级重点课题｜关键省重点实验室项目成员}]
+[2024.09—至今]
+
+\begin{itemize}
+  \item 开发轮式仿人机器人总控与双臂控制系统，完成三维建图、路径规划、动态避障、点云处理和逆运动学求解，机械臂控制频率提升 \hl{100\%}
+  \item 基于 Yocto 构建 i.MX6ULL 嵌入式 Linux，板端运行 roscore 与 AGV 底盘控制，通过以太网实现 ROS 多机通信
+  \item 完成 STM32F4 下位机、位置/键盘控制与数据库链路开发，打通感知、规划、控制和底盘执行系统
+\end{itemize}
+
+\ResumeItem{果园智能巡检小车}
+[\textnormal{中秦禾瑞（陕西）科技有限公司｜导航与建图算法工程师（兼职）}]
+[2025.11—2026.01]
+
+\begin{itemize}
+  \item 负责设备选型、传感器调试与三维建图导航开发，接入 LiDAR 原始数据生成 3D 地图并转换为栅格地图，完成巡检路径导航链路
+\end{itemize}
+
+% ====================== 其他项目 ======================
+\section{其他工程项目}
+\ResumeItem{AI 大模型智能语音交互机器人}
+[\textnormal{校级优秀毕业设计｜独立开发者}]
+[2023.12—2024.09]
+
+\begin{itemize}
+  \item 基于树莓派、PyTorch、PyQt5、ROS 与 FreeRTOS 开发语音交互机器人，完成录音、语音识别、大模型交互、语音合成与数字人对口型链路，获得 2 项软件著作权
+\end{itemize}
+
+\ResumeItem{中医理疗仪系列产品}
+[\textnormal{挑战杯河南省二等奖｜核心研发成员}]
+[2021.03—2023.09]
+
+\begin{itemize}
+  \item 参与三代产品从机械、电路、嵌入式到上位机的全流程研发，完成 STM32 / FreeRTOS、模糊 PID、PCB、传感器融合与伺服/步进电机控制
+\end{itemize}
+
+% ====================== 成果 ======================
+\section{科研成果与荣誉}
+\begin{itemize}
+  \item 发明专利 4 项、实用新型专利 2 项、软件著作权 2 项；英语六级 CET-6：473
+  \item 挑战杯河南省二等奖（2023）；高校电气电子工程师创新大赛华中赛区一等奖（2023）
+  \item 西门子杯智能制造挑战赛西部赛区二等奖（2022）；蓝桥杯嵌入式组省级三等奖（2022）
+\end{itemize}
+
+\end{document}
