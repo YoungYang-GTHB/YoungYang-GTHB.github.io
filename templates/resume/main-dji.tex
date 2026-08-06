@@ -73,7 +73,7 @@
 % ====================== 技能 ======================
 \section{专业技能}
 \begin{itemize}
-  \item \textbf{AI / 具身智能}: \hl{VLA}（\hl{\(\pi\)0.5}、\hl{X-VLA}）训练与\hl{真机部署}、\hl{FastWAM / LMWAM 世界动作模型}、flow-matching policy、action chunking、\hl{RTC 实时推理}；\hl{PyTorch（DDP）}/ \hl{JAX-Flax（FSDP）}分布式训练
+  \item \textbf{AI / 具身智能}: \hl{VLA}（\hl{\(\pi\)0.5}、\hl{X-VLA}）训练与\hl{真机部署}、\hl{FastWAM 世界动作模型}、\hl{CRAVE 零训练价值建模}、flow-matching policy、\hl{RTC 实时推理}；\hl{PyTorch（DDP）}/ \hl{JAX-Flax（FSDP）}分布式训练
   \item \textbf{深度学习}: PyTorch / JAX 训练全流程、\hl{DINOv3 / SigLIP} 视觉表征、CNN、语音识别；\hl{Triton kernel}、\hl{CUDA Graphs} 推理加速
   \item \textbf{编程语言}: \hl{C/C++}（精通）、\hl{Python}（精通）、MATLAB（熟练），熟悉 Linux 驱动/应用开发
   \item \textbf{机器人}: \hl{ROS/ROS2}（精通），\hl{导航、SLAM、运动规划、逆运动学求解}、点云处理
@@ -124,10 +124,10 @@
 \begin{itemize}
   \item 以开源 \hl{\(\pi\)0.5}（openpi）为基座训练双臂机器人叠衣策略，经数据精选与两阶段初始化做出\hl{新 SOTA 配方}，动作误差 MAE@50 较原 SOTA \hl{降低约 77\%}，并完成\hl{真机部署上机}
   \item 主导 \hl{VLA 推理实时化}：实现 \hl{RTC 实时分块推理}与 \hl{Triton kernel 优化}，单步推理耗时由约 256ms 优化至 32ms（\hl{约 8 倍}），末端抖动\hl{降低 81\%}
-  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 \hl{cross-embodiment 跨本体混训}与权重空间模型合并等系统实验
+  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，AWBC 离线 MAE@1 为 \hl{0.0079}（SFT 0.0089）；开展 \hl{cross-embodiment 跨本体混训}与权重空间模型合并实验
   \item 完成清华 \hl{X-VLA} 架构在自有双臂平台真机 bring-up，通过固件级 IK 将推理周期由 \hl{1.4s 压至 0.33s}
   \item 复现并适配\hl{FastWAM 世界动作模型}，完成 Task\_A1 叠衣配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
-  \item 构建\hl{里程碑世界动作模型（LMWAM）}，挖掘 milestone latent 并作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上系统评测
+  \item 构建 \hl{CRAVE 零训练里程碑 / 价值引擎}，从冻结视觉特征生成 milestone 与 progress/value 信号（对人工 stage-progress 相关系数 \hl{0.865}）；探索将\hl{三档 advantage 接入 AWBC}，减少人工阶段标注依赖
 \end{itemize}
 
 \ResumeItem{中秦禾瑞（陕西）科技有限公司}

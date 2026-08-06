@@ -74,9 +74,9 @@
 \begin{itemize}
   \item Trained a dual-arm cloth-folding policy on the open-source \(\pi\)0.5 (openpi) VLA; a curated-data + two-stage-init recipe cut action error (offline MAE@50) by about 77\% vs. the prior best, and shipped to real-robot deployment
   \item Led VLA inference real-time optimization (RTC real-time chunking + Triton kernel autotuning), cutting single-step inference latency from about 256 ms to 32 ms (roughly 8x) and end-effector jitter by 81\%; drove the ROS1 to ROS2 migration for on-robot serving
-  \item Built an AWBC / RECAP-advantage offline policy-improvement pipeline; ran cross-embodiment co-training and weight-space model-merging experiments
+  \item Built an AWBC / RECAP-advantage offline policy-improvement pipeline (offline MAE@1: 0.0079 vs. SFT 0.0089); ran cross-embodiment co-training and weight-space model-merging experiments
   \item Brought up Tsinghua's X-VLA architecture on our dual-arm platform, using firmware-level IK to cut the control cycle from 1.4 s to 0.33 s
-  \item Explored a self-supervised latent-milestone world model (LMVLA), injecting predicted sub-goals into the \(\pi\)0.5 action expert; evaluated on LIBERO / RoboTwin
+  \item Built CRAVE, a training-free milestone/value engine that derives milestone and progress/value signals from frozen visual features (0.865 correlation with human stage-progress labels); explored three-level advantage conditioning for AWBC to reduce manual stage annotation
 \end{itemize}
 
 \ResumeItem{Zhongqin Herui (Shaanxi) Technology Co., Ltd.}
