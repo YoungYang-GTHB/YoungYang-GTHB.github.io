@@ -75,7 +75,7 @@
   \item Trained a dual-arm cloth-folding policy on the open-source \(\pi\)0.5 (openpi) VLA; a curated-data + two-stage-init recipe cut action error (offline MAE@50) by about 77\% vs. the prior best, and shipped to real-robot deployment
   \item Led VLA inference real-time optimization (RTC real-time chunking + Triton kernel autotuning), cutting single-step inference latency from about 256 ms to 32 ms (roughly 8x) and end-effector jitter by 81\%; drove the ROS1 to ROS2 migration for on-robot serving
   \item Built an AWBC / RECAP-advantage offline policy-improvement pipeline; ran cross-embodiment co-training and weight-space model-merging experiments
-  \item Brought up Tsinghua's X-VLA architecture on our platform, using firmware-level IK to cut the control cycle from 1.4 s to 0.33 s; built an offline vision-ablation gate that root-caused and fixed a dataloader bug which had made the model vision-blind
+  \item Brought up Tsinghua's X-VLA architecture on our dual-arm platform, using firmware-level IK to cut the control cycle from 1.4 s to 0.33 s
   \item Explored a self-supervised latent-milestone world model (LMVLA), injecting predicted sub-goals into the \(\pi\)0.5 action expert; evaluated on LIBERO / RoboTwin
 \end{itemize}
 
