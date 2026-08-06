@@ -1,128 +1,182 @@
 % !TeX TS-program = xelatex
-% 郭睢阳｜DJI 端到端决策规划算法工程师定制简历
+% ============================================================================
+% 郭睢阳 - DJI 端到端决策规划算法工程师定制简历
+% 基于 adongwanai/LLM-Resume-Template (CC BY 4.0)
+% 原始仓库: https://github.com/adongwanai/LLM-Resume-Template
+% ============================================================================
 \documentclass{resume-photo}
 
+% 字体（FandolSong 随 TeX Live 分发，无需额外安装；如已装 Noto 可改回 Noto Serif CJK SC）
 \usepackage{xeCJK}
 \setCJKmainfont{FandolSong-Regular.otf}[BoldFont=FandolSong-Bold.otf, ItalicFont=FandolKai-Regular.otf]
 \usepackage{fontspec}
-\usepackage{xcolor}
-\definecolor{djiRed}{RGB}{188,32,38}
-\newcommand{\hl}[1]{\textbf{\textcolor{djiRed}{#1}}}
-\usepackage{enumitem}
-\setlist[itemize]{itemsep=1.5pt, topsep=2pt, leftmargin=1.5em}
 
+% 重点高亮（关键技术/量化成果标红加粗，提升可扫描性）
+\usepackage{xcolor}
+\definecolor{hlred}{RGB}{192,0,0}
+\newcommand{\hl}[1]{\textbf{\textcolor{hlred}{#1}}}
+
+% 个人主页二维码
+\usepackage{qrcode}
+
+% 紧凑排版
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=2pt, topsep=2pt}
+
+% 重排条目：第一行「标题(粗) + 右对齐日期」，副标题另起一行 —— 日期严格右对齐、永不换行，更整齐
 \RenewDocumentCommand{\ResumeItem}{omoo}{%
-  \par\vspace{2.5pt}\noindent
+  \par\vspace{3pt}\noindent
   {\heiti\zihao{-4} #2}%
   \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
   \par\nopagebreak
   \IfValueT{#3}{{\zihao{5} #3}\par}%
-  \vspace{1pt}%
+  \vspace{1.5pt}%
 }
 
-\ctexset{section/beforeskip=0.45em, section/afterskip=0.35em}
+% 章节标题前后留白略增，分组更清晰
+\ctexset{section/beforeskip=0.6em, section/afterskip=0.5em}
+\newcommand{\ExpItem}[3]{%
+  \noindent\textbf{#1｜#2} \hfill {\footnotesize #3}\\[-2pt]
+}
 
+% ====== 个人信息 ======
 \ResumeName{郭睢阳}
-\ResumePhoto{photo.jpg}
+\ResumePhoto{photo.jpg}  % 替换为你的照片文件名，不想要头像就注释掉
 
 \begin{document}
 
 \ResumeContacts{
   15893346463,%
   \ResumeUrl{mailto:1327217178@qq.com}{1327217178@qq.com},%
-  \ResumeUrl{https://youngyang-gthb.github.io/}{youngyang-gthb.github.io},%
-  \textnormal{2027 届硕士}%
+  \textnormal{西北工业大学 | 控制工程 · 硕士 | 2024.09—2027.06}%
 }
+
 \ResumeTitle
 
 \begin{center}
-  {\heiti\zihao{-4}\hl{目标岗位：端到端决策规划算法工程师｜VLA · 世界动作模型（WAM）· 真机策略部署}}
+  {\heiti\zihao{-4}\hl{求职方向：DJI 端到端决策规划算法工程师（VLA / WAM）}}
 \end{center}
 
-\noindent 西北工业大学控制工程硕士，聚焦机器人端到端策略学习。现于 IDEA 研究院孵化企业视启未来从事
-\hl{VLA 与世界动作模型（WAM）研发}，完成双臂柔性物体操作的\hl{数据、训练、实时推理、真机部署与失效归因}闭环；
-具备 PyTorch/JAX、ROS2、Triton/CUDA Graphs 与机器人系统工程经验。
+% ====================== 简介 ======================
+\noindent 西北工业大学控制工程专业硕士在读（2027年6月毕业），方向机器人与人工智能。具备从机械设计、电路设计到嵌入式软件和上位机开发的\hl{全流程研发能力}。现于 IDEA 研究院：视启未来从事 \hl{VLA（视觉-语言-动作模型）与世界动作模型（WAM）}算法研发，推动双臂机器人柔性操作策略的\hl{训练、实时推理优化与真机部署}。熟悉 ROS、Linux 应用开发与深度学习，参与\hl{国家级重点课题}，累计 \hl{6 项专利（4 发明 / 2 实用新型）}与 \hl{2 项软件著作权}。
 
 % ====================== 教育 ======================
 \section{教育背景}
-\ResumeItem{西北工业大学\hl{（985 / 双一流）}}
-[\textnormal{控制工程｜硕士｜机器人与人工智能方向｜GPA：89.56/100（前 30\%）}]
+\ResumeItem{西北工业大学\hl{（985）}}
+[\textnormal{控制工程 | 硕士 | 机器人与人工智能方向 | GPA: 89.56/100（前 30\%）}]
 [2024.09—2027.06]
 
-\ResumeItem{郑州大学\hl{（211 / 双一流）}}
-[\textnormal{自动化（卓越班）｜学士｜GPA：3.54/4.0（前 20\%）}]
+\ResumeItem{郑州大学\hl{（211）}}
+[\textnormal{自动化（卓越班）| 学士 | 机器人与人工智能方向 | GPA: 3.54/4.0（前 20\%）}]
 [2020.09—2024.06]
 
-% ====================== 岗位能力 ======================
-\section{岗位相关能力}
+% ====================== 技能 ======================
+\section{专业技能}
 \begin{itemize}
-  \item \textbf{端到端策略：}熟悉 \hl{VLA（\(\pi\)0.5 / openpi、X-VLA）}、flow matching、action chunking，具备模仿学习、离线策略改进与\hl{世界动作模型（FastWAM / LMWAM）}实践
-  \item \textbf{训练与部署：}PyTorch / JAX-Flax 分布式训练；\hl{RTC、Triton kernel、CUDA Graphs} 推理优化；ROS/ROS2 真机系统集成
-  \item \textbf{评测与诊断：}建立离线视觉消融门禁、动作误差与真机控制指标，能够定位数据链路、视觉输入和控制周期中的失效根因
-  \item \textbf{工程基础：}熟练使用 Python、C/C++、Linux、Git；掌握 Transformer、Diffusion Policy、机器人运动学、导航与嵌入式控制
+  \item \textbf{AI / 具身智能}: \hl{VLA}（\hl{\(\pi\)0.5}、\hl{X-VLA}）训练与\hl{真机部署}、\hl{FastWAM / LMWAM 世界动作模型}、flow-matching policy、action chunking、\hl{RTC 实时推理}；\hl{PyTorch（DDP）}/ \hl{JAX-Flax（FSDP）}分布式训练
+  \item \textbf{深度学习}: PyTorch / JAX 训练全流程、\hl{DINOv3 / SigLIP} 视觉表征、CNN、语音识别；\hl{Triton kernel}、\hl{CUDA Graphs} 推理加速
+  \item \textbf{编程语言}: \hl{C/C++}（精通）、\hl{Python}（精通）、MATLAB（熟练），熟悉 Linux 驱动/应用开发
+  \item \textbf{机器人}: \hl{ROS/ROS2}（精通），\hl{导航、SLAM、运动规划、逆运动学求解}、点云处理
+  \item \textbf{嵌入式 / 硬件}: \hl{Yocto + IMX6ULL} 嵌入式 Linux / ROS 多机部署，\hl{STM32/51/Arduino、FreeRTOS}；PCB 设计（Altium Designer、嘉立创）
+  \item \textbf{工具}: \hl{Vibecoding}（Claude Code 等 AI 辅助编程）、Git、PyQt5 上位机开发、Inventor 3D 建模
 \end{itemize}
 
-% ====================== 核心经历 ======================
-\section{核心实习经历}
-\ResumeItem{IDEA 研究院孵化企业：视启未来}
-[\textnormal{VLA 与世界动作模型算法实习生｜具身智能团队}]
-[2026.04—至今]
+% ====================== 项目经历 ======================
+\section{项目经历}
 
-\begin{itemize}
-  \item 面向 Agilex Piper 双臂机器人叠衣任务，以开源 \hl{\(\pi\)0.5（openpi）}训练端到端 VLA 策略；通过数据精选与两阶段初始化，使动作误差 \hl{MAE@50 相对原有最优配方降低约 77\%}，完成真机部署
-  \item 主导 VLA 推理实时化：实现 \hl{RTC 实时分块推理、Triton kernel 与 CUDA Graphs 优化}，单步推理耗时由约 \hl{256ms 降至 32ms（约 8 倍）}，末端抖动降低 81\%
-  \item 完成清华 \hl{X-VLA} 在自有双臂平台的真机 bring-up，以固件级 IK 将推理控制周期由 \hl{1.4s 压至 0.33s}，打通模型输出到机器人执行链路
-  \item 建立离线 \hl{vision-ablation 视觉消融门禁}，定位 X-VLA 黑图数据链路导致的“视觉失明”根因并完成修复，形成训练前输入检查与失效归因流程
-  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 DAgger 失败接管、cross-embodiment 混训及权重空间模型合并实验
-  \item 复现并适配 \hl{FastWAM 世界动作模型}（Wan2.2 Video Expert + ActionDiT），完成 Task\_A1 叠衣数据/训练配置、WebSocket/ROS2 真机部署链与连续夹爪支持；实现相机分辨率、夹爪闭锁和起始位姿 \hl{preflight 安全门禁}
-  \item 构建\hl{里程碑世界动作模型（LMWAM）}：从冻结视觉特征中挖掘 milestone latent，经递归预测作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上完成系统评测与边界分析
-\end{itemize}
-
-% ====================== 机器人项目 ======================
-\newpage
-\section{机器人系统项目}
 \ResumeItem{串并联混合轮式仿人机器人}
-[\textnormal{国家级重点课题｜关键省重点实验室项目成员}]
+[\textnormal{\hl{国家级重点课题} | 关键省重点实验室项目成员}]
 [2024.09—至今]
 
 \begin{itemize}
-  \item 开发轮式仿人机器人总控与双臂控制系统，完成三维建图、路径规划、动态避障、点云处理和逆运动学求解，机械臂控制频率提升 \hl{100\%}
-  \item 基于 Yocto 构建 i.MX6ULL 嵌入式 Linux，板端运行 roscore 与 AGV 底盘控制，通过以太网实现 ROS 多机通信
-  \item 完成 STM32F4 下位机、位置/键盘控制与数据库链路开发，打通感知、规划、控制和底盘执行系统
+  \item \textbf{项目简介}: 设计搭建串并联混合型轮式仿人机器人系统，包含 AGV 小车、并联机构、两个 6 自由度机械臂（自研 6 轴/JAKA）及 2 自由度头部，实现农业采摘、实验教学、工业场景应用
+  \item \textbf{技术栈}: Ubuntu 20.04、\hl{ROS Noetic}、\hl{Yocto / IMX6ULL}、\hl{STM32F4}、点云处理、路径规划、\hl{神通数据库}
+  \item \textbf{工作内容}: 编写机器人总控程序，实现三维建图、路径规划、动态避障、点云与\hl{逆运动学求解}；基于 Yocto 构建 i.MX6ULL 系统，板端运行 \hl{roscore / AGV 底盘控制}并通过\hl{以太网实现 ROS 多机通信}；优化机械臂控制使频率\hl{提升 100\%}，并完成 STM32F4 下位机与数据库开发
 \end{itemize}
 
-\ResumeItem{果园智能巡检小车}
-[\textnormal{中秦禾瑞（陕西）科技有限公司｜导航与建图算法工程师（兼职）}]
-[2025.11—2026.01]
-
-\begin{itemize}
-  \item 负责设备选型、传感器调试与三维建图导航开发，接入 LiDAR 原始数据生成 3D 地图并转换为栅格地图，完成巡检路径导航链路
-\end{itemize}
-
-% ====================== 其他项目 ======================
-\section{其他工程项目}
 \ResumeItem{AI 大模型智能语音交互机器人}
-[\textnormal{校级优秀毕业设计｜独立开发者}]
+[\textnormal{\hl{校优秀毕业设计} | 独立开发者}]
 [2023.12—2024.09]
 
 \begin{itemize}
-  \item 基于树莓派、PyTorch、PyQt5、ROS 与 FreeRTOS 开发语音交互机器人，完成录音、语音识别、大模型交互、语音合成与数字人对口型链路，获得 2 项软件著作权
+  \item \textbf{项目简介}: 结合前沿 NLP 技术、\hl{AI 大模型}和 AI 对口型技术，实现智能家用语音聊天机器人
+  \item \textbf{技术栈}: 树莓派 4B、Python、\hl{PyQt5}、\hl{PyTorch}、ROS、FreeRTOS
+  \item \textbf{工作内容}: 设计 AI 大模型智能交互软件，实现\hl{录音、语音识别、大模型交互}；实现语音合成、\hl{AI 数字人对口型}功能；实现智能家居控制交互；获得 \hl{2 项软件著作权}
 \end{itemize}
 
 \ResumeItem{中医理疗仪系列产品}
-[\textnormal{挑战杯河南省二等奖｜核心研发成员}]
+[\textnormal{\hl{挑战杯省级二等奖} | 核心研发成员}]
 [2021.03—2023.09]
 
 \begin{itemize}
-  \item 参与三代产品从机械、电路、嵌入式到上位机的全流程研发，完成 STM32 / FreeRTOS、模糊 PID、PCB、传感器融合与伺服/步进电机控制
+  \item \textbf{三代产品}: 智能葫芦灸理疗仪（一代）→ 新型智能化温针理疗仪（二代）→ 家用可移动灸罐理疗仪（三代）
+  \item \textbf{技术栈}: \hl{STM32}、\hl{FreeRTOS}、\hl{模糊 PID}、传感器融合、蓝牙通信
+  \item \textbf{工作内容}: 主导三代理疗仪\hl{全流程研发}（机械设计→电路设计→嵌入式软件→上位机），完成 STM32 嵌入式系统开发，负责 STM32 芯片外围电路\hl{PCB 设计}，温度/图像/压力等多种传感器数据接入，伺服与步进电机驱动开发
 \end{itemize}
 
-% ====================== 成果 ======================
-\section{科研成果与荣誉}
+% ====================== 实习经历 ======================
+\section{实习经历}
+
+\ResumeItem{IDEA 研究院：视启未来}
+[\textnormal{VLA 与世界动作模型算法实习生 · 具身智能团队}]
+[2026.04—至今]
+
 \begin{itemize}
-  \item 发明专利 4 项、实用新型专利 2 项、软件著作权 2 项；英语六级 CET-6：473
-  \item 挑战杯河南省二等奖（2023）；高校电气电子工程师创新大赛华中赛区一等奖（2023）
-  \item 西门子杯智能制造挑战赛西部赛区二等奖（2022）；蓝桥杯嵌入式组省级三等奖（2022）
+  \item 以开源 \hl{\(\pi\)0.5}（openpi）为基座训练双臂机器人叠衣策略，经数据精选与两阶段初始化做出\hl{新 SOTA 配方}，动作误差 MAE@50 较原 SOTA \hl{降低约 77\%}，并完成\hl{真机部署上机}
+  \item 主导 \hl{VLA 推理实时化}：实现 \hl{RTC 实时分块推理}与 \hl{Triton kernel 优化}，单步推理耗时由约 256ms 优化至 32ms（\hl{约 8 倍}），末端抖动\hl{降低 81\%}
+  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 \hl{cross-embodiment 跨本体混训}与权重空间模型合并等系统实验
+  \item 完成清华 \hl{X-VLA} 架构在自有双臂平台真机 bring-up，用固件级 IK 将推理周期由 \hl{1.4s 压至 0.33s}；建立离线视觉消融门禁，\hl{定位并修复模型“视觉失明”根因缺陷}
+  \item 复现并适配\hl{FastWAM 世界动作模型}，完成 Task\_A1 叠衣配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
+  \item 构建\hl{里程碑世界动作模型（LMWAM）}，挖掘 milestone latent 并作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上系统评测
 \end{itemize}
+
+\ResumeItem{中秦禾瑞（陕西）科技有限公司}
+[\textnormal{导航与建图算法工程师（兼职）}]
+[2025.11—2026.01]
+
+\begin{itemize}
+  \item 负责果园智能巡检小车\hl{三维建图和导航算法}开发，设备选型、调试与传感器数据处理
+  \item 接入\hl{雷达原始数据实现 3D 建图}，基于三维地图处理为\hl{栅格地图}进行巡检小车导航
+\end{itemize}
+
+\ResumeItem{华为数字能源实践营}
+[\textnormal{学员（培训）}]
+[2025.07]
+
+\begin{itemize}
+  \item 学习数字能源云微服务 \hl{DDD 架构}与 AI 工程化部署，掌握\hl{提示词工程}与 DevOps 部署流程
+\end{itemize}
+
+\ResumeItem{东风汽车有限公司}
+[\textnormal{参观学习}]
+[2023.08]
+
+\begin{itemize}
+  \item 参观学习汽车汽油/柴油发动机内部结构和工作原理，了解汽车全过程工程制造流程
+\end{itemize}
+
+% ====================== 竞赛与荣誉 ======================
+\section{竞赛与荣誉}
+\begin{itemize}
+  \item 第十六届挑战杯河南省大学生课外学术科技作品竞赛 \hfill \hl{省级二等奖（2023）}
+  \item 第二届高校电气电子工程师创新大赛 \hfill \hl{华中赛区一等奖（2023）}
+  \item 第十六届西门子杯智能制造挑战赛 \hfill 西部赛区二等奖（2022）
+  \item 蓝桥杯嵌入式设计与开发组 \hfill 省级三等奖（2022）
+  \item 哈尔滨工业大学郑州研究院特训营 \hfill 优秀营员（2022）
+  \item 郑州大学二等奖学金、三好学生 \hfill 2022—2023, 2024—2025
+\end{itemize}
+
+% ====================== 专利 ======================
+\section{专利与证书}
+\begin{itemize}
+  \item \hl{发明专利 4 项}、\hl{实用新型专利 2 项}、\hl{软件著作权 2 项}
+  \item 英语六级（CET-6）: 473 分
+\end{itemize}
+
+\vfill
+\begin{center}
+  \qrcode[height=2cm]{https://youngyang-gthb.github.io/}\\[4pt]
+  {\footnotesize 扫码访问\hl{个人主页}（作品 / 项目详情）：\ResumeUrl{https://youngyang-gthb.github.io/}{youngyang-gthb.github.io}}
+\end{center}
 
 \end{document}
