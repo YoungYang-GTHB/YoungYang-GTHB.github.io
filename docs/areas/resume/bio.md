@@ -1,7 +1,7 @@
 ---
 title: 个人简介
 category: personal
-updated: 2026-07-01
+updated: 2026-08-06
 source: content/resume.yaml
 ---
 
@@ -12,7 +12,7 @@ source: content/resume.yaml
 | 项目 | 内容 |
 |------|------|
 | 姓名 | 郭睢阳 |
-| 出生年月 | 2002 年 3 月 |
+| 出生日期 | 2002 年 3 月 20 日 |
 | 籍贯 | 河南省南阳市 |
 | 现居 | 陕西·西安 |
 | 政治面貌 | 共青团员 |

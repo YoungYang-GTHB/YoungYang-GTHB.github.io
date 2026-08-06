@@ -77,6 +77,39 @@
   \item \textbf{工具}: \hl{Vibecoding}（Claude Code 等 AI 辅助编程）、Git、PyQt5 上位机开发、Inventor 3D 建模
 \end{itemize}
 
+% ====================== 实习经历 ======================
+\section{实习经历}
+
+\ResumeItem{IDEA 研究院：视启未来}
+[\textnormal{VLA 与世界动作模型算法实习生 · 具身智能团队}]
+[2026.04—至今]
+
+\begin{itemize}
+  \item 以开源 \hl{\(\pi\)0.5}（openpi）为基座训练双臂机器人叠衣策略，经数据精选与两阶段初始化做出\hl{新 SOTA 配方}，动作误差 MAE@50 较原 SOTA \hl{降低约 77\%}，并完成\hl{真机部署上机}
+  \item 主导 \hl{VLA 推理实时化}：实现 \hl{RTC 实时分块推理}与 \hl{Triton kernel 优化}，单步推理耗时由约 256ms 优化至 32ms（\hl{约 8 倍}），末端抖动\hl{降低 81\%}
+  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 \hl{cross-embodiment 跨本体混训}与权重空间模型合并等系统实验
+  \item 完成清华 \hl{X-VLA} 架构在自有双臂平台真机 bring-up，用固件级 IK 将推理周期由 \hl{1.4s 压至 0.33s}；建立离线视觉消融门禁，\hl{定位并修复模型“视觉失明”根因缺陷}
+  \item 复现并适配\hl{FastWAM 世界动作模型}，完成 Task\_A1 叠衣配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
+  \item 构建\hl{里程碑世界动作模型（LMWAM）}，挖掘 milestone latent 并作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上系统评测
+\end{itemize}
+
+\ResumeItem{中秦禾瑞（陕西）科技有限公司}
+[\textnormal{技术合伙人（兼职）}]
+[2025.11—2026.01]
+
+\begin{itemize}
+  \item 负责果园智能巡检小车\hl{三维建图和导航算法}开发，设备选型、调试与传感器数据处理
+  \item 接入\hl{雷达原始数据实现 3D 建图}，基于三维地图处理为\hl{栅格地图}进行巡检小车导航
+\end{itemize}
+
+\ResumeItem{华为数字能源实践营}
+[\textnormal{学员（培训）}]
+[2025.07]
+
+\begin{itemize}
+  \item 学习数字能源云微服务 \hl{DDD 架构}与 AI 工程化部署，掌握\hl{提示词工程}与 DevOps 部署流程
+\end{itemize}
+
 % ====================== 项目经历 ======================
 \section{项目经历}
 
@@ -108,47 +141,6 @@
   \item \textbf{三代产品}: 智能葫芦灸理疗仪（一代）→ 新型智能化温针理疗仪（二代）→ 家用可移动灸罐理疗仪（三代）
   \item \textbf{技术栈}: \hl{STM32}、\hl{FreeRTOS}、\hl{模糊 PID}、传感器融合、蓝牙通信
   \item \textbf{工作内容}: 主导三代理疗仪\hl{全流程研发}（机械设计→电路设计→嵌入式软件→上位机），完成 STM32 嵌入式系统开发，负责 STM32 芯片外围电路\hl{PCB 设计}，温度/图像/压力等多种传感器数据接入，伺服与步进电机驱动开发
-\end{itemize}
-
-% ====================== 实习经历 ======================
-\section{实习经历}
-
-\ResumeItem{IDEA 研究院：视启未来}
-[\textnormal{VLA 与世界动作模型算法实习生 · 具身智能团队}]
-[2026.04—至今]
-
-\begin{itemize}
-  \item 以开源 \hl{\(\pi\)0.5}（openpi）为基座训练双臂机器人叠衣策略，经数据精选与两阶段初始化做出\hl{新 SOTA 配方}，动作误差 MAE@50 较原 SOTA \hl{降低约 77\%}，并完成\hl{真机部署上机}
-  \item 主导 \hl{VLA 推理实时化}：实现 \hl{RTC 实时分块推理}与 \hl{Triton kernel 优化}，单步推理耗时由约 256ms 优化至 32ms（\hl{约 8 倍}），末端抖动\hl{降低 81\%}
-  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，开展 \hl{cross-embodiment 跨本体混训}与权重空间模型合并等系统实验
-  \item 完成清华 \hl{X-VLA} 架构在自有双臂平台真机 bring-up，用固件级 IK 将推理周期由 \hl{1.4s 压至 0.33s}；建立离线视觉消融门禁，\hl{定位并修复模型“视觉失明”根因缺陷}
-  \item 复现并适配\hl{FastWAM 世界动作模型}，完成 Task\_A1 叠衣配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
-  \item 构建\hl{里程碑世界动作模型（LMWAM）}，挖掘 milestone latent 并作为虚拟未来视觉 token 注入 \(\pi\)0.5 action expert，在 \hl{LIBERO / RoboTwin} 上系统评测
-\end{itemize}
-
-\ResumeItem{中秦禾瑞（陕西）科技有限公司}
-[\textnormal{导航与建图算法工程师（兼职）}]
-[2025.11—2026.01]
-
-\begin{itemize}
-  \item 负责果园智能巡检小车\hl{三维建图和导航算法}开发，设备选型、调试与传感器数据处理
-  \item 接入\hl{雷达原始数据实现 3D 建图}，基于三维地图处理为\hl{栅格地图}进行巡检小车导航
-\end{itemize}
-
-\ResumeItem{华为数字能源实践营}
-[\textnormal{学员（培训）}]
-[2025.07]
-
-\begin{itemize}
-  \item 学习数字能源云微服务 \hl{DDD 架构}与 AI 工程化部署，掌握\hl{提示词工程}与 DevOps 部署流程
-\end{itemize}
-
-\ResumeItem{东风汽车有限公司}
-[\textnormal{参观学习}]
-[2023.08]
-
-\begin{itemize}
-  \item 参观学习汽车汽油/柴油发动机内部结构和工作原理，了解汽车全过程工程制造流程
 \end{itemize}
 
 % ====================== 竞赛与荣誉 ======================
