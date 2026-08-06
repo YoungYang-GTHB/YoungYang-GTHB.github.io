@@ -13,6 +13,8 @@ personal:
   birthday: 2002 年 3 月 20 日
   github: https://github.com/YoungYang-GTHB
   linkedin: https://linkedin.com/in/guosuiyang
+  website: https://youngyang-gthb.github.io/
+  accepts_city_transfer: true
   summary: |
     面向具身智能的机器人研发工程师，具备从机械、电路到嵌入式与上位机的全流程落地能力。
     现于 IDEA 研究院：视启未来从事 VLA（视觉-语言-动作模型）与世界动作模型（WAM）算法研发，推动双臂机器人
@@ -78,10 +80,17 @@ education:
   - school: 西北工业大学
     degree: 硕士
     major: 控制工程
+    faculty: 自动化学院
     period: "2024.09 - 2027.06"
     gpa: "89.56/100"
     rank: "前 30%"
     direction: 机器人与人工智能
+    laboratory:
+      has_experience: true
+      name: 机器人实验室
+      level: 省级
+      advisor: 樊泽明
+      responsible_teacher: 樊泽明
     tags:
       - 985 工程
       - 双一流
@@ -89,10 +98,17 @@ education:
   - school: 郑州大学
     degree: 本科
     major: 自动化（卓越班）
+    faculty: 电气与信息工程学院
     period: "2020.09 - 2024.06"
     gpa: "3.54/4.0"
     rank: "前 20%"
     direction: 机器人与人工智能
+    laboratory:
+      has_experience: true
+      name: 河南省机器人感知与控制工程研究中心（康复机器人与智能辅助系统实验室）
+      level: 省级
+      advisor: 毛晓波
+      responsible_teacher: 任海川
     tags:
       - 211 工程
       - 双一流

@@ -29,6 +29,9 @@ test("resume schema exposes campus recruiting education and experience fields", 
   assert.ok(catalog.some((field) => field.path === "educations.0.educationType"));
   assert.ok(catalog.some((field) => field.path === "educations.0.studyMode"));
   assert.ok(catalog.some((field) => field.path === "educations.0.laboratory"));
+  assert.ok(catalog.some((field) => field.path === "educations.0.hasLaboratoryExperience"));
+  assert.ok(catalog.some((field) => field.path === "educations.0.laboratoryLevel"));
+  assert.ok(catalog.some((field) => field.path === "educations.0.laboratoryResponsibleTeacher"));
   assert.ok(catalog.some((field) => field.path === "educations.0.researchDirection"));
   assert.ok(catalog.some((field) => field.path === "educations.0.advisor"));
   assert.ok(catalog.some((field) => field.path === "internships.0.company"));
@@ -39,6 +42,9 @@ test("resume schema exposes campus recruiting education and experience fields", 
   assert.equal("educationType" in template.educations[0], true);
   assert.equal("studyMode" in template.educations[0], true);
   assert.equal("laboratory" in template.educations[0], true);
+  assert.equal("hasLaboratoryExperience" in template.educations[0], true);
+  assert.equal("laboratoryLevel" in template.educations[0], true);
+  assert.equal("laboratoryResponsibleTeacher" in template.educations[0], true);
   assert.equal("researchDirection" in template.educations[0], true);
   assert.equal("advisor" in template.educations[0], true);
 });

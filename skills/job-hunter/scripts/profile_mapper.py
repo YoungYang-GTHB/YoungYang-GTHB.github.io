@@ -68,6 +68,7 @@ def build_profile(compact: bool = False) -> dict:
     onlinePresence = {
         "githubUrl": personal.get("github", "https://github.com/guosuiyang"),
         "linkedinUrl": personal.get("linkedin", ""),
+        "websiteUrl": personal.get("website", ""),
     }
 
     jobPreferences = {
@@ -77,6 +78,7 @@ def build_profile(compact: bool = False) -> dict:
         "preferredLocations": "西安、深圳、北京、成都、上海",
         "employmentType": "全职",
         "expectedSalary": "面议",
+        "willingToRelocate": "是" if personal.get("accepts_city_transfer") else "否",
     }
 
     # ---- 技能 ----
@@ -101,17 +103,23 @@ def build_profile(compact: bool = False) -> dict:
     # ---- 教育经历 ----
     educations = []
     for edu in education:
+        laboratory = edu.get("laboratory", {}) or {}
         educations.append({
             "school": edu.get("school", ""),
             "degree": edu.get("degree", ""),
             "major": edu.get("major", ""),
-            "faculty": "",
+            "faculty": edu.get("faculty", ""),
             "city": "西安" if "西北工业" in edu.get("school", "") else "郑州",
             "country": "中国",
             "startDate": (edu.get("period", " - ").split(" - ")[0] if " - " in edu.get("period", "") else ""),
             "endDate": (edu.get("period", " - ").split(" - ")[1] if " - " in edu.get("period", "") else ""),
             "gpa": edu.get("gpa", ""),
             "ranking": edu.get("rank", ""),
+            "hasLaboratoryExperience": "是" if laboratory.get("has_experience") else "否",
+            "laboratory": laboratory.get("name", ""),
+            "laboratoryLevel": laboratory.get("level", ""),
+            "advisor": laboratory.get("advisor", ""),
+            "laboratoryResponsibleTeacher": laboratory.get("responsible_teacher", ""),
             "researchDirection": edu.get("direction", ""),
             "graduationStatus": "预计毕业" if "2027" in edu.get("period", "") else "已毕业",
             "courses": "",
