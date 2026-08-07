@@ -73,3 +73,17 @@ output:
 cache:
   enabled: true
   ttl_minutes: 60  # 缓存有效期
+
+# 求职工作流策略（供后续筛选、归档和投递流程统一读取）
+workflow:
+  generate_job_specific_resume: false
+  ask_before_resume_customization: false
+  resume_templates:
+    embodied_ai: "public/resume.pdf"
+    embedded: "public/resume-embedded.pdf"
+  referral_channel_first: true
+  final_submission_requires_confirmation: true
+  early_batch_policy:
+    confirmed_no_autumn_impact: "safe_to_progress"
+    unknown_autumn_impact: "cautious_verify_before_submission"
+    confirmed_affects_autumn: "hold_unless_explicit_exception"
