@@ -11,6 +11,7 @@ AI-Resume-Form-Filling-Assistant 标准简历 JSON。
 import sys
 import json
 import argparse
+import re
 from pathlib import Path
 
 import yaml
@@ -24,6 +25,40 @@ def load_resume_yaml() -> dict:
         return {}
     with open(yaml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def normalize_date(value: str) -> str:
+    """把中文或分隔符不一致的日期归一化为 YYYY-MM-DD / YYYY-MM。"""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    numbers = re.findall(r"\d+", text)
+    if len(numbers) >= 3:
+        return f"{int(numbers[0]):04d}-{int(numbers[1]):02d}-{int(numbers[2]):02d}"
+    if len(numbers) >= 2:
+        return f"{int(numbers[0]):04d}-{int(numbers[1]):02d}"
+    if len(numbers) == 1 and len(numbers[0]) == 4:
+        return numbers[0]
+    return text
+
+
+def split_period(value: str) -> tuple[str, str, str]:
+    """返回开始时间、结束时间、是否仍在进行。"""
+    text = str(value or "").strip()
+    parts = re.split(r"\s+-\s+", text, maxsplit=1)
+    start = normalize_date(parts[0]) if parts else ""
+    raw_end = parts[1].strip() if len(parts) > 1 else ""
+    is_current = raw_end in {"至今", "现在", "目前"}
+    end = "" if is_current else normalize_date(raw_end)
+    return start, end, "是" if is_current else "否"
+
+
+def join_description(exp: dict) -> str:
+    parts = [str(exp.get("description", "")).strip()]
+    achievements = [str(item).strip() for item in exp.get("achievements", []) if str(item).strip()]
+    if achievements:
+        parts.append("；".join(achievements))
+    return " ".join(part.replace("\n", " ") for part in parts if part).strip()
 
 
 def build_profile(compact: bool = False) -> dict:
@@ -47,7 +82,7 @@ def build_profile(compact: bool = False) -> dict:
         "currentCountry": "中国",
         "highestEducationLevel": "硕士",
         "gender": "男",
-        "birthDate": "2002-03",
+        "birthDate": normalize_date(personal.get("birthday", "")),
         "politicalStatus": personal.get("politicalStatus", "共青团员"),
         "summary": personal.get("summary", "").strip().replace("\n", " "),
         "hometownCity": (personal.get("hometown", "") or ""),
@@ -72,7 +107,7 @@ def build_profile(compact: bool = False) -> dict:
     }
 
     jobPreferences = {
-        "targetRole": "机器人算法工程师 / ROS开发工程师 / 嵌入式软件工程师",
+        "targetRole": "具身智能 / VLA / 机器人学习算法工程师 / 嵌入式软件工程师",
         "targetIndustry": "机器人 / 自动驾驶 / 人工智能 / 高端装备",
         "expectedCity": "西安 深圳 北京",
         "preferredLocations": "西安、深圳、北京、成都、上海",
@@ -93,10 +128,10 @@ def build_profile(compact: bool = False) -> dict:
         "primarySkills": skills_str,
         "programmingLanguages": "C/C++ (精通), Python (熟练), MATLAB (熟练)",
         "frameworks": "ROS1/ROS2, PyTorch, PyQt5, FreeRTOS",
-        "aiTools": "PyTorch, CNN, 语音识别, 图像处理, 点云处理",
+        "aiTools": "PyTorch, JAX, VLA, WAM, π0.5, X-VLA, Triton, CUDA Graphs",
         "databases": "神通数据库",
         "tooling": "Git, Docker, AD, 嘉立创, Inventor, 3D打印",
-        "domainKnowledge": "机器人系统设计, 嵌入式开发, 电路设计, 机械设计",
+        "domainKnowledge": "机器人学习, 算法训练与部署, ROS/ROS2, 嵌入式开发, 电路设计",
         "notableAchievements": "",
     }
 
@@ -104,6 +139,7 @@ def build_profile(compact: bool = False) -> dict:
     educations = []
     for edu in education:
         laboratory = edu.get("laboratory", {}) or {}
+        start_date, end_date, _ = split_period(edu.get("period", ""))
         educations.append({
             "school": edu.get("school", ""),
             "degree": edu.get("degree", ""),
@@ -111,8 +147,8 @@ def build_profile(compact: bool = False) -> dict:
             "faculty": edu.get("faculty", ""),
             "city": "西安" if "西北工业" in edu.get("school", "") else "郑州",
             "country": "中国",
-            "startDate": (edu.get("period", " - ").split(" - ")[0] if " - " in edu.get("period", "") else ""),
-            "endDate": (edu.get("period", " - ").split(" - ")[1] if " - " in edu.get("period", "") else ""),
+            "startDate": start_date,
+            "endDate": end_date,
             "gpa": edu.get("gpa", ""),
             "ranking": edu.get("rank", ""),
             "hasLaboratoryExperience": "是" if laboratory.get("has_experience") else "否",
@@ -131,27 +167,53 @@ def build_profile(compact: bool = False) -> dict:
     internships = []
     for exp in experience:
         if exp.get("type") == "实习":
+            start_date, end_date, is_current = split_period(exp.get("period", ""))
             internships.append({
                 "company": exp.get("company", ""),
                 "title": exp.get("role", ""),
                 "city": "",
                 "country": "中国",
-                "startDate": (exp.get("period", " - ").split(" - ")[0] if " - " in exp.get("period", "") else ""),
-                "endDate": (exp.get("period", " - ").split(" - ")[1] if " - " in exp.get("period", "") else ""),
-                "description": exp.get("description", "").strip().replace("\n", " "),
+                "startDate": start_date,
+                "endDate": end_date,
+                "isCurrent": is_current,
+                "description": join_description(exp),
                 "achievements": "; ".join(exp.get("achievements", [])),
                 "technologies": "",
             })
 
+    # ---- 正式 / 兼职工作经历 ----
+    work_experiences = []
+    for exp in experience:
+        if exp.get("type") not in {"全职", "兼职", "合同", "自由职业"}:
+            continue
+        start_date, end_date, is_current = split_period(exp.get("period", ""))
+        work_experiences.append({
+            "company": exp.get("company", ""),
+            "title": exp.get("role", ""),
+            "department": "",
+            "employmentType": exp.get("type", ""),
+            "industry": "机器人 / 人工智能",
+            "city": "",
+            "country": "中国",
+            "startDate": start_date,
+            "endDate": end_date,
+            "isCurrent": is_current,
+            "locationMode": "",
+            "description": join_description(exp),
+            "achievements": "; ".join(exp.get("achievements", [])),
+            "technologies": "",
+        })
+
     # ---- 项目经历 ----
     profile_projects = []
     for proj in projects:
+        start_date, end_date, _ = split_period(proj.get("period", ""))
         profile_projects.append({
             "name": proj.get("title", ""),
             "role": proj.get("role", ""),
             "organization": "西北工业大学" if "2024" in proj.get("period", "") else "郑州大学",
-            "startDate": (proj.get("period", " - ").split(" - ")[0] if " - " in proj.get("period", "") else ""),
-            "endDate": (proj.get("period", " - ").split(" - ")[1] if " - " in proj.get("period", "") else ""),
+            "startDate": start_date,
+            "endDate": end_date,
             "description": proj.get("description", "").strip().replace("\n", " "),
             "highlights": "; ".join(proj.get("achievements", [])),
             "technologies": "; ".join(proj.get("technologies", [])),
@@ -202,7 +264,7 @@ def build_profile(compact: bool = False) -> dict:
         "skills": profile_skills,
         "educations": educations,
         "internships": internships,
-        "workExperiences": [],
+        "workExperiences": work_experiences,
         "projects": profile_projects,
         "campusExperiences": [],
         "certificates": certificates,

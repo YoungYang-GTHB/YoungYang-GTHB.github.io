@@ -97,16 +97,43 @@ class JobFilter:
         ])
 
     def score(self, job: dict) -> int:
+        """按目标主线给出 0-100 的可解释初筛分，不替代人工选岗。"""
         s = 0
         loc = job.get(self.FIELD_MAP["location"], "")
         ind = job.get(self.FIELD_MAP["industry"], "")
         if self._contains_any(loc, self._filters.get("cities", [])):
-            s += 2
+            s += 10
         if self._contains_any(ind, self._filters.get("industries", [])):
-            s += 2
+            s += 5
         if job.get(self.FIELD_MAP["graduation"], "") == "2027":
-            s += 1
-        return min(s, 5)
+            s += 5
+
+        matching = self._filters.get("matching", {})
+        position = str(job.get(self.FIELD_MAP["position"], ""))
+        corpus = " ".join(
+            str(value) for key, value in job.items()
+            if not str(key).startswith("_") and isinstance(value, (str, int, float))
+        )
+        primary_hits = self._matched_keywords(corpus, matching.get("primary_keywords", []))
+        secondary_hits = self._matched_keywords(corpus, matching.get("secondary_keywords", []))
+        title_hits = self._matched_keywords(position, matching.get("primary_keywords", []))
+        negative_hits = self._matched_keywords(corpus, matching.get("deprioritize_keywords", []))
+
+        s += min(45, len(primary_hits) * 9)
+        s += min(20, len(secondary_hits) * 4)
+        s += min(15, len(title_hits) * 5)
+        s -= min(20, len(negative_hits) * 5)
+        job["_match_reasons"] = primary_hits[:6] + secondary_hits[:4]
+        job["_target_track"] = self.classify_track(corpus)
+        return max(0, min(s, 100))
+
+    def classify_track(self, text: str) -> str:
+        matching = self._filters.get("matching", {})
+        if self._matched_keywords(text, matching.get("primary_keywords", [])):
+            return "具身智能"
+        if self._matched_keywords(text, matching.get("secondary_keywords", [])):
+            return "嵌入式/机器人系统"
+        return "通用/观察"
 
     # ---- matchers ----
     def _match_any(self, job, filter_key, field_key):
@@ -132,6 +159,11 @@ class JobFilter:
         if not text or not keywords:
             return bool(not keywords)
         return any(kw.lower() in text.lower() for kw in keywords)
+
+    @staticmethod
+    def _matched_keywords(text: str, keywords: list[str]) -> list[str]:
+        normalized = str(text or "").lower()
+        return [keyword for keyword in keywords if str(keyword).lower() in normalized]
 
 
 # ============================================================

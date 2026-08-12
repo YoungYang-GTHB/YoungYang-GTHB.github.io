@@ -122,6 +122,62 @@ python3 scripts/fetch_jobs.py --nav 61 --phase 提前批 --full-sync
 
 短期 access token 过期时工具会自动调用平台当前使用的刷新接口；整个微信会话失效后才需要重新扫码。
 
+### 当前项目的统一工作台
+
+项目内所有岗位同步、短名单、投递前确认和成功落档统一使用 `jobctl.py`，不再分别手工维护截图、Markdown 和 CSV：
+
+```bash
+# 校验唯一数据源，并查看当前投递统计
+python3 skills/job-hunter/scripts/jobctl.py validate
+python3 skills/job-hunter/scripts/jobctl.py status
+
+# 同步当前提前批，并按具身智能主线查看前 20 个岗位
+python3 skills/job-hunter/scripts/jobctl.py sync --phase 提前批
+python3 skills/job-hunter/scripts/jobctl.py shortlist --phase 提前批 --limit 20
+
+# 若服务器直连失效，导入浏览器扩展导出的可见岗位数据
+python3 skills/job-hunter/scripts/jobctl.py sync \
+  --phase 提前批 \
+  --browser-export imports/YYYY-MM-DD_offer-nav61_raw.jsonl
+```
+
+统一账本位于 `career/求职投递/2027届/data/applications.yaml`，`投递汇总.md`、旧 CSV 追踪器和已投 URL 去重状态均由它生成或回填。历史数据需要恢复时执行：
+
+```bash
+python3 skills/job-hunter/scripts/jobctl.py reconcile
+```
+
+账本中的 `active_phase` 是硬门禁。当前为提前批；以后阶段切换时只需执行：
+
+```bash
+python3 skills/job-hunter/scripts/jobctl.py set-phase 秋招
+```
+
+与当前批次不同的岗位无法进入提交流程。政策为 `unknown`、`affects_formal` 或仅有往届证据的岗位会自动标为暂缓；只有当届明确安全，或本人明确批准例外后，才能通过 `preflight`。
+
+新岗位先创建草稿并查看最终快照：
+
+```bash
+python3 skills/job-hunter/scripts/jobctl.py prepare \
+  --id company-job-id \
+  --company 公司名 \
+  --position 岗位名 \
+  --phase 提前批 \
+  --policy-status current_year_safe \
+  --resume public/resume.pdf
+python3 skills/job-hunter/scripts/jobctl.py preflight company-job-id
+```
+
+验证码和招聘网站的最终提交仍由本人确认。网页显示投递成功后，使用 `preflight` 输出的令牌一次性落档：
+
+```bash
+python3 skills/job-hunter/scripts/jobctl.py record-applied company-job-id \
+  --confirmation 'CONFIRM:company-job-id:……' \
+  --verified
+```
+
+这样可以防止重复投递、错用简历、混投批次或把“页面已填写”误记为“投递成功”。
+
 ### 1. 挖掘优势
 
 ```text

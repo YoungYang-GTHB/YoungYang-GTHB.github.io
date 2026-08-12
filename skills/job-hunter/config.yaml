@@ -63,6 +63,43 @@ filters:
   # 公司性质偏好
   company_types: []  # 留空等于不限，可填: 民企, 央国企, 外企
 
+  # 岗位相关性：具身为主线，嵌入式与机器人系统为支线。
+  matching:
+    primary_keywords:
+      - 具身智能
+      - VLA
+      - 世界动作模型
+      - WAM
+      - 世界模型
+      - Robot Learning
+      - 机器人学习
+      - 强化学习
+      - 模仿学习
+      - 灵巧操作
+      - Manipulation
+      - 多模态
+      - 真机部署
+    secondary_keywords:
+      - ROS
+      - ROS2
+      - 机器人系统
+      - 运动规划
+      - 决策规划
+      - 推理优化
+      - CUDA
+      - Triton
+      - 嵌入式
+      - Linux
+      - Yocto
+      - STM32
+    deprioritize_keywords:
+      - 销售
+      - 财务
+      - 运营
+      - 市场营销
+      - 教师
+      - 客户经理
+
 # 输出配置
 output:
   directory: "output"

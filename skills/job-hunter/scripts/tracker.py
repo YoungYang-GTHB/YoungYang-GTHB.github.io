@@ -51,31 +51,41 @@ class ApplicationTracker:
         position: str,
         status: Status,
         *,
+        application_id: str = "",
         url: str = "",
         location: str = "",
         resume_version: str = "",
         notes: str = "",
-    ) -> None:
-        """记录一笔操作。自动追加到当日 CSV。"""
+    ) -> bool:
+        """记录一笔操作。application_id 存在时保证同一投递幂等。"""
         date_str = datetime.now().strftime("%Y-%m-%d")
         filepath = self._dir / f"{date_str}.csv"
 
         is_new = not filepath.exists()
+        if application_id:
+            for existing_path in self._dir.glob("*.csv"):
+                with open(existing_path, encoding="utf-8") as existing:
+                    if any(
+                        row.get("application_id") == application_id
+                        for row in csv.DictReader(existing)
+                    ):
+                        return False
         with open(filepath, "a", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             if is_new:
                 writer.writerow(
                     [
-                        "timestamp", "company", "position", "status",
+                        "timestamp", "application_id", "company", "position", "status",
                         "url", "location", "resume_version", "notes",
                     ]
                 )
             writer.writerow(
                 [
-                    datetime.now().isoformat(), company, position, status,
+                    datetime.now().isoformat(), application_id, company, position, status,
                     url, location, resume_version, notes,
                 ]
             )
+        return True
 
     # ---- read / stats ----
 
@@ -90,10 +100,14 @@ class ApplicationTracker:
             )
             filepath = self._dir / f"{date_str}.csv"
             if filepath.exists():
-                count = sum(1 for _ in open(filepath, encoding="utf-8")) - 1  # skip header
-                if count > 0:
-                    result["dates"][date_str] = count
-                    result["total"] += count
+                with open(filepath, encoding="utf-8") as handle:
+                    rows = list(csv.DictReader(handle))
+                if rows:
+                    result["dates"][date_str] = len(rows)
+                    result["total"] += len(rows)
+                    for row in rows:
+                        status = row.get("status", "unknown")
+                        result["by_status"][status] = result["by_status"].get(status, 0) + 1
 
         return result
 
