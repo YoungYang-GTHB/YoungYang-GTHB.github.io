@@ -29,7 +29,16 @@ def normalize_url(value: Any) -> str:
     text = str(value or "").strip()
     if not text:
         return ""
-    parts = urlsplit(text)
+    # Aggregated job feeds occasionally place contact instructions such as
+    # "邮箱投递：hr@example.com" in a column named “投递地址”.  Such
+    # values are useful to the applicant but are not URLs and must not abort a
+    # full scan (``urlsplit`` can reject their Unicode pseudo-netloc).
+    if not text.lower().startswith(("http://", "https://")):
+        return ""
+    try:
+        parts = urlsplit(text)
+    except ValueError:
+        return ""
     return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path.rstrip("/"), parts.query, ""))
 
 

@@ -7,10 +7,14 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_ROOT))
 
-from scripts.exclusions import ExclusionStore
+from scripts.exclusions import ExclusionStore, normalize_url
 
 
 class ExclusionStoreTests(unittest.TestCase):
+    def test_non_url_contact_instruction_does_not_abort_matching(self):
+        self.assertEqual(normalize_url("邮箱投递：zpc@wch.cn"), "")
+        self.assertEqual(normalize_url("//邮箱投递：zpc@wch.cn"), "")
+
     def test_matches_company_and_position_in_same_phase(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             store = ExclusionStore(Path(temp_dir) / "exclusions.yaml")
