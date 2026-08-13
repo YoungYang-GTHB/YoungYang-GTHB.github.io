@@ -533,7 +533,7 @@ def cmd_shortlist(args: argparse.Namespace) -> int:
         for item in records
         if int(item.get("_match_score", 0) or 0) >= args.min_score
     ]
-    selected = qualified[: args.limit]
+    selected = qualified[: args.limit] if args.limit > 0 else qualified
     if args.json:
         print(json.dumps(selected, ensure_ascii=False, indent=2))
         return 0
@@ -705,7 +705,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     scan_parser.add_argument("--nav", type=int, default=61)
     scan_parser.add_argument("--phase", choices=("提前批", "秋招", "春招"), default="")
-    scan_parser.add_argument("--limit", type=int, default=15)
+    scan_parser.add_argument(
+        "--limit", type=int, default=0,
+        help="可选截断数量；0 表示输出所有达到阈值的岗位（默认）",
+    )
     scan_parser.add_argument("--min-score", type=int, default=35)
     scan_parser.add_argument("--full-sync", action="store_true")
     scan_parser.add_argument("--json", action="store_true")
@@ -742,7 +745,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="默认读取统一账本的 active_phase",
     )
     shortlist_parser.add_argument("--input", default="", help="指定岗位 JSONL；默认读取 output/ 最新阶段岗位池")
-    shortlist_parser.add_argument("--limit", type=int, default=20)
+    shortlist_parser.add_argument(
+        "--limit", type=int, default=0,
+        help="可选截断数量；0 表示输出所有达到阈值的岗位（默认）",
+    )
     shortlist_parser.add_argument("--min-score", type=int, default=0)
     shortlist_parser.add_argument("--json", action="store_true")
     shortlist_parser.set_defaults(handler=cmd_shortlist)

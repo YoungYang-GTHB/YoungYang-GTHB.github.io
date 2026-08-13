@@ -133,11 +133,11 @@ python3 skills/job-hunter/scripts/jobctl.py status
 
 # 同步当前提前批，并按具身智能主线查看前 20 个岗位
 python3 skills/job-hunter/scripts/jobctl.py sync --phase 提前批
-python3 skills/job-hunter/scripts/jobctl.py shortlist --phase 提前批 --limit 20
+python3 skills/job-hunter/scripts/jobctl.py shortlist --phase 提前批 --min-score 35
 
 # 推荐：一条命令完成增量同步、历史排除和高匹配短名单输出
 python3 skills/job-hunter/scripts/jobctl.py scan \
-  --phase 提前批 --min-score 35 --limit 15
+  --phase 提前批 --min-score 35
 
 # 若服务器直连失效，导入浏览器扩展导出的可见岗位数据
 python3 skills/job-hunter/scripts/jobctl.py sync \
