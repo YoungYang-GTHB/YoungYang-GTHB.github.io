@@ -32,6 +32,7 @@ sys.path.insert(0, str(SKILL_ROOT))
 
 from scripts.state import FetcherState
 from scripts.tracker import ApplicationTracker
+from scripts.exclusions import ExclusionStore
 
 
 PHASES = {"提前批", "秋招", "春招", "实习", "未知"}
@@ -527,11 +528,19 @@ def cmd_shortlist(args: argparse.Namespace) -> int:
         ),
         reverse=True,
     )
-    selected = records[: args.limit]
+    qualified = [
+        item
+        for item in records
+        if int(item.get("_match_score", 0) or 0) >= args.min_score
+    ]
+    selected = qualified[: args.limit]
     if args.json:
         print(json.dumps(selected, ensure_ascii=False, indent=2))
         return 0
-    print(f"岗位池: {input_path}；共 {len(records)} 条；显示前 {len(selected)} 条")
+    print(
+        f"岗位池: {input_path}；共 {len(records)} 条；"
+        f"分数≥{args.min_score} 的 {len(qualified)} 条；显示 {len(selected)} 条"
+    )
     print("分数\t主线\t公司\t岗位\t地点\t截止时间\t匹配依据")
     for item in selected:
         reasons = ",".join(item.get("_match_reasons", []))
@@ -546,6 +555,73 @@ def cmd_shortlist(args: argparse.Namespace) -> int:
                 reasons=reasons,
             )
         )
+    return 0
+
+
+def cmd_scan(args: argparse.Namespace) -> int:
+    """增量同步 Offer 情报局，并只打印紧凑的高匹配新增岗位。"""
+    phase = args.phase or ApplicationLedger(Path(args.ledger)).data.get("active_phase")
+    command = [
+        sys.executable,
+        str(SKILL_ROOT / "scripts" / "fetch_jobs.py"),
+        "--phase",
+        phase,
+    ]
+    if args.nav:
+        command += ["--nav", str(args.nav)]
+    if args.full_sync:
+        command.append("--full-sync")
+    result = subprocess.run(command, cwd=PROJECT_ROOT, check=False)
+    if result.returncode:
+        return result.returncode
+    return cmd_shortlist(
+        argparse.Namespace(
+            phase=phase,
+            input="",
+            limit=args.limit,
+            min_score=args.min_score,
+            json=args.json,
+            ledger=args.ledger,
+        )
+    )
+
+
+def cmd_exclude_add(args: argparse.Namespace) -> int:
+    store = ExclusionStore(args.exclusions)
+    store.add(
+        {
+            "id": args.id,
+            "company": args.company,
+            "position_keyword": args.position_keyword,
+            "job_id": args.job_id,
+            "url": args.url,
+            "phase": args.phase,
+            "reason": args.reason,
+            "expires_at": args.expires_at,
+        }
+    )
+    print(f"[jobctl] 已加入排除库: {args.id}")
+    return 0
+
+
+def cmd_exclude_list(args: argparse.Namespace) -> int:
+    store = ExclusionStore(args.exclusions)
+    rules = store.active_rules(args.phase)
+    print(f"排除库: {store.path}；生效规则 {len(rules)} 条")
+    print("ID\t阶段\t公司\t岗位关键词/岗位ID\t理由")
+    for rule in rules:
+        target = rule.get("position_keyword") or rule.get("job_id") or rule.get("url")
+        print(
+            f"{rule.get('id')}\t{rule.get('phase') or '全部'}\t"
+            f"{rule.get('company')}\t{target}\t{rule.get('reason')}"
+        )
+    return 0
+
+
+def cmd_exclude_remove(args: argparse.Namespace) -> int:
+    store = ExclusionStore(args.exclusions)
+    store.disable(args.id)
+    print(f"[jobctl] 已停用排除规则: {args.id}")
     return 0
 
 
@@ -624,6 +700,42 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser.add_argument("--dry-run", action="store_true")
     sync_parser.set_defaults(handler=cmd_sync)
 
+    scan_parser = subparsers.add_parser(
+        "scan", help="低 Token 增量检索：同步 Offer 情报局并只输出高匹配新岗位"
+    )
+    scan_parser.add_argument("--nav", type=int, default=61)
+    scan_parser.add_argument("--phase", choices=("提前批", "秋招", "春招"), default="")
+    scan_parser.add_argument("--limit", type=int, default=15)
+    scan_parser.add_argument("--min-score", type=int, default=35)
+    scan_parser.add_argument("--full-sync", action="store_true")
+    scan_parser.add_argument("--json", action="store_true")
+    scan_parser.set_defaults(handler=cmd_scan)
+
+    exclude_parser = subparsers.add_parser("exclude", help="维护历史岗位排除决策库")
+    exclude_subparsers = exclude_parser.add_subparsers(dest="exclude_command", required=True)
+    exclude_default = str(
+        PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "job_exclusions.yaml"
+    )
+    exclude_add = exclude_subparsers.add_parser("add", help="加入一条排除规则")
+    exclude_add.add_argument("--id", required=True)
+    exclude_add.add_argument("--company", default="")
+    exclude_add.add_argument("--position-keyword", default="")
+    exclude_add.add_argument("--job-id", default="")
+    exclude_add.add_argument("--url", default="")
+    exclude_add.add_argument("--phase", choices=("", "提前批", "秋招", "春招"), default="")
+    exclude_add.add_argument("--reason", required=True)
+    exclude_add.add_argument("--expires-at", default="")
+    exclude_add.add_argument("--exclusions", default=exclude_default)
+    exclude_add.set_defaults(handler=cmd_exclude_add)
+    exclude_list = exclude_subparsers.add_parser("list", help="查看生效排除规则")
+    exclude_list.add_argument("--phase", choices=("", "提前批", "秋招", "春招"), default="")
+    exclude_list.add_argument("--exclusions", default=exclude_default)
+    exclude_list.set_defaults(handler=cmd_exclude_list)
+    exclude_remove = exclude_subparsers.add_parser("remove", help="停用一条排除规则")
+    exclude_remove.add_argument("id")
+    exclude_remove.add_argument("--exclusions", default=exclude_default)
+    exclude_remove.set_defaults(handler=cmd_exclude_remove)
+
     shortlist_parser = subparsers.add_parser("shortlist", help="按具身主线评分查看岗位短名单")
     shortlist_parser.add_argument(
         "--phase", choices=("提前批", "秋招", "春招"), default="",
@@ -631,6 +743,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     shortlist_parser.add_argument("--input", default="", help="指定岗位 JSONL；默认读取 output/ 最新阶段岗位池")
     shortlist_parser.add_argument("--limit", type=int, default=20)
+    shortlist_parser.add_argument("--min-score", type=int, default=0)
     shortlist_parser.add_argument("--json", action="store_true")
     shortlist_parser.set_defaults(handler=cmd_shortlist)
     return parser
@@ -641,7 +754,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         return int(args.handler(args) or 0)
-    except LedgerError as error:
+    except (LedgerError, ValueError) as error:
         print(f"[jobctl] {error}", file=sys.stderr)
         return 2
 

@@ -37,6 +37,7 @@ sys.path.insert(0, str(SKILL_ROOT))
 
 from scripts.auth import TokenManager
 from scripts.api import OfferAPI
+from scripts.exclusions import ExclusionStore
 from scripts.state import FetcherState
 from scripts.tracker import ApplicationTracker
 
@@ -101,7 +102,10 @@ class JobFilter:
         s = 0
         loc = job.get(self.FIELD_MAP["location"], "")
         ind = job.get(self.FIELD_MAP["industry"], "")
-        if self._contains_any(loc, self._filters.get("cities", [])):
+        preferred_cities = self._filters.get("preferred_cities", []) or self._filters.get(
+            "cities", []
+        )
+        if self._contains_any(loc, preferred_cities):
             s += 10
         if self._contains_any(ind, self._filters.get("industries", [])):
             s += 5
@@ -186,6 +190,7 @@ def fetch_navigation(
     state: FetcherState,
     job_filter: JobFilter,
     tracker: ApplicationTracker,
+    exclusions: ExclusionStore,
     nav: dict,
     max_records: int = 500,
     force_full: bool = False,
@@ -284,10 +289,28 @@ def fetch_navigation(
             default=None,
         )
 
+    # 混有新旧数据的第一页里，旧记录不应再次进入本轮输出。
+    # 更新时间缺失或不可靠时，用内容指纹作为增量兜底。
+    if cutoff and not force_full:
+        has_version_history = state.has_seen_record_history()
+        candidate_records = [
+            job
+            for job in all_records
+            if job.get(JobFilter.FIELD_MAP["updated"], "") > cutoff
+            or (has_version_history and not state.is_seen_record(job))
+        ]
+    else:
+        candidate_records = all_records
+
     # 筛选
     recent_companies = tracker.get_recent_companies(days=30)
     matched = []
-    for job in all_records:
+    excluded_count = 0
+    for job in candidate_records:
+        exclusion = exclusions.match(job, phase=job_filter._phase or "")
+        if exclusion:
+            excluded_count += 1
+            continue
         if not job_filter.passes(job):
             continue
         score = job_filter.score(job)
@@ -311,21 +334,24 @@ def fetch_navigation(
         seen.add(url)
         deduped.append(job)
 
-    # 更新状态
-    state.update(
-        nav_id=nav_id,
-        nav_name=nav_name,
-        fetched_count=len(all_records),
-        new_count=len(deduped),
-        latest_update=effective_cutoff,
-        total_rows=current_total,
-    )
+    # dry-run 不推进 cutoff，也不污染已见版本状态。
+    if not dry_run:
+        state.remember_records(all_records)
+        state.update(
+            nav_id=nav_id,
+            nav_name=nav_name,
+            fetched_count=len(all_records),
+            new_count=len(deduped),
+            latest_update=effective_cutoff,
+            total_rows=current_total,
+        )
 
     return {
         "nav": nav,
         "fetched": len(all_records),
         "matched": len(matched),
         "deduped": len(deduped),
+        "excluded": excluded_count,
         "records": deduped,
         "mode": mode,
         "total_rows": current_total,
@@ -363,6 +389,7 @@ def run_fetch(
     state = FetcherState()
     job_filter = JobFilter(config, phase=phase)
     tracker = ApplicationTracker()
+    exclusions = ExclusionStore()
 
     navigations = config.get("navigations", [])
     if nav_id is not None:
@@ -383,6 +410,7 @@ def run_fetch(
             state=state,
             job_filter=job_filter,
             tracker=tracker,
+            exclusions=exclusions,
             nav=nav,
             max_records=max_per_source,
             force_full=force_full,
@@ -395,7 +423,8 @@ def run_fetch(
         pct = (result["deduped"] / result["fetched"] * 100) if result["fetched"] else 0
         print(
             f"[fetch]   {result['mode']} → {result['fetched']}条→"
-            f"匹配{result['matched']}→去重后{result['deduped']}条 ({pct:.0f}%)",
+            f"排除{result['excluded']}→匹配{result['matched']}→"
+            f"去重后{result['deduped']}条 ({pct:.0f}%)",
             file=sys.stderr,
         )
 
@@ -404,7 +433,7 @@ def run_fetch(
     for r in all_results:
         all_records.extend(r["records"])
 
-    if not dry_run and all_records:
+    if not dry_run:
         date_str = datetime.now().strftime("%Y-%m-%d")
         output_dir = PROJECT_ROOT / output_cfg.get("directory", "output")
         if phase:
@@ -412,6 +441,7 @@ def run_fetch(
             output_path = output_dir / f"{date_str}-offer-{phase_file}-jobs.jsonl"
         else:
             output_path = output_dir / f"{date_str}-jobs.jsonl"
+        # 0 条增量也写空文件，避免 shortlist 误读上一轮结果。
         write_jsonl(all_records, output_path)
         print(f"[fetch] ✔ 已写入: {output_path} ({len(all_records)} 条)", file=sys.stderr)
     elif dry_run:

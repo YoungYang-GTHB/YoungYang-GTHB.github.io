@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -8,6 +9,7 @@ sys.path.insert(0, str(SKILL_ROOT))
 
 from scripts.fetch_jobs import JobFilter
 from scripts.import_offer_export import build_phase_pool, detect_phase
+from scripts.state import FetcherState
 
 
 class OfferExportImportTests(unittest.TestCase):
@@ -98,6 +100,15 @@ class OfferExportImportTests(unittest.TestCase):
 
         self.assertGreater(job_filter.score(embodied), job_filter.score(generic))
         self.assertEqual(embodied["_target_track"], "具身智能")
+
+    def test_seen_record_version_changes_with_content(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            state = FetcherState(Path(temp_dir) / "state.json")
+            original = {"企业名称": "机器人甲", "职位": "VLA算法", "更新时间": "2026-08-13"}
+            state.remember_records([original])
+            self.assertTrue(state.is_seen_record(original))
+            changed = dict(original, 职位="VLA真机部署算法")
+            self.assertFalse(state.is_seen_record(changed))
 
 
 if __name__ == "__main__":

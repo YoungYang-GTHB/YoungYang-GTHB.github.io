@@ -88,6 +88,30 @@ class FetcherState:
     def is_applied(self, job_url: str) -> bool:
         return job_url in self._data.get("applied_urls", [])
 
+    def is_seen_record(self, record: dict[str, Any]) -> bool:
+        """判断这一版本的岗位记录是否已经处理过。"""
+        return self._record_fingerprint(record) in self._data.get(
+            "seen_record_versions", []
+        )
+
+    def has_seen_record_history(self) -> bool:
+        """是否已经建立过岗位版本历史，用于兼容旧版 state.json。"""
+        return "seen_record_versions" in self._data
+
+    def remember_records(self, records: list[dict[str, Any]]) -> None:
+        """记住岗位版本；正文或更新时间发生变化时视为新版本。"""
+        if not records:
+            return
+        seen = self._data.setdefault("seen_record_versions", [])
+        known = set(seen)
+        for record in records:
+            fingerprint = self._record_fingerprint(record)
+            if fingerprint not in known:
+                seen.append(fingerprint)
+                known.add(fingerprint)
+        self._data["seen_record_versions"] = seen[-20000:]
+        self._save()
+
     def get_summary(self) -> dict:
         """返回所有导航的抓取状态摘要。"""
         summary = {}
@@ -119,3 +143,15 @@ class FetcherState:
     def _nav_state(self, nav_id: int) -> dict:
         navs = self._data.setdefault("navigations", {})
         return navs.setdefault(str(nav_id), {})
+
+    @staticmethod
+    def _record_fingerprint(record: dict[str, Any]) -> str:
+        stable = {
+            str(key): value
+            for key, value in record.items()
+            if not str(key).startswith("_")
+        }
+        payload = json.dumps(
+            stable, ensure_ascii=False, sort_keys=True, default=str
+        ).encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()

@@ -135,6 +135,10 @@ python3 skills/job-hunter/scripts/jobctl.py status
 python3 skills/job-hunter/scripts/jobctl.py sync --phase 提前批
 python3 skills/job-hunter/scripts/jobctl.py shortlist --phase 提前批 --limit 20
 
+# 推荐：一条命令完成增量同步、历史排除和高匹配短名单输出
+python3 skills/job-hunter/scripts/jobctl.py scan \
+  --phase 提前批 --min-score 35 --limit 15
+
 # 若服务器直连失效，导入浏览器扩展导出的可见岗位数据
 python3 skills/job-hunter/scripts/jobctl.py sync \
   --phase 提前批 \
@@ -154,6 +158,23 @@ python3 skills/job-hunter/scripts/jobctl.py set-phase 秋招
 ```
 
 与当前批次不同的岗位无法进入提交流程。政策为 `unknown`、`affects_formal` 或仅有往届证据的岗位会自动标为暂缓；只有当届明确安全，或本人明确批准例外后，才能通过 `preflight`。
+
+历史已经明确决定“不投”的岗位写入长期排除库
+`career/求职投递/2027届/data/job_exclusions.yaml`。扫描器会先过滤排除库，避免反复展示、反复消耗模型上下文。推荐使用命令维护，而不是直接改 YAML：
+
+```bash
+python3 skills/job-hunter/scripts/jobctl.py exclude add \
+  --id example-low-fit \
+  --company 示例公司 \
+  --position-keyword RAG \
+  --phase 提前批 \
+  --reason '与具身智能主线和嵌入式支线匹配度低'
+
+python3 skills/job-hunter/scripts/jobctl.py exclude list --phase 提前批
+python3 skills/job-hunter/scripts/jobctl.py exclude remove example-low-fit
+```
+
+排除规则支持公司、岗位关键词、岗位 ID、URL、阶段和到期日。岗位 ID / URL 适合精确排除；公司 + 岗位关键词适合过滤同类重复岗位。若只是提前批暂不投，应填写 `--phase 提前批`，避免误伤后续秋招的新岗位。
 
 新岗位先创建草稿并查看最终快照：
 
