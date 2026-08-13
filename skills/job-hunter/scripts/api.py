@@ -18,6 +18,9 @@ class OfferAPI:
         self._timeout = timeout
         self._token_mgr = TokenManager()
         self._session = requests.Session()
+        # 云端环境的全局代理曾把 offerqingbaoju.cn 错误转发到本机并重置连接。
+        # 该客户端只访问配置中的 Offer 情报局 API，因此固定直连最稳定。
+        self._session.trust_env = False
         retry = Retry(
             total=4,
             connect=4,

@@ -7,7 +7,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_ROOT))
 
-from scripts.fetch_jobs import JobFilter
+from scripts.fetch_jobs import JobFilter, normalize_update_time
 from scripts.import_offer_export import build_phase_pool, detect_phase
 from scripts.state import FetcherState
 
@@ -109,6 +109,10 @@ class OfferExportImportTests(unittest.TestCase):
             self.assertTrue(state.is_seen_record(original))
             changed = dict(original, 职位="VLA真机部署算法")
             self.assertFalse(state.is_seen_record(changed))
+
+    def test_update_time_normalizes_platform_date_separator(self):
+        self.assertEqual(normalize_update_time("2026/08/13"), "2026-08-13")
+        self.assertEqual(normalize_update_time("2026-08-13"), "2026-08-13")
 
 
 if __name__ == "__main__":

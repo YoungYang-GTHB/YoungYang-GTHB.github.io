@@ -60,6 +60,11 @@ def detect_phase(record: dict) -> str:
             return phase
     return "未知"
 
+
+def normalize_update_time(value: Any) -> str:
+    """将平台常见的 ``YYYY/MM/DD`` 与 ISO 日期统一为可比较文本。"""
+    return str(value or "").strip().replace("/", "-")
+
 # ============================================================
 # 筛选模块
 # ============================================================
@@ -251,7 +256,12 @@ def fetch_navigation(
         if cutoff and not force_full:
             # 记录本页最新 更新时间
             page_newest = max(
-                (r.get(JobFilter.FIELD_MAP["updated"], "") for r in records),
+                (
+                    normalize_update_time(
+                        r.get(JobFilter.FIELD_MAP["updated"], "")
+                    )
+                    for r in records
+                ),
                 default="",
             )
             # 记录全局最新
@@ -260,7 +270,10 @@ def fetch_navigation(
 
             # 检查本页是否全部是旧数据
             all_old = all(
-                r.get(JobFilter.FIELD_MAP["updated"], "1970-01-01") <= cutoff
+                normalize_update_time(
+                    r.get(JobFilter.FIELD_MAP["updated"], "1970-01-01")
+                )
+                <= normalize_update_time(cutoff)
                 for r in records
             )
             if all_old and page > 1:
@@ -284,20 +297,28 @@ def fetch_navigation(
         effective_cutoff = seen_newest_update
     else:
         effective_cutoff = max(
-            (r.get(JobFilter.FIELD_MAP["updated"], "1970-01-01")
-             for r in all_records),
+            (
+                normalize_update_time(
+                    r.get(JobFilter.FIELD_MAP["updated"], "1970-01-01")
+                )
+                for r in all_records
+            ),
             default=None,
         )
 
-    # 混有新旧数据的第一页里，旧记录不应再次进入本轮输出。
-    # 更新时间缺失或不可靠时，用内容指纹作为增量兜底。
-    if cutoff and not force_full:
-        has_version_history = state.has_seen_record_history()
+    # 全量同步只决定“遍历全部页面”，不代表历史岗位要重新输出。
+    # 一旦建立版本历史，始终以内容指纹判断新增/变更；旧版状态文件
+    # 没有指纹历史时，才回退到更新时间 cutoff。
+    if state.has_seen_record_history():
+        candidate_records = [
+            job for job in all_records if not state.is_seen_record(job)
+        ]
+    elif cutoff and not force_full:
         candidate_records = [
             job
             for job in all_records
-            if job.get(JobFilter.FIELD_MAP["updated"], "") > cutoff
-            or (has_version_history and not state.is_seen_record(job))
+            if normalize_update_time(job.get(JobFilter.FIELD_MAP["updated"], ""))
+            > normalize_update_time(cutoff)
         ]
     else:
         candidate_records = all_records

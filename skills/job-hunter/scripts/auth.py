@@ -74,7 +74,9 @@ class TokenManager:
             return None
 
         try:
-            response = requests.post(
+            session_client = requests.Session()
+            session_client.trust_env = False
+            response = session_client.post(
                 f"{self._base_url}/refresh",
                 headers={
                     "Authorization": f"Bearer {access_token}",
