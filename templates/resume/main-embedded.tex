@@ -77,6 +77,7 @@
 \begin{itemize}
   \item 参与搭建 AGV、并联机构、双 6 自由度机械臂与 2 自由度头部组成的轮式仿人机器人系统
   \item 使用 \hl{C++ / ROS Noetic} 编写机器人总控程序，实现三维建图、路径规划、目标识别、动态避障、点云发布、碰撞检测与\hl{逆运动学求解}
+  \item 基于 \hl{MuJoCo} 搭建轮式仿人机器人仿真环境；开发\hl{自研双臂与底盘电机控制系统}，完成执行机构控制与整机联调
   \item 基于 \hl{Yocto} 为 \hl{i.MX6ULL} 构建嵌入式 Linux 系统，在板端运行 \hl{roscore} 与 AGV 底盘控制系统，通过\hl{有线以太网实现与上位机 ROS 多机通信}
   \item 基于 \hl{STM32F4} 开发下位机位置 / 键盘控制与 AGV 控制，优化多自由度机械臂控制方案，使\hl{六自由度机械臂控制频率提升 100\%}
   \item 搭建神通数据库完成机器人运行数据的高并发增删改查，参与自研机械臂、传感器与上位系统联调
@@ -106,13 +107,14 @@
 \section{工程实践经历}
 
 \ResumeItem{IDEA 研究院：视启未来}
-[\textnormal{VLA 与世界模型算法实习生 · 机器人系统与端侧 AI}]
+[\textnormal{VLA 与世界模型实习生 · 机器人系统与端侧 AI}]
 [2026.04—至今]
 
 \begin{itemize}
   \item 参与双臂机器人 VLA 策略训练与真机部署，主导推理服务 \hl{ROS1 → ROS2} 迁移，构建 30Hz 指令发布 / 3Hz 模型推理双时钟实时控制链路
   \item 实现 \hl{RTC、CUDA Graphs 与 Triton kernel} 优化，单步推理耗时由约 256ms 降至 32ms（\hl{约 8 倍}），末端抖动降低 81\%
   \item 完成 X-VLA 在自有双臂平台 bring-up，使用\hl{机械臂固件 EndPoseCtrl 实现 IK}，将控制周期由 \hl{1.4s 压至 0.33s}
+  \item 完成 \hl{RECAP / RLT 在美甲操作任务}上的应用实现，适配训练与评测链路
 \end{itemize}
 
 \ResumeItem{中秦禾瑞（陕西）科技有限公司}

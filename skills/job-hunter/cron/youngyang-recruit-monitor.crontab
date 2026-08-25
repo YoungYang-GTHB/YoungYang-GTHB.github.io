@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+TZ=Asia/Shanghai
+
+# The host uses UTC and Ubuntu Vixie Cron does not support per-user trigger
+# timezones. 01:00 UTC is 09:00 Asia/Shanghai; TZ still controls the command.
+0 1 * * * /vePFS/tim/workspace/YoungYang/YoungYang-Resume/skills/job-hunter/scripts/run_daily_monitor_cron.sh

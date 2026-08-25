@@ -149,7 +149,12 @@ class JobFilter:
         kws = self._filters.get(filter_key, [])
         if not kws:
             return True
-        return self._contains_any(job.get(self.FIELD_MAP[field_key], ""), kws)
+        value = str(job.get(self.FIELD_MAP[field_key], "") or "").strip()
+        # Offer 情报局的行业等辅助字段经常为空。字段缺失代表“未知”，
+        # 不能当成“不匹配”，否则会把职位正文高度相关的记录全部漏掉。
+        if not value:
+            return True
+        return self._contains_any(value, kws)
 
     def _match_none(self, job, filter_key, field_key):
         kws = self._filters.get(filter_key, [])
@@ -161,7 +166,9 @@ class JobFilter:
         year = self._filters.get("graduation_year", "")
         if not year:
             return True
-        return job.get(self.FIELD_MAP["graduation"], "") == year
+        graduation = str(job.get(self.FIELD_MAP["graduation"], "") or "")
+        # 平台常以“2026,2027”或“2027届”表达多届可投，不能要求整串精确相等。
+        return str(year) in graduation
 
     @staticmethod
     def _contains_any(text: str, keywords: list[str]) -> bool:

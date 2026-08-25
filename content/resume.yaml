@@ -25,7 +25,7 @@ personal:
 featured:
   title: 双臂机器人叠衣 · 具身智能 VLA 系统
   org: 视启未来（IDEA 研究院孵化）
-  role: VLA 与世界动作模型算法实习生 · 具身智能团队
+  role: VLA 与世界模型实习生 · 具身智能团队
   period: "2026.04 - 至今"
   tagline: 从数据、训练、实时推理到真机部署的全链路具身智能落地
   summary: |
@@ -185,6 +185,7 @@ projects:
     technologies:
       - Ubuntu 20.04
       - ROS Noetic
+      - MuJoCo
       - STM32F4
       - 点云处理
       - 路径规划
@@ -192,6 +193,8 @@ projects:
     achievements:
       - 实现三维地图构建、路径规划、目标识别和动态空间避障
       - 编写机器人总控程序，实现点云发布、碰撞检测、逆运动学求解
+      - 基于 MuJoCo 搭建轮式仿人机器人仿真环境，用于模型与控制链路联调
+      - 开发自研双臂与底盘电机控制系统，完成执行机构控制及整机联调
       - 基于 Yocto 为 i.MX6ULL 构建嵌入式 Linux 系统，在板端运行 roscore 与 AGV 底盘控制，并通过有线以太网实现与上位机 ROS 多机通信
       - 设计自研多自由度机械臂可靠性与灵活替代控制方案
       - 实现六自由度机械臂控制频率提升 100%
@@ -292,7 +295,7 @@ projects:
 
 experience:
   - company: IDEA 研究院：视启未来
-    role: VLA 与世界动作模型算法实习生 · 具身智能团队
+    role: VLA 与世界模型实习生 · 具身智能团队
     period: "2026.04 - 至今"
     type: 实习
     description: |
@@ -302,6 +305,7 @@ experience:
       - 以开源 π0.5（openpi）为基座训练双臂叠衣策略，通过数据精选 + 两阶段初始化做出新 SOTA 配方，动作误差 MAE@50 较原 SOTA 降低约 77%，并完成真机部署上机
       - 主导 VLA 推理实时化：实现 RTC 实时分块推理 + Triton kernel 优化，单步推理耗时由约 256ms 优化至 32ms（约 8×），末端抖动降低 81%
       - 实现 AWBC / RECAP advantage 离线策略改进流水线，AWBC 离线 MAE@1 为 0.0079（SFT 0.0089）；开展 cross-embodiment 混训与权重空间模型合并实验
+      - 完成 RECAP 与 RLT 在美甲操作任务上的应用实现，打通任务适配、训练与评测链路
       - 完成清华 X-VLA 架构在自有双臂平台的真机 bring-up，通过固件级 IK 将推理周期由 1.4s 压至 0.33s
       - 复现并适配 FastWAM 世界动作模型，完成 Task_A1 叠衣数据/训练配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
       - 构建 CRAVE 零训练里程碑 / 价值引擎，从冻结视觉特征生成 milestone 与 progress/value 信号（对人工 stage-progress 相关系数 0.865）；探索将三档 advantage 接入 AWBC，减少人工阶段标注依赖
@@ -321,6 +325,7 @@ experience:
   - company: 华为数字能源实践营
     role: 学员
     period: "2025.07"
+    location: 西安
     type: 培训
     description: |
       学习企业数字能源云微服务 DDD 架构，了解 AI 在能源服务的应用场景和工程化部署。

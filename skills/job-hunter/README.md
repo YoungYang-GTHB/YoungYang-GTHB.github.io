@@ -63,6 +63,39 @@ Job OK 不是“自动投递神器”：
 
 ## Quick Start
 
+### 猎聘硬科技专题增量发现
+
+项目内置了针对猎聘“硬科技新主场”专题的只读发现脚本。它连接已经启动的 Chrome CDP，遍历动态分页，提取公司、猎聘公司 ID、在招职位数量和方向关键词，并与现有投递/监测账本去重：
+
+```bash
+python3 scripts/scan_liepin_hardtech.py
+```
+
+如需保留快照：
+
+```bash
+python3 scripts/scan_liepin_hardtech.py \
+  --output output/liepin-hardtech-$(date +%F).json
+```
+
+默认 CDP 地址为 `http://127.0.0.1:9222`。专题中的职位数量混合社招、实习和校招，脚本只产生 `discovery_only` 线索；必须继续取得公司官方的2027届、正式全职和完整 JD 证据，才能进入投递队列。
+
+### 每日只读监测
+
+一个命令同时生成预计开放/安全日/硬截止提醒、猎聘增量快照和运行清单。若监测项提供带时区的 `hard_deadline_at`，系统会识别早于 09:00 日报的凌晨截止，并将前一天标记为“最后可用整日”：
+
+```bash
+python3 scripts/run_daily_monitor.py
+```
+
+默认产物位于 `output/daily-monitor/`。除提醒、猎聘快照和 manifest 外，还会生成 `YYYY-MM-DD-liepin-delta.json`，列出新增/消失公司和在招数变化。如 Chrome CDP 尚未启动，命令会保留时间提醒，并在 manifest 中标记猎聘扫描失败。可用下列命令主动跳过猎聘：
+
+```bash
+python3 scripts/run_daily_monitor.py --skip-liepin
+```
+
+该流程不修改投递/监测台账，也不打开或提交申请表。
+
 ### 1. 让 Agent 帮你安装
 
 在 Codex、Claude Code 或其他支持 Skill 的 Agent 里直接说：

@@ -101,6 +101,31 @@ class OfferExportImportTests(unittest.TestCase):
         self.assertGreater(job_filter.score(embodied), job_filter.score(generic))
         self.assertEqual(embodied["_target_track"], "具身智能")
 
+    def test_missing_industry_does_not_hide_relevant_job(self):
+        config = {
+            "filters": {
+                "industries": ["机器人", "互联网"],
+                "education_keywords": ["硕士", "详见公告"],
+                "graduation_year": "2027",
+            }
+        }
+        job = {
+            "企业名称": "自变量机器人",
+            "职位": "VLA算法工程师",
+            "行业": "",
+            "学历要求": "详见公告",
+            "毕业年份": "2027",
+        }
+
+        self.assertTrue(JobFilter(config).passes(job))
+
+    def test_multi_year_graduation_field_includes_target_year(self):
+        job_filter = JobFilter(self.config)
+
+        self.assertTrue(job_filter.passes({"毕业年份": "2026,2027"}))
+        self.assertTrue(job_filter.passes({"毕业年份": "2027届"}))
+        self.assertFalse(job_filter.passes({"毕业年份": "2026"}))
+
     def test_seen_record_version_changes_with_content(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             state = FetcherState(Path(temp_dir) / "state.json")

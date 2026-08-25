@@ -12,12 +12,14 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from collections import Counter
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import yaml
 
@@ -27,6 +29,9 @@ DEFAULT_LEDGER = (
     PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "applications.yaml"
 )
 DEFAULT_SUMMARY = PROJECT_ROOT / "career" / "求职投递" / "2027届" / "投递汇总.md"
+DEFAULT_MONITORING = (
+    PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "monitoring.yaml"
+)
 
 sys.path.insert(0, str(SKILL_ROOT))
 
@@ -78,6 +83,448 @@ STATUS_LABELS = {
 
 class LedgerError(ValueError):
     pass
+
+
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Safe YAML loader that refuses silently shadowed mapping keys."""
+
+
+def _construct_unique_mapping(loader: UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False):
+    seen: set[Any] = set()
+    for key_node, _ in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in seen:
+            raise LedgerError(
+                f"YAML 重复键 {key!r}（第 {key_node.start_mark.line + 1} 行）"
+            )
+        seen.add(key)
+    return yaml.SafeLoader.construct_mapping(loader, node, deep=deep)
+
+
+UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    _construct_unique_mapping,
+)
+
+
+def load_yaml_unique(path: Path) -> dict[str, Any]:
+    return yaml.load(path.read_text(encoding="utf-8"), Loader=UniqueKeyLoader) or {}
+
+
+def load_monitoring(path: Path = DEFAULT_MONITORING) -> dict[str, Any]:
+    if not path.exists():
+        raise LedgerError(f"监测清单不存在: {path}")
+    payload = load_yaml_unique(path)
+    if not isinstance(payload.get("monitors"), list):
+        raise LedgerError("monitoring.yaml 的 monitors 必须是列表")
+    return payload
+
+
+def save_monitoring(payload: dict[str, Any], path: Path = DEFAULT_MONITORING) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(
+        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False, width=1000),
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+
+
+def validate_monitoring(payload: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    allowed_statuses = {"watching", "open", "prepared", "tracking"}
+    allowed_priorities = {"P0", "P1", "P2"}
+    default_resume = stringify(payload.get("default_resume")).strip()
+    evidence_cutoff: date | None = None
+    updated_at = stringify(payload.get("updated_at")).strip()
+    if updated_at:
+        try:
+            evidence_cutoff = date.fromisoformat(updated_at[:10])
+        except ValueError:
+            errors.append(f"updated_at 日期无效: {updated_at}")
+    if not default_resume:
+        errors.append("default_resume 不能为空")
+    elif not (PROJECT_ROOT / default_resume).is_file():
+        errors.append(f"default_resume 文件不存在: {default_resume}")
+    seen: set[str] = set()
+    for index, item in enumerate(payload.get("monitors", []), start=1):
+        prefix = f"monitors[{index}]"
+        for field in ("id", "company", "status", "priority", "next_check", "action"):
+            if not stringify(item.get(field)).strip():
+                errors.append(f"{prefix}.{field} 不能为空")
+        monitor_id = stringify(item.get("id"))
+        if monitor_id in seen:
+            errors.append(f"{prefix}.id 重复: {monitor_id}")
+        seen.add(monitor_id)
+        if item.get("status") not in allowed_statuses:
+            errors.append(f"{prefix}.status 非法: {item.get('status')}")
+        if item.get("status") == "open" and not stringify(item.get("safe_date")).strip():
+            errors.append(f"{prefix}.status 为 open 时 safe_date 不能为空")
+        if (
+            item.get("status") == "prepared"
+            and item.get("priority") in {"P0", "P1"}
+            and not stringify(item.get("safe_date")).strip()
+        ):
+            errors.append(f"{prefix}.P0/P1 prepared 监测项的 safe_date 不能为空")
+        if (
+            item.get("status") == "prepared"
+            and item.get("priority") in {"P0", "P1"}
+            and not stringify(item.get("target")).strip()
+        ):
+            errors.append(f"{prefix}.P0/P1 prepared 监测项的 target 不能为空")
+        if (
+            item.get("status") in {"open", "prepared"}
+            and item.get("priority") in {"P0", "P1"}
+            and not stringify(item.get("resume")).strip()
+        ):
+            errors.append(f"{prefix}.P0/P1 open/prepared 监测项的 resume 不能为空")
+        if item.get("status") == "open" and not stringify(item.get("open_confirmed_at")).strip():
+            errors.append(f"{prefix}.status 为 open 时 open_confirmed_at 不能为空")
+        if item.get("priority") not in allowed_priorities:
+            errors.append(f"{prefix}.priority 非法: {item.get('priority')}")
+        parsed_dates: dict[str, date] = {}
+        for field in (
+            "next_check", "safe_date", "hard_deadline", "expected_open", "last_checked", "open_confirmed_at"
+        ):
+            value = stringify(item.get(field)).strip()
+            if not value:
+                continue
+            try:
+                parsed_dates[field] = date.fromisoformat(value)
+            except ValueError:
+                errors.append(f"{prefix}.{field} 日期无效: {value}")
+        deadline_at_value = stringify(item.get("hard_deadline_at")).strip()
+        if deadline_at_value:
+            try:
+                deadline_at = datetime.fromisoformat(deadline_at_value)
+            except ValueError:
+                errors.append(f"{prefix}.hard_deadline_at 时间无效: {deadline_at_value}")
+            else:
+                if deadline_at.utcoffset() is None:
+                    errors.append(f"{prefix}.hard_deadline_at 必须包含时区偏移")
+                if "hard_deadline" not in parsed_dates:
+                    errors.append(f"{prefix}.hard_deadline_at 存在时 hard_deadline 不能为空")
+                elif deadline_at.date() != parsed_dates["hard_deadline"]:
+                    errors.append(f"{prefix}.hard_deadline_at 日期必须与 hard_deadline 一致")
+        if (
+            "next_check" in parsed_dates
+            and "last_checked" in parsed_dates
+            and parsed_dates["next_check"] <= parsed_dates["last_checked"]
+        ):
+            errors.append(f"{prefix}.next_check 必须晚于 last_checked")
+        if (
+            "safe_date" in parsed_dates
+            and "expected_open" in parsed_dates
+            and parsed_dates["safe_date"] < parsed_dates["expected_open"]
+        ):
+            errors.append(f"{prefix}.safe_date 不能早于 expected_open")
+        if (
+            "safe_date" in parsed_dates
+            and "hard_deadline" in parsed_dates
+            and parsed_dates["safe_date"] > parsed_dates["hard_deadline"]
+        ):
+            errors.append(f"{prefix}.safe_date 不能晚于 hard_deadline")
+        if (
+            "open_confirmed_at" in parsed_dates
+            and "last_checked" in parsed_dates
+            and parsed_dates["open_confirmed_at"] > parsed_dates["last_checked"]
+        ):
+            errors.append(f"{prefix}.open_confirmed_at 不能晚于 last_checked")
+        action = stringify(item.get("action")).strip()
+        action_date_match = re.match(r"^(\d{2}-\d{2})(?!至|起)", action)
+        if action_date_match and "next_check" in parsed_dates:
+            try:
+                action_date = date.fromisoformat(
+                    f"{parsed_dates['next_check'].year}-{action_date_match.group(1)}"
+                )
+            except ValueError:
+                errors.append(f"{prefix}.action 起始日期无效: {action_date_match.group(1)}")
+            else:
+                if action_date != parsed_dates["next_check"]:
+                    errors.append(
+                        f"{prefix}.action 单次起始日期必须与 next_check 一致: "
+                        f"{action_date_match.group(1)} != {parsed_dates['next_check'].strftime('%m-%d')}"
+                    )
+        if evidence_cutoff is not None:
+            for field in ("last_checked", "open_confirmed_at"):
+                if field in parsed_dates and parsed_dates[field] > evidence_cutoff:
+                    errors.append(
+                        f"{prefix}.{field} 不能晚于时间基准 {evidence_cutoff.isoformat()}"
+                    )
+        if not stringify(item.get("last_checked")).strip():
+            errors.append(f"{prefix}.last_checked 不能为空")
+        if not stringify(item.get("evidence_status")).strip():
+            errors.append(f"{prefix}.evidence_status 不能为空")
+        urls = item.get("official_urls")
+        if not isinstance(urls, list) or not urls:
+            errors.append(f"{prefix}.official_urls 必须是非空列表")
+        elif any(not stringify(url).strip() for url in urls):
+            errors.append(f"{prefix}.official_urls 不能包含空值")
+        if item.get("submit_gate") != "user_confirmation":
+            errors.append(f"{prefix}.submit_gate 必须为 user_confirmation")
+        application_ids = item.get("application_ids", [])
+        if application_ids and not isinstance(application_ids, list):
+            errors.append(f"{prefix}.application_ids 必须是列表")
+        resume = stringify(item.get("resume") or default_resume).strip()
+        if not resume:
+            errors.append(f"{prefix}.resume 及 default_resume 不能同时为空")
+        elif not (PROJECT_ROOT / resume).is_file():
+            errors.append(f"{prefix}.resume 文件不存在: {resume}")
+    return errors
+
+
+def validate_monitor_coverage(
+    ledger: "ApplicationLedger", payload: dict[str, Any]
+) -> list[str]:
+    errors: list[str] = []
+    mapped: dict[str, list[str]] = {}
+    for monitor in payload.get("monitors", []):
+        for application_id in monitor.get("application_ids", []) or []:
+            mapped.setdefault(stringify(application_id), []).append(monitor["id"])
+    ledger_ids = {stringify(item.get("id")) for item in ledger.applications}
+    for application_id, monitor_ids in mapped.items():
+        if application_id not in ledger_ids:
+            errors.append(
+                f"监测项 {','.join(monitor_ids)} 引用了不存在的投递记录: {application_id}"
+            )
+        if len(monitor_ids) > 1:
+            errors.append(
+                f"投递记录被多个监测项重复覆盖: {application_id} -> {','.join(monitor_ids)}"
+            )
+    applications_by_id = {
+        stringify(item.get("id")): item for item in ledger.applications
+    }
+    for monitor in payload.get("monitors", []):
+        hard_deadline = stringify(monitor.get("hard_deadline")).strip()
+        for application_id in monitor.get("application_ids", []) or []:
+            application = applications_by_id.get(stringify(application_id))
+            if application is None:
+                continue
+            application_deadline = stringify(application.get("deadline")).strip()
+            exact_application_deadline = False
+            if application_deadline:
+                try:
+                    date.fromisoformat(application_deadline)
+                except ValueError:
+                    pass
+                else:
+                    exact_application_deadline = True
+            if (
+                not hard_deadline
+                and exact_application_deadline
+                and application.get("status") in {"draft", "prepared", "held"}
+            ):
+                errors.append(
+                    f"投递记录 {application_id} 有明确 deadline {application_deadline}，"
+                    f"但监测项 {monitor['id']} 缺少 hard_deadline"
+                )
+                continue
+            if not hard_deadline:
+                continue
+            if not application_deadline:
+                errors.append(
+                    f"监测项 {monitor['id']} 有官方硬截止 {hard_deadline}，"
+                    f"但投递记录 {application_id} 缺少 deadline"
+                )
+            elif application_deadline[:10] != hard_deadline:
+                errors.append(
+                    f"官方硬截止不一致: {monitor['id']}={hard_deadline}, "
+                    f"{application_id}={application_deadline}"
+                )
+    required = {
+        stringify(item.get("id"))
+        for item in ledger.applications
+        if item.get("phase") == "秋招" and item.get("status") in {"prepared", "held"}
+    }
+    for application_id in sorted(required - set(mapped)):
+        errors.append(f"秋招待确认记录缺少监测映射: {application_id}")
+    return errors
+
+
+def monitor_due_reasons(item: dict[str, Any], target: date) -> list[str]:
+    """Return all reminder stages that are active on ``target``.
+
+    ``next_check`` remains the recurring/manual check anchor.  Expected opening
+    and safety dates additionally produce explicit opening T-7/T-1/day and
+    safety T-7/T-3/T-1/day reminders so a single recurring check date cannot
+    hide an important stage.
+    """
+    reasons: list[str] = []
+    next_check = date.fromisoformat(stringify(item["next_check"]))
+    if next_check == target:
+        reasons.append("定期检查")
+    elif next_check < target:
+        reasons.append(f"检查逾期{(target - next_check).days}天")
+
+    expected_value = stringify(item.get("expected_open")).strip()
+    if expected_value and item.get("status") in {"watching", "tracking"}:
+        expected_open = date.fromisoformat(expected_value)
+        if target == expected_open - timedelta(days=7):
+            reasons.append("预计开放前7日")
+        if target == expected_open - timedelta(days=1):
+            reasons.append("预计开放前1日")
+        if target == expected_open:
+            reasons.append("预计开放日")
+        elif target > expected_open:
+            reasons.append(f"预计开放后{(target - expected_open).days}日未确认")
+
+    safe_value = stringify(item.get("safe_date")).strip()
+    if safe_value:
+        safe_date = date.fromisoformat(safe_value)
+        if target == safe_date - timedelta(days=7):
+            reasons.append("安全日前7日")
+        if target == safe_date - timedelta(days=3):
+            reasons.append("安全日前3日")
+        if target == safe_date - timedelta(days=2):
+            reasons.append("安全日前2日")
+        if target == safe_date - timedelta(days=1):
+            reasons.append("安全日前1日")
+        if target == safe_date:
+            reasons.append("安全日")
+        elif target > safe_date:
+            reasons.append(f"已越过安全日{(target - safe_date).days}天")
+
+    deadline_value = stringify(item.get("hard_deadline")).strip()
+    if deadline_value:
+        hard_deadline = date.fromisoformat(deadline_value)
+        deadline_label = stringify(item.get("deadline_label")).strip() or "官方硬截止"
+        days_left = (hard_deadline - target).days
+        deadline_at_value = stringify(item.get("hard_deadline_at")).strip()
+        deadline_at = datetime.fromisoformat(deadline_at_value) if deadline_at_value else None
+        if 1 <= days_left <= 7:
+            reasons.append(f"{deadline_label}前{days_left}天")
+            if days_left == 1 and deadline_at is not None:
+                reasons.append(
+                    f"最后可用整日（次日{deadline_at.strftime('%H:%M')}截止）"
+                )
+        elif days_left == 0:
+            if deadline_at is not None and (deadline_at.hour, deadline_at.minute) < (9, 0):
+                reasons.append(
+                    f"{deadline_label}已于{deadline_at.strftime('%H:%M')}结束（早于09:00日报）"
+                )
+            else:
+                reasons.append(f"{deadline_label}日")
+        elif days_left < 0:
+            reasons.append(f"已越过{deadline_label}{-days_left}天")
+
+    checked_value = stringify(item.get("last_checked")).strip()
+    # Staleness is an evidence-quality qualifier, not a standalone action.
+    # Emitting it for every monitor after two days floods the daily queue with
+    # records whose own recurrence/opening/safety stage is still in the future.
+    # Attach it only after a real reminder stage above has become active.
+    if checked_value and reasons:
+        checked_date = date.fromisoformat(checked_value)
+        age = (target - checked_date).days
+        if age >= 2:
+            reasons.append(f"官网证据已{age}天未更新")
+    confirmed_value = stringify(item.get("open_confirmed_at")).strip()
+    if item.get("status") == "open" and confirmed_value:
+        confirmed_date = date.fromisoformat(confirmed_value)
+        open_age = (target - confirmed_date).days
+        if open_age > 0:
+            reasons.append(f"确认开放后{open_age}日尚未完成筛岗")
+    return reasons
+
+
+def deadline_display(item: dict[str, Any]) -> str:
+    """Render a deadline without discarding an official time or offset."""
+    precise = stringify(item.get("hard_deadline_at")).strip()
+    if precise:
+        return datetime.fromisoformat(precise).isoformat(timespec="minutes").replace("T", " ")
+    return stringify(item.get("hard_deadline")).strip() or "—"
+
+
+def reminder_urgency(reasons: list[str]) -> int:
+    """Rank actionable stages independently from company priority.
+
+    A P1 safety deadline must not sit below a P0 routine website check.  The
+    company priority remains the second ordering key within the same stage.
+    """
+    if any("截止" in reason for reason in reasons):
+        return -1
+    if any(reason == "安全日" or reason.startswith("已越过安全日") for reason in reasons):
+        return 0
+    if "安全日前1日" in reasons:
+        return 1
+    if (
+        "安全日前3日" in reasons
+        or "安全日前2日" in reasons
+        or "预计开放前1日" in reasons
+        or "预计开放日" in reasons
+        or any(reason.startswith("预计开放后") for reason in reasons)
+        or any(reason.startswith("确认开放后") for reason in reasons)
+    ):
+        return 2
+    if "安全日前7日" in reasons or "预计开放前7日" in reasons:
+        return 3
+    if any(reason.startswith("检查逾期") for reason in reasons):
+        return 4
+    return 5
+
+
+def select_brief_rows(
+    selected: list[tuple[dict[str, Any], list[str]]], limit: int
+) -> tuple[
+    list[tuple[dict[str, Any], list[str]]],
+    list[tuple[dict[str, Any], list[str]]],
+]:
+    """Keep the brief readable without silently dropping strong reminders.
+
+    Rows at urgency 0-2 are strong reminders.  At most ``limit`` rows receive
+    the full evidence/JD/action expansion; additional strong reminders remain
+    visible in a compact company-and-reason list.  Routine rows only fill spare
+    detailed capacity.
+    """
+    if len(selected) <= limit:
+        return selected, []
+    mandatory = [row for row in selected if reminder_urgency(row[1]) <= 2]
+    mandatory_ids = {item["id"] for item, _ in mandatory}
+    remainder = [row for row in selected if row[0]["id"] not in mandatory_ids]
+    detailed_mandatory = mandatory[:limit]
+    compact_mandatory = mandatory[limit:]
+    detailed = detailed_mandatory + remainder[: max(0, limit - len(detailed_mandatory))]
+    return detailed, compact_mandatory
+
+
+def resume_guidance(item: dict[str, Any]) -> str:
+    """Return concise, evidence-bounded resume advice for a selected target."""
+    explicit = stringify(item.get("resume_advice"))
+    if explicit:
+        return explicit
+    target_corpus = stringify(item.get("target")).casefold()
+    evidence_corpus = stringify(item.get("evidence_status")).casefold()
+    # Exact targets are sometimes only opaque ATS IDs (for example J12785).
+    # Fall back to verified JD evidence only for those opaque values.  When a
+    # target already has a semantic role name, evidence may mention excluded
+    # alternatives or optional VLA/infra bonuses and must not override it.
+    target_has_semantics = bool(
+        re.search(r"[\u4e00-\u9fff]", target_corpus)
+        or re.search(r"[a-z]{2,}", target_corpus)
+    )
+    corpus = target_corpus if target_has_semantics else f"{target_corpus} {evidence_corpus}".strip()
+    infra_corpus = f"{corpus} {evidence_corpus}".strip()
+    if any(keyword in corpus for keyword in ("具身", "vla", "世界模型", "robot learning", "机器人", "端到端")):
+        return (
+            "主简历；突出VLA/WAM、双臂真机、ROS2、数据评测闭环与端侧部署；"
+            "不虚增Isaac、PPO、双足/步态或量产经验"
+        )
+    if any(keyword in corpus for keyword in ("多模态", "vlm", "视觉语言")):
+        return (
+            "主简历；突出多模态/VLA训练、数据与评测、PyTorch、FSDP和部署闭环；"
+            "不虚增顶会论文、百亿预训练、生产Agent/RAG或专用领域经验"
+        )
+    if any(keyword in infra_corpus for keyword in ("训练框架", "训练引擎", "分布式训练", "训练系统", "推理", "infra", "算子", "hpc", "软件栈", "模型部署", "性能优化", "gpu/npu")):
+        return (
+            "主简历；突出FSDP、Triton、CUDA Graphs、RTC、8倍推理优化与故障定位；"
+            "不虚增Megatron、DeepSpeed、vLLM、TensorRT、千卡或编译器核心开发"
+        )
+    if any(keyword in corpus for keyword in ("多模态", "大模型", "算法", "vlm", "llm")):
+        return (
+            "主简历；突出多模态/VLA训练、数据与评测、PyTorch、FSDP和部署闭环；"
+            "不虚增顶会论文、百亿预训练、生产Agent/RAG或专用领域经验"
+        )
+    return "主简历；仅使用可验证的项目、训练、性能优化与部署经历，不按JD关键词虚增技能"
 
 
 def today_string() -> str:
@@ -134,7 +581,7 @@ class ApplicationLedger:
                 "updated_at": today_string(),
                 "applications": [],
             }
-        payload = yaml.safe_load(self.path.read_text(encoding="utf-8")) or {}
+        payload = load_yaml_unique(self.path)
         payload.setdefault("schema_version", 1)
         payload.setdefault("active_phase", "提前批")
         payload.setdefault("updated_at", today_string())
@@ -165,6 +612,13 @@ class ApplicationLedger:
 
     def validate(self) -> list[str]:
         errors: list[str] = []
+        evidence_cutoff: date | None = None
+        updated_at = stringify(self.data.get("updated_at")).strip()
+        if updated_at:
+            try:
+                evidence_cutoff = date.fromisoformat(updated_at[:10])
+            except ValueError:
+                errors.append(f"updated_at 日期无效: {updated_at}")
         if self.data.get("active_phase") not in ACTIVE_PHASES:
             errors.append(f"active_phase 非法: {self.data.get('active_phase')}")
         seen_ids: set[str] = set()
@@ -187,6 +641,17 @@ class ApplicationLedger:
                 for field in ("applied_at", "channel", "resume"):
                     if not stringify(item.get(field)).strip():
                         errors.append(f"{prefix}.{field} 在已投递状态下不能为空")
+            applied_at = stringify(item.get("applied_at")).strip()
+            if applied_at and evidence_cutoff is not None:
+                try:
+                    applied_date = date.fromisoformat(applied_at[:10])
+                except ValueError:
+                    errors.append(f"{prefix}.applied_at 日期无效: {applied_at}")
+                else:
+                    if applied_date > evidence_cutoff:
+                        errors.append(
+                            f"{prefix}.applied_at 不能晚于时间基准 {evidence_cutoff.isoformat()}"
+                        )
             resume = stringify(item.get("resume"))
             if resume and not (PROJECT_ROOT / resume).exists():
                 errors.append(f"{prefix}.resume 文件不存在: {resume}")
@@ -289,7 +754,136 @@ def cmd_validate(args: argparse.Namespace) -> int:
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
-    print(f"[jobctl] 账本校验通过：{len(ledger.applications)} 条")
+    monitoring = load_monitoring(Path(args.monitoring))
+    monitor_errors = validate_monitoring(monitoring)
+    monitor_errors.extend(validate_monitor_coverage(ledger, monitoring))
+    if monitor_errors:
+        for error in monitor_errors:
+            print(f"- {error}", file=sys.stderr)
+        return 1
+    print(
+        f"[jobctl] 校验通过：投递账本 {len(ledger.applications)} 条；"
+        f"监测项 {len(monitoring.get('monitors', []))} 条"
+    )
+    return 0
+
+
+def cmd_monitor_due(args: argparse.Namespace) -> int:
+    path = Path(args.monitoring)
+    payload = load_monitoring(path)
+    errors = validate_monitoring(payload)
+    if errors:
+        raise LedgerError("监测清单校验失败:\n- " + "\n- ".join(errors))
+    timezone_name = stringify(payload.get("timezone")) or "Asia/Shanghai"
+    target = (
+        date.fromisoformat(args.date)
+        if args.date
+        else datetime.now(ZoneInfo(timezone_name)).date()
+    )
+    monitors = payload["monitors"]
+    with_reasons = [(item, monitor_due_reasons(item, target)) for item in monitors]
+    selected = with_reasons if args.all else [
+        (item, reasons) for item, reasons in with_reasons if reasons
+    ]
+    selected.sort(
+        key=lambda row: (
+            reminder_urgency(row[1]),
+            {"P0": 0, "P1": 1, "P2": 2}[row[0]["priority"]],
+            row[0].get("hard_deadline") or "9999-12-31",
+            row[0].get("safe_date") or "9999-12-31",
+            row[0]["next_check"],
+            row[0]["company"],
+        )
+    )
+    total_selected = len(selected)
+    compact_mandatory: list[tuple[dict[str, Any], list[str]]] = []
+    if args.brief and total_selected > args.brief_limit:
+        selected, compact_mandatory = select_brief_rows(selected, args.brief_limit)
+    print(f"监测日期: {target.isoformat()}；到期 {total_selected} / {len(monitors)}")
+    if args.brief:
+        hidden = total_selected - len(selected) - len(compact_mandatory)
+        print(
+            f"行动简报: 详列 {len(selected)} 项；紧凑强提醒 {len(compact_mandatory)} 项；"
+            f"后台巡检保留 {hidden} 项；强提醒以详表或紧凑清单保留"
+        )
+        if compact_mandatory:
+            print("其余强提醒（公司｜原因）:")
+            for start in range(0, len(compact_mandatory), 6):
+                chunk = compact_mandatory[start : start + 6]
+                print(
+                    "；".join(
+                        f"{item['company']}｜{'、'.join(reasons)}"
+                        for item, reasons in chunk
+                    )
+                )
+    default_resume = stringify(payload.get("default_resume"))
+    print(
+        "优先级\t提醒原因\t下次检查\t安全日\t截止节点\t公司\t状态\t"
+        "最后核验\t官网证据状态\t推荐岗位\t简历\t简历建议\t动作"
+    )
+    for item, reasons in selected:
+        print(
+            f"{item['priority']}\t{'、'.join(reasons) or '尚未到期'}\t"
+            f"{item['next_check']}\t"
+            f"{item.get('safe_date') or '—'}\t{deadline_display(item)}\t{item['company']}\t"
+            f"{item['status']}\t{item.get('last_checked') or '—'}\t"
+            f"{item.get('evidence_status') or '待下次官网核验'}\t"
+            f"{item.get('target') or '待开放后筛选'}\t"
+            f"{item.get('resume') or default_resume}\t{resume_guidance(item)}\t{item['action']}"
+        )
+    return 0
+
+
+def cmd_monitor_record_check(args: argparse.Namespace) -> int:
+    """Record one evidence-backed website check and move its recurrence date."""
+    path = Path(args.monitoring)
+    payload = load_monitoring(path)
+    errors = validate_monitoring(payload)
+    if errors:
+        raise LedgerError("监测清单校验失败:\n- " + "\n- ".join(errors))
+    timezone_name = stringify(payload.get("timezone")) or "Asia/Shanghai"
+    checked = (
+        date.fromisoformat(args.date)
+        if args.date
+        else datetime.now(ZoneInfo(timezone_name)).date()
+    )
+    next_check = date.fromisoformat(args.next_check)
+    if next_check <= checked:
+        raise LedgerError("--next-check 必须晚于本次核验日期，避免任务立即再次逾期")
+    monitor = next(
+        (item for item in payload["monitors"] if stringify(item.get("id")) == args.id),
+        None,
+    )
+    if monitor is None:
+        raise LedgerError(f"监测项不存在: {args.id}")
+    monitor["last_checked"] = checked.isoformat()
+    monitor["evidence_status"] = args.evidence.strip()
+    monitor["next_check"] = next_check.isoformat()
+    if args.status:
+        monitor["status"] = args.status
+    if args.safe_date is not None:
+        monitor["safe_date"] = args.safe_date
+    if args.expected_open is not None:
+        monitor["expected_open"] = args.expected_open
+    if monitor["status"] == "open":
+        if not stringify(monitor.get("open_confirmed_at")).strip():
+            monitor["open_confirmed_at"] = checked.isoformat()
+        if next_check > checked + timedelta(days=3):
+            raise LedgerError(
+                "状态为 open 时 --next-check 最迟为开放后 3 日，"
+                "以保证及时完成全量筛岗"
+            )
+        if args.safe_date is None and not stringify(monitor.get("safe_date")).strip():
+            monitor["safe_date"] = (checked + timedelta(days=7)).isoformat()
+    payload["updated_at"] = datetime.now(ZoneInfo(timezone_name)).isoformat(timespec="seconds")
+    errors = validate_monitoring(payload)
+    if errors:
+        raise LedgerError("更新后监测清单校验失败:\n- " + "\n- ".join(errors))
+    save_monitoring(payload, path)
+    print(
+        f"[jobctl] 已记录官网核验: {monitor['company']} ({args.id})；"
+        f"{checked.isoformat()} → 下次 {next_check.isoformat()}；状态 {monitor['status']}"
+    )
     return 0
 
 
@@ -634,7 +1228,39 @@ def build_parser() -> argparse.ArgumentParser:
     status_parser.set_defaults(handler=cmd_status)
 
     validate_parser = subparsers.add_parser("validate", help="校验账本和简历文件")
+    validate_parser.add_argument("--monitoring", default=str(DEFAULT_MONITORING))
     validate_parser.set_defaults(handler=cmd_validate)
+
+    monitor_parser = subparsers.add_parser("monitor-due", help="列出指定日期已到期的官网监测动作")
+    monitor_parser.add_argument("--date", default="", help="YYYY-MM-DD；默认系统当天")
+    monitor_parser.add_argument("--all", action="store_true", help="显示全部监测项")
+    monitor_parser.add_argument(
+        "--brief", action="store_true", help="显示人工行动简报，但不截断安全日/T-1/已开放未筛岗"
+    )
+    monitor_parser.add_argument(
+        "--brief-limit", type=int, default=12, help="简报的常规目标条数，默认 12"
+    )
+    monitor_parser.add_argument("--monitoring", default=str(DEFAULT_MONITORING))
+    monitor_parser.set_defaults(handler=cmd_monitor_due)
+
+    monitor_record_parser = subparsers.add_parser(
+        "monitor-record-check", help="记录一次官网核验并设置下一次检查日期（不投递）"
+    )
+    monitor_record_parser.add_argument("id", help="monitoring.yaml 中的监测项 ID")
+    monitor_record_parser.add_argument("--evidence", required=True, help="本次官网核验结论")
+    monitor_record_parser.add_argument("--next-check", required=True, help="下一次检查日 YYYY-MM-DD")
+    monitor_record_parser.add_argument("--date", default="", help="本次核验日；默认北京时间当天")
+    monitor_record_parser.add_argument(
+        "--status", choices=("watching", "open", "prepared", "tracking"), default=""
+    )
+    monitor_record_parser.add_argument(
+        "--safe-date", default=None, help="可选更新安全日；传空字符串可清除"
+    )
+    monitor_record_parser.add_argument(
+        "--expected-open", default=None, help="可选更新预计开放日；传空字符串可清除"
+    )
+    monitor_record_parser.add_argument("--monitoring", default=str(DEFAULT_MONITORING))
+    monitor_record_parser.set_defaults(handler=cmd_monitor_record_check)
 
     phase_parser = subparsers.add_parser("set-phase", help="切换当前允许投递的招聘批次")
     phase_parser.add_argument("phase", choices=("提前批", "秋招", "春招"))
