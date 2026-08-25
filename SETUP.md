@@ -130,11 +130,18 @@ python3 scripts/fetch_jobs.py --save-token "你的token值"
 
 ---
 
-## 六、个人信息填写
+## 六、私有个人数据
 
 ### 6.1 结构化数据（简历生成的数据源）
 
-编辑 `content/resume.yaml`，已有郭睢阳的完整简历数据作为示例。包含：
+真实数据存放在私有子模块 `career/site/content/resume.yaml`。公开仓库仅提供 `examples/resume.example.yaml` 匿名示例。具有私有仓库权限时执行：
+
+```bash
+./scripts/prepare-private-site.sh
+RESUME_DATA_PATH=content/resume.yaml npm run dev
+```
+
+结构化数据包含：
 
 - `personal` — 基本信息（姓名、邮箱、电话、地址、GitHub 等）
 - `education` — 教育经历（学校、专业、GPA、排名）
@@ -146,12 +153,12 @@ python3 scripts/fetch_jobs.py --save-token "你的token值"
 - `patents` — 专利
 - `certifications` — 证书
 
-### 6.2 Markdown 文档库
+### 6.2 个人知识库
 
-编辑 `docs/` 下的 Markdown 文件，按 ARA 分类：
+个人文档位于私有子模块 `career/个人知识库/`，不提交到公开主仓库。
 
 ```
-docs/
+career/个人知识库/
 ├── areas/         # 活跃：简历/项目/求职
 ├── resources/     # 参考：证书/论文/竞赛
 ├── archive/       # 归档：旧项目/课程
@@ -162,10 +169,10 @@ docs/
 
 ### 6.3 LaTeX 简历
 
-- 模板：`templates/resume/main.tex`
-- 照片：放一张 `photo.jpg` 到 `templates/resume/`
-- 不需要头像：注释掉 `\ResumePhoto{photo.jpg}` 行
-- 编译：`cd templates/resume && xelatex main.tex`
+- 通用类与字体：`templates/resume/`
+- 私有个人化源码：`career/resumes/sources/`
+- 私有照片：`career/resumes/assets/photo.jpg`
+- 编译：`./scripts/build-private-resumes.sh`
 
 ---
 
@@ -193,7 +200,8 @@ filters:
 | `skills/job-hunter/state.json` | 岗位抓取状态 |
 | `skills/job-hunter/records/` | 投递记录 |
 | `output/` | 生成的简历 PDF 和岗位 JSONL |
-| `templates/resume/photo.jpg` | 个人照片 |
+| `content/resume.yaml` | 从私有子模块同步的本地个人数据 |
+| `public/profile/`、`public/projects/`、`public/resume*.pdf` | 从私有子模块同步的本地展示产物 |
 | `.npmrc` | npm 镜像配置 |
 
 ---
@@ -205,9 +213,10 @@ filters:
 npm run dev                    # 本地开发服务器 http://localhost:3000
 npm run build                  # 生产构建
 
-# ─── 简历 ───
-cd templates/resume
-xelatex main.tex               # 编译简历 PDF
+# ─── 私有站点与简历 ───
+./scripts/prepare-private-site.sh
+RESUME_DATA_PATH=content/resume.yaml npm run dev
+./scripts/build-private-resumes.sh
 
 # ─── 岗位拉取 ───
 cd skills/job-hunter

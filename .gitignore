@@ -33,6 +33,10 @@ next-env.d.ts
 /output/
 output/
 /media-source/
+/content/resume.yaml
+/public/profile/
+/public/projects/
+/public/resume*.pdf
 
 # ============================================================
 # LaTeX 编译中间文件

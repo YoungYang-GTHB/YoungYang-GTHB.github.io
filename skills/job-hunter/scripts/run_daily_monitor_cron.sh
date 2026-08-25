@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-project_root="/vePFS/tim/workspace/YoungYang/YoungYang-Resume"
+project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)"
 output_dir="${project_root}/output/daily-monitor"
 
 mkdir -p "${output_dir}"

@@ -14,6 +14,14 @@ export interface PersonalInfo {
   github?: string;
   linkedin?: string;
   summary: string;
+  headline?: string;
+  photo?: string;
+  resumeLinks?: Array<{
+    label: string;
+    href: string;
+    download?: string;
+    primary?: boolean;
+  }>;
 }
 
 export interface Education {

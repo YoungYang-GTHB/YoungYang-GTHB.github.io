@@ -15,7 +15,14 @@ function resolvePublicAsset(assetPath: string): string | null {
 }
 
 export function getResumeData(): ResumeData {
-  const filePath = path.join(process.cwd(), 'content', 'resume.yaml');
+  const configuredPath = process.env.RESUME_DATA_PATH;
+  const filePath = configuredPath
+    ? path.resolve(process.cwd(), configuredPath)
+    : path.join(process.cwd(), 'examples', 'resume.example.yaml');
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Resume data not found: ${filePath}`);
+  }
   const fileContents = fs.readFileSync(filePath, 'utf8');
   const data = yaml.load(fileContents) as ResumeData;
 

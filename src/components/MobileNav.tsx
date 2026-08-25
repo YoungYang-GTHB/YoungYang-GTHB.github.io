@@ -24,7 +24,7 @@ const navItems: NavItem[] = [
   { label: '专利成果', href: '#patents', icon: <Lightbulb className="h-4 w-4" /> },
 ];
 
-export function MobileNav() {
+export function MobileNav({ name }: { name: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('');
 
@@ -105,7 +105,7 @@ export function MobileNav() {
         {/* 侧边栏头部 */}
         <div className="flex items-center justify-between border-b p-4">
           <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            郭睢阳
+            {name}
           </span>
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
             <X className="h-5 w-5" />

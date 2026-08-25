@@ -32,7 +32,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 w-full border-b border-foreground/10 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-3">
-            <MobileNav />
+            <MobileNav name={resumeData.personal.name} />
             <div className="flex h-8 w-8 items-center justify-center bg-foreground text-background">
               <Bot className="h-4 w-4" />
             </div>

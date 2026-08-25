@@ -11,7 +11,7 @@ from scripts.profile_mapper import build_profile, normalize_date, split_period
 
 class ProfileMapperTests(unittest.TestCase):
     def test_date_normalization_preserves_full_birthday(self):
-        self.assertEqual(normalize_date("2002 年 3 月 20 日"), "2002-03-20")
+        self.assertEqual(normalize_date("2024 年 3 月 20 日"), "2024-03-20")
         self.assertEqual(split_period("2026.04 - 至今"), ("2026-04", "", "是"))
 
     def test_profile_uses_confirmed_capability_boundaries(self):

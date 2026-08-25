@@ -17,8 +17,7 @@ interface Props {
 }
 
 export function Header({ data }: Props) {
-  const heroSummary =
-    '面向具身智能的机器人研发工程师，具备从机械、电路到嵌入式与上位机的全流程落地能力。现于 IDEA 研究院：视启未来从事 VLA 与世界模型研发，覆盖策略训练、实时推理优化与双臂真机部署。';
+  const heroSummary = data.summary.trim();
 
   return (
     <motion.section
@@ -29,10 +28,10 @@ export function Header({ data }: Props) {
     >
       <div className="mb-8 flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-muted-foreground">
         <span>PROFILE / ROBOTICS ENGINEER</span>
-        <span className="hidden sm:inline">XI&apos;AN · CN / UTC+8</span>
+        <span className="hidden sm:inline">{data.location}</span>
       </div>
 
-      <div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_14rem] lg:items-start lg:gap-14">
+      <div className={`grid gap-9 lg:items-start lg:gap-14 ${data.photo ? 'lg:grid-cols-[minmax(0,1fr)_14rem]' : ''}`}>
         <div>
           <div className="flex items-center gap-3 text-sm font-semibold text-primary">
             <span className="h-2 w-2 bg-signal" />
@@ -42,7 +41,7 @@ export function Header({ data }: Props) {
           <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl md:text-7xl lg:text-[5.5rem]">
             {data.name}
             <span className="mt-3 block text-[0.42em] font-semibold leading-tight tracking-[-0.025em] text-muted-foreground">
-              让模型从训练集走到真实机器人。
+              {data.headline || data.tagline}
             </span>
           </h1>
 
@@ -79,30 +78,23 @@ export function Header({ data }: Props) {
                 </a>
               </Button>
             )}
-            <Button variant="outline" asChild className="h-10 rounded-none border-foreground/20 bg-transparent px-4 shadow-none">
-              <a href="/resume-vla-zh.pdf" download="郭睢阳-VLA具身智能工程师-中文简历.pdf">
-                <Download className="h-4 w-4" /> VLA 中文简历
-              </a>
-            </Button>
-            <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
-              <a href="/resume-vla-en.pdf" download="Suiyang-Guo-VLA-Embodied-AI-Resume-EN.pdf">
-                VLA English
-              </a>
-            </Button>
-            <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
-              <a href="/resume-embedded-zh.pdf" download="郭睢阳-嵌入式开发工程师-中文简历.pdf">
-                嵌入式中文
-              </a>
-            </Button>
-            <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
-              <a href="/resume-embedded-en.pdf" download="Suiyang-Guo-Embedded-Systems-Resume-EN.pdf">
-                Embedded English
-              </a>
-            </Button>
+            {data.resumeLinks?.map((resume) => (
+              <Button
+                key={resume.href}
+                variant={resume.primary ? 'outline' : 'ghost'}
+                asChild
+                className="h-10 rounded-none px-3 text-muted-foreground"
+              >
+                <a href={resume.href} download={resume.download}>
+                  {resume.primary && <Download className="h-4 w-4" />}
+                  {resume.label}
+                </a>
+              </Button>
+            ))}
           </div>
         </div>
 
-        <motion.aside
+        {data.photo && <motion.aside
           initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.18, duration: 0.55 }}
@@ -115,7 +107,7 @@ export function Header({ data }: Props) {
               {/* 公开站点使用 ASCII 资源名，避免 React 预加载响应头编码问题。 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/profile/profile.jpg"
+                  src={data.photo}
                   alt={data.name}
                   className="h-full w-full object-cover"
                 />
@@ -129,7 +121,7 @@ export function Header({ data }: Props) {
           <dl className="mt-7 space-y-2 border-l border-primary/30 pl-4 text-xs">
             <div>
               <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">EDUCATION</dt>
-              <dd className="mt-0.5 font-semibold">西北工业大学 · 控制工程</dd>
+              <dd className="mt-0.5 font-semibold">{data.subtitle}</dd>
             </div>
             {data.tagline && (
               <div>
@@ -138,7 +130,7 @@ export function Header({ data }: Props) {
               </div>
             )}
           </dl>
-        </motion.aside>
+        </motion.aside>}
       </div>
     </motion.section>
   );

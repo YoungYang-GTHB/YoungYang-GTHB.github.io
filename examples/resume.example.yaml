@@ -1,0 +1,66 @@
+personal:
+  name: Portfolio Owner
+  title: Robotics Engineer
+  subtitle: University · Engineering
+  tagline: Robotics · Machine Learning · Embedded Systems
+  headline: Turning models into reliable robotic systems.
+  email: hello@example.com
+  phone: "+00 000 0000 0000"
+  location: City · Country
+  github: https://github.com/example
+  summary: >-
+    This anonymous dataset demonstrates the public portfolio schema. Real profile data,
+    resume sources and application records belong in the private career submodule.
+
+education:
+  - school: Example University
+    degree: MSc
+    major: Robotics
+    period: 2024—2027
+    direction: Robot Learning
+    tags: [Graduate]
+
+skills:
+  ai:
+    - name: Robot Learning
+      level: Proficient
+      description: Policy training, evaluation and deployment
+  programming:
+    - name: Python / C++
+      level: Proficient
+      description: Model and robotics software development
+  embedded:
+    - name: Embedded Systems
+      level: Familiar
+      description: RTOS, motor control and board integration
+  os:
+    - name: ROS / Linux
+      level: Proficient
+      description: Robot middleware and system integration
+  tools:
+    - name: Git
+      level: Proficient
+      description: Version control and collaboration
+
+projects:
+  - title: Example Robot Project
+    slug: example-robot
+    period: 2025—Present
+    role: Project Contributor
+    description: Anonymous project used to validate the portfolio rendering pipeline.
+    technologies: [ROS2, Python, C++]
+    achievements:
+      - Built a reproducible model-to-robot integration pipeline
+
+experience:
+  - company: Example Organization
+    role: Robotics Intern
+    period: 2026
+    description: Worked on robot-learning system integration.
+    achievements:
+      - Improved the reliability of an anonymous deployment workflow
+
+awards: []
+honors: []
+patents: []
+certifications: []

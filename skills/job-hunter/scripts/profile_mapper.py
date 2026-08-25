@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-profile_mapper — 将 docs/ 知识库 + content/resume.yaml 映射为
+profile_mapper — 将私有或示例 resume.yaml 映射为
 AI-Resume-Form-Filling-Assistant 标准简历 JSON。
 
 用法:
@@ -12,6 +12,7 @@ import sys
 import json
 import argparse
 import re
+import os
 from pathlib import Path
 
 import yaml
@@ -20,7 +21,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def load_resume_yaml() -> dict:
-    yaml_path = PROJECT_ROOT / "content" / "resume.yaml"
+    configured = os.environ.get("RESUME_DATA_PATH", "")
+    yaml_path = Path(configured).expanduser() if configured else PROJECT_ROOT / "career" / "site" / "content" / "resume.yaml"
+    if not yaml_path.is_absolute():
+        yaml_path = PROJECT_ROOT / yaml_path
     if not yaml_path.exists():
         return {}
     with open(yaml_path, "r", encoding="utf-8") as f:
@@ -64,6 +68,7 @@ def join_description(exp: dict) -> str:
 def build_profile(compact: bool = False) -> dict:
     data = load_resume_yaml()
     personal = data.get("personal", {})
+    application = data.get("application", {})
     education = data.get("education", [])
     projects = data.get("projects", [])
     experience = data.get("experience", [])
@@ -75,44 +80,44 @@ def build_profile(compact: bool = False) -> dict:
 
     # ---- 基本信息 ----
     profile_personal = {
-        "fullName": personal.get("name", "郭睢阳"),
-        "email": personal.get("email", "1327217178@qq.com"),
-        "phoneNumber": personal.get("phone", "15893346463"),
-        "currentCity": (personal.get("location", "") or "").replace("陕西·", "").replace("·", ""),
-        "currentCountry": "中国",
-        "highestEducationLevel": "硕士",
-        "gender": "男",
+        "fullName": personal.get("name", ""),
+        "email": personal.get("email", ""),
+        "phoneNumber": personal.get("phone", ""),
+        "currentCity": application.get("currentCity", personal.get("location", "")),
+        "currentCountry": application.get("currentCountry", ""),
+        "highestEducationLevel": application.get("highestEducationLevel", ""),
+        "gender": application.get("gender", ""),
         "birthDate": normalize_date(personal.get("birthday", "")),
-        "politicalStatus": personal.get("politicalStatus", "共青团员"),
+        "politicalStatus": personal.get("politicalStatus", ""),
         "summary": personal.get("summary", "").strip().replace("\n", " "),
         "hometownCity": (personal.get("hometown", "") or ""),
-        "nationality": "汉族",
+        "nationality": application.get("nationality", ""),
     }
 
     contactAndLocation = {
         "hometownCity": (personal.get("hometown", "") or ""),
-        "hometownProvince": "河南",
-        "currentAddressLine1": (personal.get("location", "") or ""),
+        "hometownProvince": application.get("hometownProvince", ""),
+        "currentAddressLine1": application.get("currentAddressLine1", personal.get("location", "")),
     }
 
     identityAndAuthorization = {
-        "politicalStatus": personal.get("politicalStatus", "共青团员"),
-        "workAuthorization": "在中国合法工作，无限制",
+        "politicalStatus": personal.get("politicalStatus", ""),
+        "workAuthorization": application.get("workAuthorization", ""),
     }
 
     onlinePresence = {
-        "githubUrl": personal.get("github", "https://github.com/guosuiyang"),
+        "githubUrl": personal.get("github", ""),
         "linkedinUrl": personal.get("linkedin", ""),
         "websiteUrl": personal.get("website", ""),
     }
 
     jobPreferences = {
-        "targetRole": "具身智能 / VLA / 机器人学习算法工程师 / 嵌入式软件工程师",
-        "targetIndustry": "机器人 / 自动驾驶 / 人工智能 / 高端装备",
-        "expectedCity": "西安 深圳 北京",
-        "preferredLocations": "西安、深圳、北京、成都、上海",
-        "employmentType": "全职",
-        "expectedSalary": "面议",
+        "targetRole": application.get("targetRole", ""),
+        "targetIndustry": application.get("targetIndustry", ""),
+        "expectedCity": application.get("expectedCity", ""),
+        "preferredLocations": application.get("preferredLocations", ""),
+        "employmentType": application.get("employmentType", ""),
+        "expectedSalary": application.get("expectedSalary", ""),
         "willingToRelocate": "是" if personal.get("accepts_city_transfer") else "否",
     }
 
@@ -126,12 +131,12 @@ def build_profile(compact: bool = False) -> dict:
 
     profile_skills = {
         "primarySkills": skills_str,
-        "programmingLanguages": "C/C++ (精通), Python (熟练), MATLAB (熟练)",
-        "frameworks": "ROS1/ROS2, PyTorch, PyQt5, FreeRTOS",
-        "aiTools": "PyTorch, JAX, VLA, WAM, π0.5, X-VLA, Triton, CUDA Graphs",
-        "databases": "神通数据库",
-        "tooling": "Git, Docker, AD, 嘉立创, Inventor, 3D打印",
-        "domainKnowledge": "机器人学习, 算法训练与部署, ROS/ROS2, 嵌入式开发, 电路设计",
+        "programmingLanguages": application.get("programmingLanguages", ""),
+        "frameworks": application.get("frameworks", ""),
+        "aiTools": application.get("aiTools", ""),
+        "databases": application.get("databases", ""),
+        "tooling": application.get("tooling", ""),
+        "domainKnowledge": application.get("domainKnowledge", ""),
         "notableAchievements": "",
     }
 
@@ -145,8 +150,8 @@ def build_profile(compact: bool = False) -> dict:
             "degree": edu.get("degree", ""),
             "major": edu.get("major", ""),
             "faculty": edu.get("faculty", ""),
-            "city": "西安" if "西北工业" in edu.get("school", "") else "郑州",
-            "country": "中国",
+            "city": edu.get("city", ""),
+            "country": edu.get("country", ""),
             "startDate": start_date,
             "endDate": end_date,
             "gpa": edu.get("gpa", ""),
@@ -172,7 +177,7 @@ def build_profile(compact: bool = False) -> dict:
                 "company": exp.get("company", ""),
                 "title": exp.get("role", ""),
                 "city": "",
-                "country": "中国",
+                "country": exp.get("country", ""),
                 "startDate": start_date,
                 "endDate": end_date,
                 "isCurrent": is_current,
@@ -192,9 +197,9 @@ def build_profile(compact: bool = False) -> dict:
             "title": exp.get("role", ""),
             "department": "",
             "employmentType": exp.get("type", ""),
-            "industry": "机器人 / 人工智能",
+            "industry": exp.get("industry", ""),
             "city": "",
-            "country": "中国",
+            "country": exp.get("country", ""),
             "startDate": start_date,
             "endDate": end_date,
             "isCurrent": is_current,
