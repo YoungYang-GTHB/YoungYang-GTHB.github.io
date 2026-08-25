@@ -138,7 +138,7 @@ python3 scripts/fetch_jobs.py --save-token "你的token值"
 
 ```bash
 ./scripts/prepare-private-site.sh
-RESUME_DATA_PATH=content/resume.yaml npm run dev
+RESUME_DATA_PATH=content/resume.public.yaml npm run dev
 ```
 
 结构化数据包含：
@@ -215,7 +215,7 @@ npm run build                  # 生产构建
 
 # ─── 私有站点与简历 ───
 ./scripts/prepare-private-site.sh
-RESUME_DATA_PATH=content/resume.yaml npm run dev
+RESUME_DATA_PATH=content/resume.public.yaml npm run dev
 ./scripts/build-private-resumes.sh
 
 # ─── 岗位拉取 ───

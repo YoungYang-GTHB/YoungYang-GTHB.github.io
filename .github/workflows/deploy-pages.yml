@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CAREER_REPO_TOKEN: ${{ secrets.CAREER_REPO_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,8 +26,22 @@ jobs:
         with:
           node-version: 20
 
+      - name: Checkout private profile source
+        if: ${{ env.CAREER_REPO_TOKEN != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: YoungYang-GTHB/YoungYang-Resume
+          token: ${{ env.CAREER_REPO_TOKEN }}
+          path: .private-career
+
       - name: Install dependencies
         run: npm install
+
+      - name: Prepare sanitized personal profile
+        if: ${{ env.CAREER_REPO_TOKEN != '' }}
+        run: |
+          node scripts/prepare-public-site.mjs .private-career/site content/resume.public.yaml public
+          echo "RESUME_DATA_PATH=content/resume.public.yaml" >> "$GITHUB_ENV"
 
       - name: Build (Next.js static export -> out/)
         run: npm run build

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { getResumeData } from "@/lib/resume";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,17 +13,24 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Engineering Portfolio",
-  description: "A data-driven engineering portfolio built with Next.js.",
-  keywords: ["portfolio", "robotics", "embedded systems", "machine learning"],
-  openGraph: {
-    title: "Engineering Portfolio",
-    description: "A data-driven engineering portfolio built with Next.js.",
-    type: "website",
-    locale: "zh_CN",
-  },
-};
+export function generateMetadata(): Metadata {
+  const { personal } = getResumeData();
+  const title = `${personal.name} · ${personal.title}`;
+  const description = personal.summary.trim().replace(/\s+/g, " ");
+
+  return {
+    title,
+    description,
+    keywords: ["VLA", "Embodied AI", "Robot Learning", "ROS2", "Robotics", "Embedded Systems"],
+    authors: [{ name: personal.name }],
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      locale: "zh_CN",
+    },
+  };
+}
 
 export default function RootLayout({
   children,

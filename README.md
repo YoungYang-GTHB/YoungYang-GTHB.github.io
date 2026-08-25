@@ -32,11 +32,13 @@ npm run dev        # http://localhost:3000
 
 # 准备真实个人站点（需要私有子模块权限）
 ./scripts/prepare-private-site.sh
-RESUME_DATA_PATH=content/resume.yaml npm run dev
+RESUME_DATA_PATH=content/resume.public.yaml npm run dev
 
 # 编译四份个人简历
 ./scripts/build-private-resumes.sh
 ```
+
+GitHub Pages 部署真实个人站点时，在公开仓库的 Actions secrets 中配置只读 `CAREER_REPO_TOKEN`。工作流会拉取私有仓库、剔除非公开个人字段，并且只复制页面实际引用的白名单资源；未配置时使用匿名示例构建。
 
 ## 完整部署指南
 

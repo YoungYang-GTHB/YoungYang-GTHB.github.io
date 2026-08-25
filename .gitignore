@@ -34,6 +34,7 @@ next-env.d.ts
 output/
 /media-source/
 /content/resume.yaml
+/content/resume.public.yaml
 /public/profile/
 /public/projects/
 /public/resume*.pdf

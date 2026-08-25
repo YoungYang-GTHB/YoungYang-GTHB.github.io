@@ -65,12 +65,14 @@ export function Header({ data }: Props) {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-2.5">
-            <Button asChild className="h-10 rounded-none px-5 shadow-none">
-              <a href="#featured">
-                真机 Demo
-                <ArrowDownRight className="h-4 w-4" />
-              </a>
-            </Button>
+            {data.resumeLinks?.length || data.photo ? (
+              <Button asChild className="h-10 rounded-none px-5 shadow-none">
+                <a href="#featured">
+                  查看真机闭环
+                  <ArrowDownRight className="h-4 w-4" />
+                </a>
+              </Button>
+            ) : null}
             {data.github && (
               <Button variant="outline" asChild className="h-10 rounded-none border-foreground/20 bg-transparent px-4 shadow-none">
                 <a href={data.github} target="_blank" rel="noopener noreferrer">

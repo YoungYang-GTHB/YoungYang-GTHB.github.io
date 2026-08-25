@@ -16,8 +16,6 @@ if [[ -L "${private_public}" ]]; then
   exit 1
 fi
 
-mkdir -p "${project_root}/content" "${project_root}/public"
-cp "${private_data}" "${project_root}/content/resume.yaml"
-cp -a "${private_public}/." "${project_root}/public/"
+node "${project_root}/scripts/prepare-public-site.mjs" career/site content/resume.public.yaml public
 
-echo "Private site data prepared locally. These generated files are ignored by Git."
+echo "Sanitized personal site prepared locally. Use RESUME_DATA_PATH=content/resume.public.yaml."
