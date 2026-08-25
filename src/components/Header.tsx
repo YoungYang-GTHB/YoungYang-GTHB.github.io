@@ -24,7 +24,7 @@ export function Header({ data }: Props) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-      className="relative border-y border-foreground/15 py-9 md:py-12"
+      className="relative overflow-hidden border border-foreground/15 bg-card px-5 py-7 shadow-[0_18px_60px_rgba(41,51,47,0.08)] md:px-9 md:py-10"
     >
       <div className="mb-8 flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-muted-foreground">
         <span>PROFILE / ROBOTICS ENGINEER</span>
@@ -103,9 +103,9 @@ export function Header({ data }: Props) {
           className="hidden lg:block"
         >
           <div className="relative">
-            <div className="absolute -inset-3 rounded-[1.75rem] bg-gradient-to-br from-primary/18 via-signal/12 to-transparent blur-[1px]" />
-            <div className="relative overflow-hidden rounded-[1.35rem] border border-foreground/10 bg-card p-2 shadow-[0_22px_55px_rgba(40,59,92,0.16)] dark:shadow-[0_22px_55px_rgba(0,0,0,0.38)]">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] bg-muted">
+            <div className="absolute -inset-3 bg-[linear-gradient(145deg,rgba(15,92,85,0.18),rgba(217,119,6,0.12),transparent)]" />
+            <div className="relative overflow-hidden border border-foreground/15 bg-card p-2 shadow-[0_20px_48px_rgba(28,38,35,0.16)] dark:shadow-[0_22px_55px_rgba(0,0,0,0.38)]">
+              <div className="relative aspect-[4/5] overflow-hidden bg-muted">
               {/* 公开站点使用 ASCII 资源名，避免 React 预加载响应头编码问题。 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -115,7 +115,7 @@ export function Header({ data }: Props) {
                 />
               </div>
             </div>
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1.5 font-mono text-[9px] font-semibold tracking-[0.14em] text-primary-foreground shadow-[0_8px_22px_rgba(49,94,251,0.28)]">
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-signal px-3 py-1.5 font-mono text-[9px] font-bold tracking-[0.14em] text-[#211507] shadow-[0_8px_22px_rgba(180,83,9,0.2)]">
               VLA · ROBOTICS
             </div>
           </div>

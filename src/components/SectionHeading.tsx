@@ -9,7 +9,7 @@ interface Props {
 export function SectionHeading({ code, title, icon: Icon }: Props) {
   return (
     <div className="flex w-full items-center gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-primary/35 bg-primary/8 text-primary">
         <Icon className="h-4.5 w-4.5" />
       </div>
       <div>

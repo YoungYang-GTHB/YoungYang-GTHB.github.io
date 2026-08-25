@@ -35,7 +35,7 @@ export function FeaturedProject({ data }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, ease: [0.2, 0.8, 0.2, 1] }}
       viewport={{ once: true, margin: '-60px' }}
-      className="relative overflow-hidden bg-[#0d1418] text-[#f5f8fb] shadow-[0_28px_80px_rgba(13,20,24,0.2)]"
+      className="relative overflow-hidden bg-[#14211e] text-[#f7f3e8] shadow-[0_28px_80px_rgba(20,33,30,0.2)]"
     >
       <div className="absolute inset-0 bg-[linear-gradient(rgba(242,245,240,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(242,245,240,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
 

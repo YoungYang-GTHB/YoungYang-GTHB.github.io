@@ -47,11 +47,11 @@ export function ThemeToggle() {
     <Button
       variant="outline"
       size="sm"
-      className="group relative h-9 w-9 overflow-hidden text-foreground transition-all hover:border-primary hover:shadow-md"
+      className="group relative h-9 w-9 overflow-hidden rounded-none border-foreground/15 text-foreground transition-all hover:border-signal hover:text-signal"
       onClick={toggleTheme}
     >
       {/* 背景渐变 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-0 transition-opacity group-hover:opacity-100" />
+      <div className="absolute inset-0 bg-signal/8 opacity-0 transition-opacity group-hover:opacity-100" />
       
       {/* 图标动画 */}
       <div className="relative flex items-center justify-center">
