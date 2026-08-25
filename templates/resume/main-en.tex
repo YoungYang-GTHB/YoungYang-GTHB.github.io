@@ -13,11 +13,13 @@
 \usepackage{qrcode}
 
 \usepackage{enumitem}
+\usepackage{needspace}
 \setlist[itemize]{itemsep=1pt, topsep=1pt, parsep=1pt}
 \linespread{1.06}
 
 % 重排条目：第一行「标题(粗) + 右对齐日期」，副标题另起一行 —— 日期严格右对齐、永不换行
 \RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \Needspace{4\baselineskip}%
   \par\vspace{2pt}\noindent
   {\heiti\zihao{-4} #2}%
   \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
@@ -41,7 +43,7 @@
 \ResumeTitle
 
 % ====================== Summary ======================
-\noindent MSc student in Control Engineering at Northwestern Polytechnical University (NPU), specializing in robotics and AI (graduating Jun 2027). Full-stack robotics engineer with end-to-end capability from mechanical/PCB design and STM32 firmware to ROS/ROS2, deep learning and host software. Currently a VLA (Vision-Language-Action) \& World-Model algorithm intern at Visincept (incubated by IDEA Research / International Digital Economy Academy), training and deploying manipulation policies for a dual-arm robot. Participated in a national key research project; holds 6 patents (4 invention, 2 utility-model) and 2 software copyrights.
+\noindent Control Engineering MSc candidate at Northwestern Polytechnical University (Class of 2027), focused on dual-arm deformable-object manipulation. Hands-on experience across the VLA lifecycle, from data curation, SFT/offline post-training and evaluation audits to ROS2 real-robot deployment. Optimized $\pi$0.5, X-VLA and FastWAM systems, reducing step latency from 256.5 ms to 32.05 ms (8$\times$) and idle end-effector jitter by 81\%. Skilled at isolating model, data and robot-stack failures through cross-date evaluation, visual ablations and deployment safety gates.
 
 % ====================== Education ======================
 \section{Education}
@@ -56,27 +58,26 @@
 % ====================== Skills ======================
 \section{Technical Skills}
 \begin{itemize}
-  \item \textbf{AI / Embodied AI}: VLA models (\(\pi\)0.5, X-VLA) training \& real-robot deployment, flow-matching policy, action chunking, RTC real-time inference, latent-milestone world models; PyTorch (DDP) / JAX-Flax (FSDP) distributed training
-  \item \textbf{Deep Learning}: end-to-end training in PyTorch / JAX, DINOv3 / SigLIP visual representations, CNNs, speech recognition; Triton kernels \& CUDA Graphs for inference acceleration
+  \item \textbf{VLA / Robot Learning}: $\pi$0.5, X-VLA, flow matching, action chunking, SFT, imitation learning, AWBC / RECAP, dataset curation, cross-domain evaluation, FastWAM world-action models
+  \item \textbf{Model \& Inference Systems}: PyTorch (DDP), JAX/Flax (FSDP), DINOv3 / SigLIP; Triton kernels, CUDA Graphs, torch.compile, RTC and end-to-end latency profiling
   \item \textbf{Programming}: C/C++ (proficient), Python (proficient), MATLAB (fluent); Linux driver/application development
-  \item \textbf{Robotics}: ROS/ROS2 (proficient); navigation, SLAM, motion planning, inverse kinematics, point-cloud processing
-  \item \textbf{Embedded \& Hardware}: STM32/51/Arduino (proficient; IMX6ULL/STM32F4), FreeRTOS; PCB design (Altium Designer, JLCPCB), 3D printing
-  \item \textbf{Tools}: Vibecoding (AI-assisted / agentic coding with Claude Code etc.), Git, PyQt5 (host software), Autodesk Inventor (3D modeling)
+  \item \textbf{Robotics}: ROS/ROS2, dual-arm manipulation and bring-up, IK, gripper/action mapping, MuJoCo, navigation, SLAM, motion planning and point clouds
+  \item \textbf{Embedded \& Hardware}: Yocto / i.MX6ULL embedded Linux, STM32F4, FreeRTOS, motor control and PCB design
+  \item \textbf{Engineering}: Git, Linux, WebSocket, PyQt5 host applications and Autodesk Inventor
 \end{itemize}
 
 % ====================== Experience ======================
 \section{Experience}
 
-\ResumeItem{Visincept (incubated by IDEA Research)}
-[\textnormal{VLA \& World-Model Algorithm Intern}]
+\ResumeItem{IDEA Research: Visincept}
+[\textnormal{VLA \& World Model Intern, Embodied AI Team}]
 [2026.04—Present]
 
 \begin{itemize}
-  \item Trained a dual-arm cloth-folding policy on the open-source \(\pi\)0.5 (openpi) VLA; a curated-data + two-stage-init recipe cut action error (offline MAE@50) by about 77\% vs. the prior best, and shipped to real-robot deployment
-  \item Led VLA inference real-time optimization (RTC real-time chunking + Triton kernel autotuning), cutting single-step inference latency from about 256 ms to 32 ms (roughly 8x) and end-effector jitter by 81\%; drove the ROS1 to ROS2 migration for on-robot serving
-  \item Built an AWBC / RECAP-advantage offline policy-improvement pipeline (offline MAE@1: 0.0079 vs. SFT 0.0089); ran cross-embodiment co-training and weight-space model-merging experiments
-  \item Brought up Tsinghua's X-VLA architecture on our dual-arm platform, using firmware-level IK to cut the control cycle from 1.4 s to 0.33 s
-  \item Built CRAVE, a training-free milestone/value engine that derives milestone and progress/value signals from frozen visual features (0.865 correlation with human stage-progress labels); explored three-level advantage conditioning for AWBC to reduce manual stage annotation
+  \item Built a dual-Piper cloth-manipulation pipeline on openpi/$\pi$0.5 spanning data curation, SFT, offline evaluation and ROS2 deployment; reduced native-validation MAE@50 from 0.0337 to 0.0079 and exposed a 3.2$\times$ cross-date generalization degradation through a separate audit split
+  \item Led VLA inference/control optimization using RTC chunking, torch.compile, CUDA Graphs and Triton autotuning; reduced step latency from 256.5 ms to 32.05 ms (8$\times$), while minimum-jerk/EMA smoothing cut idle end-effector jitter from 3.33 mm to 0.63 mm ($-$81\%)
+  \item Brought up X-VLA on the dual-arm platform; designed visual-ablation gates that traced a silent video-path fallback to black frames, raising the vision-to-proprioception sensitivity ratio from 0 to 5.17 after the fix; firmware-level IK reduced the control cycle from 1.4 s to 0.33 s
+  \item Implemented an AWBC/RECAP-advantage offline post-training pipeline and adapted RECAP/RLT to a robotic nail-painting task; reproduced FastWAM with WebSocket/ROS2, continuous-gripper support and preflight safety gates; built CRAVE milestone/value signals with 0.865 stage-progress correlation
 \end{itemize}
 
 \ResumeItem{Zhongqin Herui (Shaanxi) Technology Co., Ltd.}
@@ -98,14 +99,6 @@
   \item Practiced prompt engineering and DevOps deployment workflows
 \end{itemize}
 
-\ResumeItem{Dongfeng Motor Co., Ltd.}
-[\textnormal{Study Visit}]
-[2023.08]
-
-\begin{itemize}
-  \item Studied gasoline/diesel engine structure and principles; toured the full vehicle manufacturing process
-\end{itemize}
-
 % ====================== Projects ======================
 \section{Projects}
 
@@ -114,9 +107,8 @@
 [2024.09—Present]
 
 \begin{itemize}
-  \item \textbf{Overview}: designed and built a series-parallel hybrid wheeled humanoid system — AGV base, parallel mechanism, two 6-DoF arms (in-house 6-axis / JAKA) and a 2-DoF head — for agricultural picking, teaching and industrial use
-  \item \textbf{Stack}: Ubuntu 20.04, ROS Noetic, STM32F4, point-cloud processing, path planning, ShenTong DB
-  \item \textbf{Work}: wrote the robot master-control program (3D mapping, path planning, object recognition, dynamic obstacle avoidance); point-cloud publishing, collision detection, IK; designed an in-house multi-DoF arm control scheme, doubling (100\%) the 6-DoF arm control frequency; STM32F4 lower-level control; built a ShenTong database for high-concurrency CRUD
+  \item Built a wheeled humanoid comprising an AGV base, parallel mechanism, dual 6-DoF arms and a 2-DoF head; created a MuJoCo simulation/control-integration environment and a ROS master controller for mapping, planning, obstacle avoidance, point-cloud processing and IK
+  \item Developed in-house dual-arm and chassis motor-control systems and integrated STM32F4 firmware with actuators; built a Yocto/i.MX6ULL embedded-Linux image and ROS multi-machine networking, doubling the arm control frequency
 \end{itemize}
 
 \ResumeItem{AI-LLM Voice-Interaction Robot}
@@ -124,9 +116,7 @@
 [2023.12—2024.09]
 
 \begin{itemize}
-  \item \textbf{Overview}: a smart-home voice-chat robot combining NLP, LLMs and AI lip-sync
-  \item \textbf{Stack}: Raspberry Pi 4B, Python, PyQt5, PyTorch, ROS, FreeRTOS
-  \item \textbf{Work}: built the LLM interaction software (recording, speech recognition, LLM dialogue); speech synthesis + digital-human lip-sync; smart-home control; earned 2 software copyrights
+  \item Independently built a Raspberry Pi/PyQt5/ROS voice robot integrating audio capture, ASR, LLM dialogue, speech synthesis, digital-human lip sync and smart-home control; received 2 software copyrights
 \end{itemize}
 
 \ResumeItem{TCM Therapy Device Series (3 generations)}

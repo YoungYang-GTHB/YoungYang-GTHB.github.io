@@ -20,6 +20,7 @@
 
 % 第一行保持「标题 + 日期」严格对齐，副标题另起一行
 \RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \Needspace{4\baselineskip}%
   \par\vspace{3pt}\noindent
   {\heiti\zihao{-4} #2}%
   \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
@@ -64,7 +65,7 @@
   \item \textbf{机器人系统}: \hl{ROS/ROS2（精通）}，掌握导航、SLAM、运动规划、逆运动学、点云处理、碰撞检测与模糊 PID 控制
   \item \textbf{硬件与上位机}: \hl{Altium Designer / 嘉立创 PCB}、外围电路设计、3D 打印；\hl{PyQt5} 上位机、树莓派应用与神通数据库
   \item \textbf{端侧 AI / 性能}: PyTorch / JAX 模型部署，\hl{Triton kernel、CUDA Graphs、RTC} 实时推理优化，具备机器人 AI 算法到真机系统落地经验
-  \item \textbf{工程工具}: Git、Inventor 3D 建模、Vibecoding（Claude Code 等 AI 辅助编程）
+  \item \textbf{工程工具}: Git、Linux、WebSocket、Inventor 3D 建模与多模块系统联调
 \end{itemize}
 
 % ====================== 嵌入式项目 ======================
@@ -83,6 +84,7 @@
   \item 搭建神通数据库完成机器人运行数据的高并发增删改查，参与自研机械臂、传感器与上位系统联调
 \end{itemize}
 
+\Needspace{12\baselineskip}
 \ResumeItem{中医理疗仪系列产品（3 代）}
 [\textnormal{\hl{挑战杯省级二等奖} | 核心研发成员}]
 [2021.03—2023.09]

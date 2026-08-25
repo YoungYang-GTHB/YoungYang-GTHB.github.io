@@ -1,4 +1,4 @@
-# YoungYang-Resume 环境部署与配置指南
+# YoungYang-GTHB.github.io 环境部署与配置指南
 
 ## 一、环境依赖
 
@@ -41,8 +41,8 @@ node --version  # 应显示 v22.x
 ## 二、克隆项目
 
 ```bash
-git clone https://github.com/DianZiGUO/YoungYang-Resume.git
-cd YoungYang-Resume
+git clone https://github.com/YoungYang-GTHB/YoungYang-GTHB.github.io.git
+cd YoungYang-GTHB.github.io
 ```
 
 ---

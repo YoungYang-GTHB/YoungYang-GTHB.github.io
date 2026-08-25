@@ -21,10 +21,12 @@
 
 % 紧凑排版
 \usepackage{enumitem}
+\usepackage{needspace}
 \setlist[itemize]{itemsep=2pt, topsep=2pt}
 
 % 重排条目：第一行「标题(粗) + 右对齐日期」，副标题另起一行 —— 日期严格右对齐、永不换行，更整齐
 \RenewDocumentCommand{\ResumeItem}{omoo}{%
+  \Needspace{4\baselineskip}%
   \par\vspace{3pt}\noindent
   {\heiti\zihao{-4} #2}%
   \IfValueT{#4}{\hfill{\normalfont\zihao{5} #4}}%
@@ -54,7 +56,7 @@
 \ResumeTitle
 
 % ====================== 简介 ======================
-\noindent 西北工业大学控制工程专业硕士在读（2027年6月毕业），方向机器人与人工智能。具备覆盖\hl{算法研发与部署、软件开发、电路设计与嵌入式系统开发}的全流程研发能力；围绕 \hl{VLA（视觉-语言-动作模型）与世界动作模型（WAM）}，积累了双臂机器人柔性操作策略的\hl{训练、实时推理优化与真机部署}经验。熟悉 ROS、Linux 应用开发与深度学习，参与\hl{国家级重点课题}，累计 \hl{6 项专利（4 发明 / 2 实用新型）}与 \hl{2 项软件著作权}。
+\noindent 西北工业大学控制工程硕士（2027 届），面向双臂柔性物体操作，具备 \hl{VLA 从数据治理、SFT/离线后训练、评测审计到 ROS2 真机部署}的全链路经验。围绕 $\pi$0.5、X-VLA 与 FastWAM，完成模型—系统协同优化：单步推理 \hl{256.5ms$\rightarrow$32.05ms（8$\times$）}，末端空闲抖动\hl{下降 81\%}；擅长通过跨日期评测、视觉消融与安全门禁定位模型、数据和本体链路问题。
 
 % ====================== 教育 ======================
 \section{教育背景}
@@ -69,12 +71,12 @@
 % ====================== 技能 ======================
 \section{专业技能}
 \begin{itemize}
-  \item \textbf{AI / 具身智能}: \hl{VLA}（\hl{\(\pi\)0.5}、\hl{X-VLA}）训练与\hl{真机部署}、\hl{FastWAM 世界动作模型}、\hl{CRAVE 零训练价值建模}、flow-matching policy、\hl{RTC 实时推理}；\hl{PyTorch（DDP）}/ \hl{JAX-Flax（FSDP）}分布式训练
-  \item \textbf{深度学习}: PyTorch / JAX 训练全流程、\hl{DINOv3 / SigLIP} 视觉表征、CNN、语音识别；\hl{Triton kernel}、\hl{CUDA Graphs} 推理加速
+  \item \textbf{VLA / 机器人学习}: $\pi$0.5、X-VLA、flow matching、action chunking、\hl{SFT / 模仿学习 / AWBC / RECAP}、数据筛选与跨域评测、FastWAM 世界动作模型
+  \item \textbf{模型与推理系统}: \hl{PyTorch（DDP）/ JAX-Flax（FSDP）}、DINOv3 / SigLIP；\hl{Triton kernel、CUDA Graphs、torch.compile、RTC} 与端到端延迟分析
   \item \textbf{编程语言}: \hl{C/C++}（精通）、\hl{Python}（精通）、MATLAB（熟练），熟悉 Linux 驱动/应用开发
-  \item \textbf{机器人}: \hl{ROS/ROS2}（精通），\hl{导航、SLAM、运动规划、逆运动学求解}、点云处理
+  \item \textbf{机器人系统}: \hl{ROS/ROS2}、双臂操作与真机联调、IK / 夹爪动作映射、MuJoCo、导航、SLAM、运动规划、点云处理
   \item \textbf{嵌入式 / 硬件}: \hl{Yocto + IMX6ULL} 嵌入式 Linux / ROS 多机部署，\hl{STM32/51/Arduino、FreeRTOS}；PCB 设计（Altium Designer、嘉立创）
-  \item \textbf{工具}: \hl{Vibecoding}（Claude Code 等 AI 辅助编程）、Git、PyQt5 上位机开发、Inventor 3D 建模
+  \item \textbf{工程工具}: Git、Linux、WebSocket、PyQt5 上位机开发、Inventor 3D 建模
 \end{itemize}
 
 % ====================== 实习经历 ======================
@@ -85,12 +87,10 @@
 [2026.04—至今]
 
 \begin{itemize}
-  \item 以开源 \hl{\(\pi\)0.5}（openpi）为基座训练双臂机器人叠衣策略，经数据精选与两阶段初始化做出\hl{新 SOTA 配方}，动作误差 MAE@50 较原 SOTA \hl{降低约 77\%}，并完成\hl{真机部署上机}
-  \item 主导 \hl{VLA 推理实时化}：实现 \hl{RTC 实时分块推理}与 \hl{Triton kernel 优化}，单步推理耗时由约 256ms 优化至 32ms（\hl{约 8 倍}），末端抖动\hl{降低 81\%}
-  \item 实现 \hl{AWBC / RECAP advantage} 离线策略改进流水线，AWBC 离线 MAE@1 为 \hl{0.0079}（SFT 0.0089）；完成 \hl{RECAP / RLT 在美甲操作任务}上的应用实现与训练评测链路适配
-  \item 完成清华 \hl{X-VLA} 架构在自有双臂平台真机 bring-up，通过固件级 IK 将推理周期由 \hl{1.4s 压至 0.33s}
-  \item 复现并适配\hl{FastWAM 世界动作模型}，完成 Task\_A1 叠衣配置、WebSocket/ROS2 真机部署链、连续夹爪支持与 preflight 安全门禁
-  \item 构建 \hl{CRAVE 零训练里程碑 / 价值引擎}，从冻结视觉特征生成 milestone 与 progress/value 信号（对人工 stage-progress 相关系数 \hl{0.865}）；探索将\hl{三档 advantage 接入 AWBC}，减少人工阶段标注依赖
+  \item 面向双 Piper 柔性衣物操作，基于 openpi / $\pi$0.5 打通\hl{数据筛选—SFT—离线评测—ROS2 真机}闭环；数据精选与两阶段初始化使 native-val MAE@50 从 0.0337 降至 \hl{0.0079}，并以跨日期评测识别 \hl{3.2$\times$ 泛化退化}，避免单域指标误判
+  \item 主导 VLA 实时推理与控制链优化：RTC 分块推理结合 torch.compile、CUDA Graphs 与 Triton autotune，将单步延迟由 \hl{256.5ms 降至 32.05ms（8$\times$）}；minimum-jerk / EMA 使末端空闲抖动由 3.33mm 降至 \hl{0.63mm（$-$81\%）}
+  \item 完成 X-VLA 双臂真机 bring-up；设计视觉消融门禁并定位视频路径静默回退黑图问题，修复后视觉/本体敏感度比由 \hl{0 提升至 5.17}；通过固件级 IK 将控制周期由 \hl{1.4s 降至 0.33s}
+  \item 实现 \hl{AWBC / RECAP advantage} 离线后训练流水线，并完成 RECAP / RLT 在美甲操作任务上的适配；复现 FastWAM，打通 WebSocket / ROS2、连续夹爪与 preflight 安全门禁；构建 CRAVE milestone/value 信号（stage-progress 相关系数 \hl{0.865}）
 \end{itemize}
 
 \ResumeItem{中秦禾瑞（陕西）科技有限公司}
@@ -118,9 +118,8 @@
 [2024.09—至今]
 
 \begin{itemize}
-  \item \textbf{项目简介}: 设计搭建串并联混合型轮式仿人机器人系统，包含 AGV 小车、并联机构、两个 6 自由度机械臂（自研 6 轴/JAKA）及 2 自由度头部，实现农业采摘、实验教学、工业场景应用
-  \item \textbf{技术栈}: Ubuntu 20.04、\hl{ROS Noetic}、\hl{MuJoCo}、\hl{Yocto / IMX6ULL}、\hl{STM32F4}、点云处理、路径规划、\hl{神通数据库}
-  \item \textbf{工作内容}: 基于 \hl{MuJoCo 搭建轮式仿人机器人仿真环境}；编写机器人总控程序，实现建图、规划、避障与逆运动学；开发\hl{自研双臂与底盘电机控制系统}，完成 STM32F4 下位机、执行机构及整机联调；基于 Yocto 构建 i.MX6ULL 系统并实现 ROS 多机通信，机械臂控制频率\hl{提升 100\%}
+  \item 搭建包含 AGV、并联机构、双 6 自由度机械臂与头部的轮式仿人机器人；基于 \hl{MuJoCo 构建仿真与控制联调环境}，开发 ROS 总控，完成建图、规划、避障、点云处理与逆运动学链路
+  \item 开发\hl{自研双臂与底盘电机控制系统}，完成 STM32F4 下位机、执行机构及整机联调；基于 Yocto / i.MX6ULL 构建嵌入式 Linux 与 ROS 多机通信，机械臂控制频率\hl{提升 100\%}
 \end{itemize}
 
 \ResumeItem{AI 大模型智能语音交互机器人}

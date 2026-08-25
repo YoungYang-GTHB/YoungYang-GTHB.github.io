@@ -14,9 +14,10 @@
 
 | 文件 | 说明 |
 |------|------|
-| `main.tex` | **具身智能主线中文版**，VLA / 世界模型 / 真机部署优先 |
-| `main-embedded.tex` | **嵌入式开发支线中文版**，C/C++ / STM32 / FreeRTOS / ROS/Linux 优先 |
-| `main-en.tex` | 具身智能英文版 |
+| `main.tex` | **VLA / 具身智能中文版** → `public/resume-vla-zh.pdf` |
+| `main-en.tex` | **VLA / Embodied AI English** → `public/resume-vla-en.pdf` |
+| `main-embedded.tex` | **嵌入式开发中文版** → `public/resume-embedded-zh.pdf` |
+| `main-embedded-en.tex` | **Embedded Systems English** → `public/resume-embedded-en.pdf` |
 | `resume-photo.cls` | 带头像版文档类，基于 ctexart |
 | `fontawesome5/` | FontAwesome 5 图标字体 |
 | `_originals/` | 原始模板备份（未修改） |
@@ -33,7 +34,13 @@ xelatex main.tex
 xelatex main.tex  # 编译两次
 xelatex main-embedded.tex
 xelatex main-embedded.tex  # 编译两次
+xelatex main-en.tex
+xelatex main-en.tex
+xelatex main-embedded-en.tex
+xelatex main-embedded-en.tex
 ```
+
+公开目录中的 `resume.pdf`、`resume-en.pdf` 和 `resume-embedded.pdf` 为兼容旧投递记录与网页链接保留的别名；人工上传时优先使用带方向和语言标识的规范文件名。
 
 Overleaf: 上传整个 `templates/resume/` 目录，主文件选 `main.tex`，编译器选 `XeLaTeX`。
 

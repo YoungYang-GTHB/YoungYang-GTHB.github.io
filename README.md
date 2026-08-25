@@ -1,4 +1,4 @@
-# YoungYang-Resume
+# YoungYang-GTHB.github.io
 
 个人知识管理与校招求职系统。整合个人网站、简历生成、岗位拉取、自动填表等功能。
 
@@ -7,7 +7,7 @@
 ## 项目结构
 
 ```
-YoungYang-Resume/
+YoungYang-GTHB.github.io/
 ├── src/                        # 个人网站源码 (Next.js)
 ├── docs/                       # 个人文档库 (ARA + 三层结构)
 ├── templates/resume/           # LaTeX 简历模板

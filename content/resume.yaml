@@ -16,11 +16,10 @@ personal:
   website: https://youngyang-gthb.github.io/
   accepts_city_transfer: true
   summary: |
-    面向具身智能的机器人研发工程师，具备覆盖算法研发与部署、软件开发、电路设计与嵌入式系统开发的全流程能力。
-    围绕 VLA（视觉-语言-动作模型）与世界动作模型（WAM），积累了双臂机器人柔性操作策略的训练、实时推理优化
-    与真机部署经验。熟悉 ROS/ROS2、Linux 应用开发与深度学习，
-    聚焦机器人导航、SLAM 与智能交互。参与国家级重点课题，累计 6 项专利（4 项发明 / 2 项
-    实用新型）与 2 项软件著作权，擅长将算法工程化为可稳定运行的机器人系统。
+    西北工业大学控制工程硕士（2027 届），面向双臂柔性物体操作，具备 VLA 从数据治理、SFT/离线后训练、
+    评测审计到 ROS2 真机部署的全链路经验。围绕 π0.5、X-VLA 与 FastWAM 完成模型—系统协同优化：
+    单步推理 256.5ms→32.05ms（8×），末端空闲抖动下降 81%；擅长通过跨日期评测、视觉消融和安全门禁
+    定位模型、数据与机器人本体链路问题。
 
 featured:
   title: 双臂机器人叠衣 · 具身智能 VLA 系统
@@ -43,12 +42,12 @@ featured:
     platform: Agilex Piper 双臂机器人
     note: 真机连续执行效果；页面仅展示可公开的任务画面，不包含内部数据与训练环境。
   highlights:
-    - title: 训练配方 SOTA
-      desc: 数据精选 + 两阶段初始化做出新 SOTA 训练配方，动作误差 MAE@50 较原基线显著下降，并完成真机上机
+    - title: 数据与评测闭环
+      desc: 数据精选 + 两阶段初始化使 native-val MAE@50 从 0.0337 降至 0.0079；跨日期评测识别 3.2× 泛化退化，避免单域指标误判
     - title: 实时推理优化 8×
       desc: RTC 实时分块推理 + Triton kernel 优化，单步推理耗时约 256ms→32ms（约 8×），末端抖动降低 81%；主导 ROS1→ROS2 迁移
     - title: X-VLA 真机 bring-up
-      desc: 将清华 X-VLA 迁到自有双臂平台，完成真机 bring-up，并通过固件级 IK 将控制周期由 1.4s 压至 0.33s
+      desc: 视觉消融定位视频路径静默回退黑图问题，修复后视觉/本体敏感度比 0→5.17；固件级 IK 将控制周期 1.4s→0.33s
     - title: CRAVE × AWBC 离线策略改进
       desc: CRAVE 从冻结视觉特征生成 milestone 与 progress/value（对人工 stage-progress 相关系数 0.865）；探索以三档 advantage 接入 AWBC，减少人工阶段标注依赖
   stack:
@@ -159,9 +158,6 @@ skills:
       level: 熟练
       description: 建模、切片、打印调试
   tools:
-    - name: Vibecoding
-      level: 熟练
-      description: Claude Code / Cursor 等 AI 辅助编程，agentic 开发工作流
     - name: Git
       level: 熟练
       description: 版本控制、协作开发

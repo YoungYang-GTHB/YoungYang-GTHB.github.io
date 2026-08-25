@@ -80,18 +80,23 @@ export function Header({ data }: Props) {
               </Button>
             )}
             <Button variant="outline" asChild className="h-10 rounded-none border-foreground/20 bg-transparent px-4 shadow-none">
-              <a href="/resume.pdf" download="郭睢阳-具身智能工程师-简历.pdf">
-                <Download className="h-4 w-4" /> 下载简历
+              <a href="/resume-vla-zh.pdf" download="郭睢阳-VLA具身智能工程师-中文简历.pdf">
+                <Download className="h-4 w-4" /> VLA 中文简历
               </a>
             </Button>
             <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
-              <a href="/resume-embedded.pdf" download="郭睢阳-嵌入式开发工程师-简历.pdf">
-                嵌入式简历
+              <a href="/resume-vla-en.pdf" download="Suiyang-Guo-VLA-Embodied-AI-Resume-EN.pdf">
+                VLA English
               </a>
             </Button>
             <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
-              <a href="/resume-en.pdf" download="Suiyang-Guo-Embodied-AI-Engineer-CV.pdf">
-                English CV
+              <a href="/resume-embedded-zh.pdf" download="郭睢阳-嵌入式开发工程师-中文简历.pdf">
+                嵌入式中文
+              </a>
+            </Button>
+            <Button variant="ghost" asChild className="hidden h-10 rounded-none px-3 text-muted-foreground sm:inline-flex">
+              <a href="/resume-embedded-en.pdf" download="Suiyang-Guo-Embedded-Systems-Resume-EN.pdf">
+                Embedded English
               </a>
             </Button>
           </div>
