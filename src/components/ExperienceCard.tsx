@@ -13,8 +13,8 @@ interface Props {
 
 export function ExperienceCard({ data }: Props) {
   return (
-    <Card className="overflow-hidden rounded-none border-foreground/15 bg-card shadow-none">
-      <CardHeader className="border-b border-foreground/12 bg-secondary/45 px-5 py-4 md:px-7">
+    <Card className="overflow-hidden rounded-none border-x-0 border-y border-foreground/20 bg-transparent shadow-none">
+      <CardHeader className="border-b border-foreground/15 bg-transparent px-0 py-6 md:px-0">
         <SectionHeading code="06" title="实践经历" icon={Briefcase} />
       </CardHeader>
       <CardContent className="divide-y divide-foreground/12 p-0">
@@ -25,7 +25,7 @@ export function ExperienceCard({ data }: Props) {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.06, duration: 0.38 }}
             viewport={{ once: true }}
-            className="grid gap-4 p-5 md:grid-cols-[10rem_minmax(0,1fr)] md:gap-7 md:p-7"
+            className="grid gap-4 px-0 py-7 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10 md:px-0 md:py-9"
           >
             <div>
               <div className="inline-flex items-center gap-2 font-mono text-[10px] tracking-[0.04em] text-primary">

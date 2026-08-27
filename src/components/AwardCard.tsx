@@ -26,8 +26,8 @@ export function AwardCard({ data }: Props) {
   });
 
   return (
-    <Card className="overflow-hidden rounded-none border-foreground/15 bg-card shadow-none">
-      <CardHeader className="border-b border-foreground/12 bg-secondary/45 px-5 py-4 md:px-7">
+    <Card className="overflow-hidden rounded-none border-x-0 border-y border-foreground/20 bg-transparent shadow-none">
+      <CardHeader className="border-b border-foreground/15 bg-transparent px-0 py-6 md:px-0">
         <SectionHeading code="07" title="荣誉奖项" icon={Trophy} />
       </CardHeader>
       <CardContent className="p-0">

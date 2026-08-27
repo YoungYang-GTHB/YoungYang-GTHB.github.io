@@ -31,7 +31,7 @@ export function StatBand({ data }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.5 }}
-      className="border-y border-foreground/15"
+      className="border-b border-foreground/20"
     >
       <div className="grid grid-cols-2 md:grid-cols-5">
         {stats.map((stat, index) => (

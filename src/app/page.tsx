@@ -24,17 +24,15 @@ export default function Home() {
       
       {/* 实验记录纸背景 */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 lab-grid opacity-55" />
-        <div className="absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-[radial-gradient(circle,rgba(15,92,85,0.11),transparent_68%)]" />
-        <div className="absolute -left-52 top-[58rem] h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle,rgba(217,119,6,0.07),transparent_70%)]" />
+        <div className="absolute inset-0 lab-grid opacity-45" />
       </div>
 
       {/* 顶部导航 */}
       <nav className="sticky top-0 z-50 w-full border-b border-foreground/12 bg-background/92 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+        <div className="mx-auto flex h-[4.75rem] max-w-[90rem] items-center justify-between px-5 md:px-10">
           <div className="flex items-center gap-3">
             <MobileNav name={resumeData.personal.name} />
-            <div className="flex h-8 w-8 items-center justify-center bg-foreground text-background">
+            <div className="flex h-7 w-7 items-center justify-center bg-foreground text-background">
               <Bot className="h-4 w-4" />
             </div>
             <div className="leading-none">
@@ -57,21 +55,21 @@ export default function Home() {
       </nav>
 
       {/* 主要内容 */}
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
-        <div className="space-y-12 md:space-y-16">
+      <main className="mx-auto max-w-[90rem] px-5 md:px-10">
+        <div className="space-y-16 md:space-y-24">
           {/* 个人信息头部 */}
           <div id="header">
             <Header data={resumeData.personal} />
           </div>
 
           {/* 成果数字带 */}
-          <div id="stats">
+          <div id="stats" className="-mt-16 md:-mt-24">
             <StatBand data={resumeData} />
           </div>
 
           {/* 旗舰主项目 · 实习工作 */}
           {resumeData.featured && (
-            <div id="featured" className="scroll-mt-20">
+            <div id="featured" className="-mt-16 scroll-mt-20 md:-mt-24">
               <FeaturedProject data={resumeData.featured} />
             </div>
           )}
@@ -116,8 +114,8 @@ export default function Home() {
       </main>
 
       {/* 页脚 */}
-      <footer className="relative mt-20 border-t border-foreground/10 py-8">
-        <div className="mx-auto max-w-7xl px-4 md:px-8">
+      <footer className="relative mt-24 border-t border-foreground/15 py-8">
+        <div className="mx-auto max-w-[90rem] px-5 md:px-10">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-center text-sm text-muted-foreground">
               © {new Date().getFullYear()} {resumeData.personal.name}. All rights reserved.

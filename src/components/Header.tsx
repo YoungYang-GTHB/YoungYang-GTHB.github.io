@@ -24,68 +24,35 @@ export function Header({ data }: Props) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
-      className="relative overflow-hidden border border-foreground/15 bg-card px-5 py-7 shadow-[0_18px_60px_rgba(41,51,47,0.08)] md:px-9 md:py-10"
+      className="relative border-b border-foreground/25 py-10 md:py-14 lg:py-0"
     >
-      <div className="mb-8 flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-muted-foreground">
-        <span>PROFILE / ROBOTICS ENGINEER</span>
-        <span className="hidden sm:inline">{data.location}</span>
-      </div>
-
-      <div className={`grid gap-9 lg:items-start lg:gap-14 ${data.photo ? 'lg:grid-cols-[minmax(0,1fr)_14rem]' : ''}`}>
-        <div>
-          <div className="flex items-center gap-3 text-sm font-semibold text-primary">
-            <span className="h-2 w-2 bg-signal" />
+      <div className={`grid lg:min-h-[34rem] ${data.photo ? 'lg:grid-cols-[minmax(0,1.25fr)_minmax(17rem,0.68fr)_minmax(12rem,0.38fr)]' : 'lg:grid-cols-[minmax(0,1fr)_18rem]'}`}>
+        <div className="flex flex-col justify-center lg:pr-12 xl:pr-16">
+          <h1 className="max-w-4xl font-display text-[clamp(3rem,6vw,6.4rem)] font-bold leading-[1.02] tracking-[-0.045em]">
             {data.title}
-          </div>
-
-          <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl md:text-7xl lg:text-[5.5rem]">
-            {data.name}
-            <span className="mt-3 block text-[0.42em] font-semibold leading-tight tracking-[-0.025em] text-muted-foreground">
-              {data.headline || data.tagline}
-            </span>
           </h1>
 
-          <p className="mt-7 max-w-3xl text-base leading-8 text-muted-foreground md:text-lg">
+          <span className="mt-7 h-1 w-10 bg-signal" aria-hidden="true" />
+
+          <p className="mt-7 max-w-2xl text-base leading-8 text-muted-foreground md:text-lg md:leading-9">
             {heroSummary}
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-3 text-sm">
-            <a href={`mailto:${data.email}`} className="inline-flex items-center gap-2 transition-colors hover:text-primary">
-              <Mail className="h-4 w-4 text-primary" />
-              {data.email}
-            </a>
-            <a href={`tel:${data.phone}`} className="inline-flex items-center gap-2 transition-colors hover:text-primary">
-              <Phone className="h-4 w-4 text-primary" />
-              {data.phone}
-            </a>
-            <span className="inline-flex items-center gap-2 text-muted-foreground">
-              <MapPin className="h-4 w-4 text-primary" />
-              {data.location}
-            </span>
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-2.5">
+          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3">
             {data.resumeLinks?.length || data.photo ? (
-              <Button asChild className="h-10 rounded-none px-5 shadow-none">
+              <Button asChild className="h-12 rounded-none px-7 text-sm shadow-none">
                 <a href="#featured">
-                  查看真机闭环
+                  查看代表项目
                   <ArrowDownRight className="h-4 w-4" />
                 </a>
               </Button>
             ) : null}
-            {data.github && (
-              <Button variant="outline" asChild className="h-10 rounded-none border-foreground/20 bg-transparent px-4 shadow-none">
-                <a href={data.github} target="_blank" rel="noopener noreferrer">
-                  <Github className="h-4 w-4" /> GitHub
-                </a>
-              </Button>
-            )}
             {data.resumeLinks?.map((resume) => (
               <Button
                 key={resume.href}
-                variant={resume.primary ? 'outline' : 'ghost'}
+                variant="ghost"
                 asChild
-                className="h-10 rounded-none px-3 text-muted-foreground"
+                className="h-12 rounded-none border-b border-primary px-1 text-primary hover:bg-transparent hover:text-signal"
               >
                 <a href={resume.href} download={resume.download}>
                   {resume.primary && <Download className="h-4 w-4" />}
@@ -96,43 +63,45 @@ export function Header({ data }: Props) {
           </div>
         </div>
 
-        {data.photo && <motion.aside
+        {data.photo && <motion.div
           initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.18, duration: 0.55 }}
-          className="hidden lg:block"
+          className="hidden border-l border-foreground/15 lg:block"
         >
-          <div className="relative">
-            <div className="absolute -inset-3 bg-[linear-gradient(145deg,rgba(15,92,85,0.18),rgba(217,119,6,0.12),transparent)]" />
-            <div className="relative overflow-hidden border border-foreground/15 bg-card p-2 shadow-[0_20px_48px_rgba(28,38,35,0.16)] dark:shadow-[0_22px_55px_rgba(0,0,0,0.38)]">
-              <div className="relative aspect-[4/5] overflow-hidden bg-muted">
+          <div className="relative h-full overflow-hidden bg-muted">
               {/* 公开站点使用 ASCII 资源名，避免 React 预加载响应头编码问题。 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={data.photo}
-                  alt={data.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap bg-signal px-3 py-1.5 font-mono text-[9px] font-bold tracking-[0.14em] text-[#211507] shadow-[0_8px_22px_rgba(180,83,9,0.2)]">
-              VLA · ROBOTICS
-            </div>
+            <img src={data.photo} alt={data.name} className="h-full w-full object-cover object-center" />
           </div>
+        </motion.div>}
 
-          <dl className="mt-7 space-y-2 border-l border-primary/30 pl-4 text-xs">
-            <div>
-              <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">EDUCATION</dt>
-              <dd className="mt-0.5 font-semibold">{data.subtitle}</dd>
+        <aside className="hidden border-l border-foreground/15 py-12 pl-6 lg:flex lg:flex-col lg:justify-center xl:pl-8">
+          <dl className="divide-y divide-foreground/15 text-xs">
+            <div className="pb-5">
+              <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">在读</dt>
+              <dd className="mt-2 font-semibold leading-5">{data.subtitle}</dd>
             </div>
             {data.tagline && (
-              <div>
-                <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">FOCUS</dt>
-                <dd className="mt-0.5 leading-5">{data.tagline}</dd>
+              <div className="py-5">
+                <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">研究方向</dt>
+                <dd className="mt-2 leading-5">{data.tagline}</dd>
               </div>
             )}
+            <div className="py-5">
+              <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">位置</dt>
+              <dd className="mt-2 flex items-start gap-2 leading-5"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />{data.location}</dd>
+            </div>
+            <div className="py-5">
+              <dt className="font-mono text-[9px] tracking-[0.14em] text-muted-foreground">联系</dt>
+              <dd className="mt-2 space-y-2 leading-5">
+                <a href={`mailto:${data.email}`} className="flex items-start gap-2 break-all hover:text-primary"><Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />{data.email}</a>
+                <a href={`tel:${data.phone}`} className="flex items-center gap-2 hover:text-primary"><Phone className="h-3.5 w-3.5" />{data.phone}</a>
+              </dd>
+            </div>
           </dl>
-        </motion.aside>}
+          {data.github && <a href={data.github} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-primary hover:text-signal"><Github className="h-4 w-4" />GitHub</a>}
+        </aside>
       </div>
     </motion.section>
   );

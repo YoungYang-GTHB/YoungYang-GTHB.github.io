@@ -31,8 +31,8 @@ export function SkillMatrix({ data }: Props) {
   const categories = Object.entries(data) as Array<[keyof Skills, Skills[keyof Skills]]>;
 
   return (
-    <Card className="overflow-hidden rounded-none border-foreground/15 bg-card shadow-none">
-      <CardHeader className="border-b border-foreground/12 bg-secondary/45 px-5 py-4 md:px-7">
+    <Card className="overflow-hidden rounded-none border-x-0 border-y border-foreground/20 bg-transparent shadow-none">
+      <CardHeader className="border-b border-foreground/15 bg-transparent px-0 py-6 md:px-0">
         <SectionHeading code="03" title="专业技能" icon={Code2} />
       </CardHeader>
       <CardContent className="p-0">
@@ -46,7 +46,7 @@ export function SkillMatrix({ data }: Props) {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.06, duration: 0.35 }}
                 viewport={{ once: true }}
-                className="bg-card p-5 last:md:col-span-2 md:p-6"
+                className="bg-background p-6 last:md:col-span-2 md:p-8"
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center border border-primary/20 bg-primary/5 text-primary">

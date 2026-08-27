@@ -15,8 +15,8 @@ interface Props {
 
 export function ProjectCard({ data }: Props) {
   return (
-    <Card className="overflow-hidden rounded-none border-foreground/15 bg-card shadow-none">
-      <CardHeader className="border-b border-foreground/12 bg-secondary/45 px-5 py-4 md:px-7">
+    <Card className="overflow-hidden rounded-none border-x-0 border-y border-foreground/20 bg-transparent shadow-none">
+      <CardHeader className="border-b border-foreground/15 bg-transparent px-0 py-6 md:px-0">
         <SectionHeading code="04" title="项目经历" icon={Rocket} />
       </CardHeader>
       <CardContent className="divide-y divide-foreground/12 p-0">
@@ -27,7 +27,7 @@ export function ProjectCard({ data }: Props) {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.07, duration: 0.4 }}
             viewport={{ once: true }}
-            className="relative p-5 md:p-7"
+            className="relative px-0 py-8 md:px-0 md:py-10"
           >
             <div className="grid gap-5 md:grid-cols-[3.5rem_minmax(0,1fr)]">
               <div className="font-mono text-[11px] text-primary">P-{String(index + 1).padStart(2, '0')}</div>

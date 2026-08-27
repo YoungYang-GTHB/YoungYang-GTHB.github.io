@@ -35,15 +35,15 @@ export function FeaturedProject({ data }: Props) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, ease: [0.2, 0.8, 0.2, 1] }}
       viewport={{ once: true, margin: '-60px' }}
-      className="relative overflow-hidden bg-[#14211e] text-[#f7f3e8] shadow-[0_28px_80px_rgba(20,33,30,0.2)]"
+      className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-[#14201d] text-[#f7f7f2]"
     >
       <div className="absolute inset-0 bg-[linear-gradient(rgba(242,245,240,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(242,245,240,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
 
-      <div className="relative p-4 sm:p-6 md:p-9 lg:p-11">
+      <div className="relative mx-auto max-w-[90rem] p-5 md:p-10 lg:p-14">
         <header className="flex flex-col gap-6 border-b border-white/15 pb-7 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] tracking-[0.17em] text-white/55">
-              <span className="bg-signal px-2 py-1 font-bold text-[#071419]">FIELD NOTE / 01</span>
+              <span className="text-5xl font-semibold tracking-[-0.06em] text-signal md:text-6xl">01</span>
               <span>FLAGSHIP REAL-ROBOT SYSTEM</span>
             </div>
             <h2 className="mt-5 max-w-4xl font-display text-3xl font-bold leading-tight tracking-[-0.035em] sm:text-4xl lg:text-5xl">
