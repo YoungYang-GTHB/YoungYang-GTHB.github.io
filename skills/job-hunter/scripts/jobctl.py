@@ -53,6 +53,8 @@ STATUSES = {
     "withdrawn",
     "held",
 }
+ACTIVE_APPLICATION_STATUSES = {"applied", "screening", "interview", "offer"}
+SUBMISSION_WINDOW_SCOPES = {"company_program"}
 POLICY_STATUSES = {
     "current_year_safe",
     "previous_year_evidence",
@@ -80,9 +82,28 @@ STATUS_LABELS = {
     "held": "暂缓",
 }
 
+# 历史投递记录中的 ``public/resume.pdf`` 是当时的主简历别名；站点重构后
+# 文件拆分为 VLA 和嵌入式两个明确版本。保留原始记录文本以便审计，同时让
+# 校验使用仍存在的对应版本，避免历史记录阻断后续增量检索。
+LEGACY_RESUME_ALIASES = {
+    "public/resume.pdf": "public/resume-vla-zh.pdf",
+    "public/resume-embedded.pdf": "public/resume-embedded-zh.pdf",
+}
+
 
 class LedgerError(ValueError):
     pass
+
+
+def resume_file_exists(resume: str) -> bool:
+    """Return whether a current or documented legacy resume path is available."""
+    candidate = stringify(resume).strip()
+    if not candidate:
+        return False
+    if (PROJECT_ROOT / candidate).is_file():
+        return True
+    alias = LEGACY_RESUME_ALIASES.get(candidate)
+    return bool(alias and (PROJECT_ROOT / alias).is_file())
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
@@ -145,7 +166,7 @@ def validate_monitoring(payload: dict[str, Any]) -> list[str]:
             errors.append(f"updated_at 日期无效: {updated_at}")
     if not default_resume:
         errors.append("default_resume 不能为空")
-    elif not (PROJECT_ROOT / default_resume).is_file():
+    elif not resume_file_exists(default_resume):
         errors.append(f"default_resume 文件不存在: {default_resume}")
     seen: set[str] = set()
     for index, item in enumerate(payload.get("monitors", []), start=1):
@@ -269,7 +290,7 @@ def validate_monitoring(payload: dict[str, Any]) -> list[str]:
         resume = stringify(item.get("resume") or default_resume).strip()
         if not resume:
             errors.append(f"{prefix}.resume 及 default_resume 不能同时为空")
-        elif not (PROJECT_ROOT / resume).is_file():
+        elif not resume_file_exists(resume):
             errors.append(f"{prefix}.resume 文件不存在: {resume}")
     return errors
 
@@ -545,6 +566,216 @@ def parse_locations(value: str | list[str]) -> list[str]:
     return [str(item).strip() for item in values if str(item).strip()]
 
 
+def normalized_identity(value: Any) -> str:
+    """Normalize user-facing identifiers for conservative equality checks."""
+    return re.sub(r"\s+", "", stringify(value)).casefold()
+
+
+def applied_date(application: dict[str, Any]) -> date | None:
+    value = stringify(application.get("applied_at")).strip()
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value[:10])
+    except ValueError:
+        return None
+
+
+def submission_window(application: dict[str, Any]) -> dict[str, Any] | None:
+    rule = application.get("submission_window")
+    return rule if isinstance(rule, dict) else None
+
+
+def validate_submission_window(value: Any, prefix: str) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, dict):
+        return [f"{prefix}.submission_window 必须是对象"]
+    errors: list[str] = []
+    scope = stringify(value.get("scope")).strip()
+    if scope not in SUBMISSION_WINDOW_SCOPES:
+        errors.append(
+            f"{prefix}.submission_window.scope 非法: {scope or '为空'}"
+        )
+    for field in ("max_applications", "window_days"):
+        raw = value.get(field)
+        if isinstance(raw, bool) or not isinstance(raw, int) or raw < 1:
+            errors.append(
+                f"{prefix}.submission_window.{field} 必须是大于等于1的整数"
+            )
+    return errors
+
+
+def same_submission_scope(
+    candidate: dict[str, Any], previous: dict[str, Any], scope: str
+) -> bool:
+    if scope != "company_program":
+        return False
+    return (
+        normalized_identity(candidate.get("company"))
+        == normalized_identity(previous.get("company"))
+        and normalized_identity(candidate.get("program"))
+        == normalized_identity(previous.get("program"))
+    )
+
+
+def active_history(
+    ledger: "ApplicationLedger", candidate: dict[str, Any], scope: str
+) -> list[dict[str, Any]]:
+    records = [
+        item
+        for item in ledger.applications
+        if item.get("id") != candidate.get("id")
+        and item.get("status") in ACTIVE_APPLICATION_STATUSES
+        and same_submission_scope(candidate, item, scope)
+    ]
+    return sorted(
+        records,
+        key=lambda item: (stringify(item.get("applied_at")), stringify(item.get("id"))),
+        reverse=True,
+    )
+
+
+def effective_submission_window(
+    ledger: "ApplicationLedger", candidate: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Use the candidate rule first, otherwise inherit an active same-project rule."""
+    own = submission_window(candidate)
+    if own:
+        return own
+    for item in ledger.applications:
+        if item.get("id") == candidate.get("id"):
+            continue
+        rule = submission_window(item)
+        if rule and same_submission_scope(candidate, item, stringify(rule.get("scope"))):
+            return rule
+    return None
+
+
+def submission_conflicts(
+    ledger: "ApplicationLedger", candidate: dict[str, Any], *, reference: date | None = None
+) -> list[str]:
+    """Return exact-duplicate and declared application-window conflicts.
+
+    A rule is only enforced when the ledger has an explicit ``submission_window``.
+    This avoids inferring a platform limit from vague prose while still making a
+    verified company/project rule impossible to overlook.
+    """
+    conflicts: list[str] = []
+    company = normalized_identity(candidate.get("company"))
+    candidate_job_id = normalized_identity(candidate.get("job_id"))
+    candidate_url = stringify(candidate.get("job_url")).strip().rstrip("/")
+    for previous in ledger.applications:
+        if previous.get("id") == candidate.get("id"):
+            continue
+        if previous.get("status") not in ACTIVE_APPLICATION_STATUSES:
+            continue
+        if normalized_identity(previous.get("company")) != company:
+            continue
+        same_job_id = bool(candidate_job_id) and (
+            candidate_job_id == normalized_identity(previous.get("job_id"))
+        )
+        previous_url = stringify(previous.get("job_url")).strip().rstrip("/")
+        same_url = bool(candidate_url) and candidate_url == previous_url
+        if same_job_id or same_url:
+            conflicts.append(
+                "已存在同一岗位的有效投递："
+                f"{previous.get('position')}（{previous.get('id')}，"
+                f"{previous.get('applied_at') or '日期未记录'}）"
+            )
+
+    rule = effective_submission_window(ledger, candidate)
+    if not rule:
+        return conflicts
+    scope = stringify(rule.get("scope")).strip()
+    max_applications = rule.get("max_applications")
+    window_days = rule.get("window_days")
+    if (
+        scope not in SUBMISSION_WINDOW_SCOPES
+        or isinstance(max_applications, bool)
+        or not isinstance(max_applications, int)
+        or isinstance(window_days, bool)
+        or not isinstance(window_days, int)
+    ):
+        return conflicts
+
+    reference_day = reference or date.today()
+    cutoff = reference_day - timedelta(days=window_days - 1)
+    recent = [
+        item
+        for item in active_history(ledger, candidate, scope)
+        if (item_date := applied_date(item)) is not None and cutoff <= item_date <= reference_day
+    ]
+    if len(recent) >= max_applications:
+        evidence = "；".join(
+            f"{item.get('position')}（{item.get('applied_at')}）" for item in recent
+        )
+        conflicts.append(
+            f"公司/项目投递窗口已满：{scope} 在 {window_days} 天内最多 "
+            f"{max_applications} 个有效职位；已有 {len(recent)} 个：{evidence}"
+        )
+    return conflicts
+
+
+def history_records(
+    ledger: "ApplicationLedger",
+    *,
+    company: str = "",
+    program: str = "",
+    job_id: str = "",
+    url: str = "",
+    active_only: bool = False,
+) -> list[dict[str, Any]]:
+    """Filter all ledger records for the pre-submission history table."""
+    company_key = normalized_identity(company)
+    program_key = normalized_identity(program)
+    job_key = normalized_identity(job_id)
+    url_key = stringify(url).strip().rstrip("/")
+    records: list[dict[str, Any]] = []
+    for item in ledger.applications:
+        if company_key and company_key not in normalized_identity(item.get("company")):
+            continue
+        if program_key and program_key not in normalized_identity(item.get("program")):
+            continue
+        if job_key and job_key != normalized_identity(item.get("job_id")):
+            continue
+        if url_key and url_key != stringify(item.get("job_url")).strip().rstrip("/"):
+            continue
+        if active_only and item.get("status") not in ACTIVE_APPLICATION_STATUSES:
+            continue
+        records.append(item)
+    return sorted(
+        records,
+        key=lambda item: (stringify(item.get("applied_at")), stringify(item.get("id"))),
+        reverse=True,
+    )
+
+
+def render_history_table(records: list[dict[str, Any]]) -> str:
+    lines = [
+        "| 状态 | 投递日期 | 公司 | 项目 | 岗位 | 岗位 ID | 记录 ID |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for item in records:
+        clean = lambda value: stringify(value).replace("|", "\\|").replace("\n", " ")
+        lines.append(
+            "| "
+            + " | ".join(
+                (
+                    STATUS_LABELS.get(clean(item.get("status")), clean(item.get("status"))),
+                    clean(item.get("applied_at")) or "—",
+                    clean(item.get("company")),
+                    clean(item.get("program")) or "—",
+                    clean(item.get("position")),
+                    clean(item.get("job_id")) or "—",
+                    clean(item.get("id")),
+                )
+            )
+            + " |"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def confirmation_token(application: dict[str, Any]) -> str:
     stable = {
         key: application.get(key, "")
@@ -637,6 +868,7 @@ class ApplicationLedger:
                 errors.append(f"{prefix}.status 非法: {item.get('status')}")
             if item.get("policy_status") not in POLICY_STATUSES:
                 errors.append(f"{prefix}.policy_status 非法: {item.get('policy_status')}")
+            errors.extend(validate_submission_window(item.get("submission_window"), prefix))
             if item.get("status") in {"applied", "screening", "interview", "offer"}:
                 for field in ("applied_at", "channel", "resume"):
                     if not stringify(item.get(field)).strip():
@@ -653,7 +885,7 @@ class ApplicationLedger:
                             f"{prefix}.applied_at 不能晚于时间基准 {evidence_cutoff.isoformat()}"
                         )
             resume = stringify(item.get("resume"))
-            if resume and not (PROJECT_ROOT / resume).exists():
+            if resume and not resume_file_exists(resume):
                 errors.append(f"{prefix}.resume 文件不存在: {resume}")
         return errors
 
@@ -944,7 +1176,7 @@ def cmd_set_phase(args: argparse.Namespace) -> int:
     return 0
 
 
-def print_preflight(application: dict[str, Any]) -> None:
+def print_preflight(ledger: ApplicationLedger, application: dict[str, Any]) -> None:
     print("=== 投递前检查 ===")
     print(f"记录 ID: {application.get('id')}")
     print(f"公司 / 项目: {application.get('company')} / {application.get('program') or '—'}")
@@ -956,6 +1188,23 @@ def print_preflight(application: dict[str, Any]) -> None:
     print(f"渠道: {application.get('channel') or '—'}")
     print(f"内推码: {application.get('referral_code') or '无'}")
     print(f"岗位链接: {application.get('job_url') or '—'}")
+    rule = effective_submission_window(ledger, application)
+    if rule:
+        print(
+            "公司/项目窗口: "
+            f"{rule.get('scope')}，{rule.get('window_days')} 天内最多 "
+            f"{rule.get('max_applications')} 个职位"
+        )
+    history = active_history(ledger, application, "company_program")
+    if history:
+        print("同公司同项目有效投递:")
+        for item in history:
+            print(
+                f"- {item.get('position')} ({item.get('job_id') or '无岗位ID'}) / "
+                f"{item.get('status')} / {item.get('applied_at') or '日期未记录'}"
+            )
+    else:
+        print("同公司同项目有效投递: 无")
     print(f"确认令牌: {confirmation_token(application)}")
     print("说明: 此令牌只用于记录本人已确认；验证码和招聘网站最终提交仍由浏览器流程处理。")
 
@@ -965,6 +1214,14 @@ def ensure_submittable(ledger: ApplicationLedger, application: dict[str, Any]) -
     if application.get("phase") != active_phase:
         raise LedgerError(
             f"当前只投 {active_phase}，该岗位属于 {application.get('phase')}，已阻止进入提交流程"
+        )
+    conflicts = submission_conflicts(ledger, application)
+    if conflicts:
+        raise LedgerError("投递前去重阻断:\n- " + "\n- ".join(conflicts))
+    if application.get("status") != "prepared":
+        raise LedgerError(
+            f"当前记录状态为“{STATUS_LABELS.get(application.get('status'), application.get('status'))}”，"
+            "只有待确认岗位才能进入提交前检查"
         )
     policy_status = application.get("policy_status")
     if policy_status not in SUBMITTABLE_POLICY_STATUSES:
@@ -978,7 +1235,32 @@ def cmd_preflight(args: argparse.Namespace) -> int:
     ledger = ApplicationLedger(Path(args.ledger))
     application = ledger.get(args.id)
     ensure_submittable(ledger, application)
-    print_preflight(application)
+    print_preflight(ledger, application)
+    return 0
+
+
+def cmd_history(args: argparse.Namespace) -> int:
+    if not any((args.company, args.program, args.job_id, args.url)):
+        raise LedgerError("history 至少需要 --company、--program、--job-id 或 --url 中的一项")
+    ledger = ApplicationLedger(Path(args.ledger))
+    records = history_records(
+        ledger,
+        company=args.company,
+        program=args.program,
+        job_id=args.job_id,
+        url=args.url,
+        active_only=args.active_only,
+    )
+    if args.limit:
+        records = records[: args.limit]
+    content = render_history_table(records)
+    if args.output:
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(content, encoding="utf-8")
+        print(f"[jobctl] 已写入投递历史表: {output}")
+    else:
+        print(content, end="")
     return 0
 
 
@@ -1288,6 +1570,20 @@ def build_parser() -> argparse.ArgumentParser:
     preflight_parser = subparsers.add_parser("preflight", help="显示最终提交前快照和确认令牌")
     preflight_parser.add_argument("id")
     preflight_parser.set_defaults(handler=cmd_preflight)
+
+    history_parser = subparsers.add_parser(
+        "history", help="查询公司/项目/岗位的历史投递，供提交前去重"
+    )
+    history_parser.add_argument("--company", default="", help="公司名，可使用部分名称")
+    history_parser.add_argument("--program", default="", help="招聘项目名，可使用部分名称")
+    history_parser.add_argument("--job-id", default="", help="精确岗位 ID")
+    history_parser.add_argument("--url", default="", help="精确岗位链接")
+    history_parser.add_argument(
+        "--active-only", action="store_true", help="只显示已投递/筛选/面试/Offer 记录"
+    )
+    history_parser.add_argument("--limit", type=int, default=0, help="最多显示的记录数；0 表示全部")
+    history_parser.add_argument("--output", default="", help="可选 Markdown 表格输出路径")
+    history_parser.set_defaults(handler=cmd_history)
 
     applied_parser = subparsers.add_parser("record-applied", help="浏览器提交成功后统一落档")
     applied_parser.add_argument("id")

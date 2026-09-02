@@ -222,6 +222,29 @@ python3 skills/job-hunter/scripts/jobctl.py prepare \
 python3 skills/job-hunter/scripts/jobctl.py preflight company-job-id
 ```
 
+每次打开申请表前，先查同公司、同项目或精确岗位的历史记录；`preflight` 也会自动执行这一步。
+
+```bash
+# 模糊查公司；可附加 --active-only 只看尚在流程中的投递
+python3 skills/job-hunter/scripts/jobctl.py history --company '智源' --active-only
+
+# 用岗位 ID / 链接做精确去重，并将结果落为 Markdown 表
+python3 skills/job-hunter/scripts/jobctl.py history \
+  --job-id '661a5a88-bf47-49c5-9108-62a4cbb2708f' \
+  --output career/求职投递/2027届/投递历史核验.md
+```
+
+对于官网明确写出窗口限制的项目，在对应账本条目中填写：
+
+```yaml
+submission_window:
+  scope: company_program
+  max_applications: 1
+  window_days: 31
+```
+
+这样 `preflight` 会同时阻断同一岗位重复投递和窗口内超额投递；没有明确官网证据时只展示历史记录，不会从模糊文字推断限额。
+
 验证码和招聘网站的最终提交仍由本人确认。网页显示投递成功后，使用 `preflight` 输出的令牌一次性落档：
 
 ```bash

@@ -18,7 +18,10 @@ from scripts.jobctl import (
     ensure_submittable,
     monitor_due_reasons,
     reminder_urgency,
+    history_records,
+    render_history_table,
     select_brief_rows,
+    submission_conflicts,
     resume_guidance,
     render_summary,
     load_monitoring,
@@ -147,6 +150,75 @@ class JobctlTests(unittest.TestCase):
             application["policy_status"] = "unknown"
             with self.assertRaises(LedgerError):
                 ensure_submittable(ledger, application)
+
+    def test_submission_window_blocks_a_second_company_program_application(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "applications.yaml"
+            candidate = self.make_application()
+            candidate.update(
+                id="example-second-role",
+                position="具身世界模型部署",
+                job_id="R002",
+                submission_window={
+                    "scope": "company_program",
+                    "max_applications": 1,
+                    "window_days": 31,
+                },
+            )
+            previous = self.make_application()
+            previous.update(
+                id="example-first-role",
+                position="具身大模型算法",
+                job_id="R001",
+                status="applied",
+                applied_at=date.today().isoformat(),
+                submission_window={
+                    "scope": "company_program",
+                    "max_applications": 1,
+                    "window_days": 31,
+                },
+            )
+            payload = {
+                "schema_version": 1,
+                "active_phase": "提前批",
+                "updated_at": date.today().isoformat(),
+                "applications": [candidate, previous],
+            }
+            ledger_path.write_text(
+                yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
+            ledger = ApplicationLedger(ledger_path)
+
+            conflicts = submission_conflicts(ledger, candidate)
+            self.assertTrue(any("投递窗口已满" in item for item in conflicts))
+            with self.assertRaisesRegex(LedgerError, "投递前去重阻断"):
+                ensure_submittable(ledger, candidate)
+
+    def test_history_table_filters_company_and_active_records(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "applications.yaml"
+            active = self.make_application()
+            active.update(status="applied", applied_at="2026-08-20")
+            held = self.make_application()
+            held.update(id="example-held-role", status="held", position="备选岗位")
+            payload = {
+                "schema_version": 1,
+                "active_phase": "提前批",
+                "updated_at": "2026-08-20",
+                "applications": [active, held],
+            }
+            ledger_path.write_text(
+                yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
+            records = history_records(
+                ApplicationLedger(ledger_path), company="示例机器人", active_only=True
+            )
+
+            self.assertEqual([item["id"] for item in records], ["example-robot-role"])
+            table = render_history_table(records)
+            self.assertIn("| 已投递 | 2026-08-20 | 示例机器人 |", table)
 
     def test_monitor_due_emits_opening_and_safety_stages(self):
         monitor = {
