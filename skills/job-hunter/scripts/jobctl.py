@@ -154,7 +154,10 @@ def save_monitoring(payload: dict[str, Any], path: Path = DEFAULT_MONITORING) ->
 
 def validate_monitoring(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
-    allowed_statuses = {"watching", "open", "prepared", "tracking"}
+    # ``applied`` and ``paused`` are explicit operational states used by the
+    # long-running private monitor.  Keep them distinct from ``tracking`` so a
+    # handoff agent can tell a verified submission from a user-paused company.
+    allowed_statuses = {"watching", "open", "prepared", "tracking", "applied", "paused"}
     allowed_priorities = {"P0", "P1", "P2"}
     default_resume = stringify(payload.get("default_resume")).strip()
     evidence_cutoff: date | None = None

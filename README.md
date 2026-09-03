@@ -38,6 +38,15 @@ RESUME_DATA_PATH=content/resume.public.yaml npm run dev
 ./scripts/build-private-resumes.sh
 ```
 
+交给新的 Agent 接手时，先运行只读诊断并按接手文档顺序阅读：
+
+```bash
+./scripts/agent-status.sh
+```
+
+- **[AGENTS.md](AGENTS.md)** — 公私仓库边界、投递门禁与提交顺序
+- **[career/AGENT_HANDOFF.md](career/AGENT_HANDOFF.md)** — 私有数据真相源、浏览器/CDP、岗位筛选与故障恢复
+
 GitHub Pages 部署真实个人站点时，在公开仓库的 Actions secrets 中配置只读 `CAREER_REPO_TOKEN`。工作流会拉取私有仓库、剔除非公开个人字段，并且只复制页面实际引用的白名单资源；未配置时使用匿名示例构建。
 
 ## 完整部署指南
@@ -49,6 +58,7 @@ GitHub Pages 部署真实个人站点时，在公开仓库的 Actions secrets �
 | 文档 | 说明 |
 |------|------|
 | [SETUP.md](SETUP.md) | 环境部署与配置指南 |
+| [AGENTS.md](AGENTS.md) | Agent 接手入口与强制操作规则 |
 | [PLAN.md](PLAN.md) | 项目计划与进度 |
 | [skills/job-hunter/SKILL.md](skills/job-hunter/SKILL.md) | 求职工具使用说明 |
 
