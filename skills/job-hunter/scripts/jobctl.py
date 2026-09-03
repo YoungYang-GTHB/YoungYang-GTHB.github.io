@@ -32,6 +32,12 @@ DEFAULT_SUMMARY = PROJECT_ROOT / "career" / "求职投递" / "2027届" / "投递
 DEFAULT_MONITORING = (
     PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "monitoring.yaml"
 )
+DEFAULT_COMPANY_CATEGORIES = (
+    PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "company_categories.yaml"
+)
+DEFAULT_CATEGORY_SUMMARY_DIR = (
+    PROJECT_ROOT / "career" / "求职投递" / "2027届" / "分类汇总"
+)
 
 sys.path.insert(0, str(SKILL_ROOT))
 
@@ -802,6 +808,15 @@ def confirmation_token(application: dict[str, Any]) -> str:
     return f"CONFIRM:{application.get('id', 'unknown')}:{digest}"
 
 
+def enabled_phases(data: dict[str, Any]) -> list[str]:
+    """Return enabled submission phases with legacy ``active_phase`` support."""
+    values = data.get("active_phases")
+    if isinstance(values, list) and values:
+        return [stringify(value) for value in values]
+    phase = stringify(data.get("active_phase"))
+    return [phase] if phase else []
+
+
 class ApplicationLedger:
     def __init__(self, path: Path = DEFAULT_LEDGER):
         self.path = Path(path)
@@ -812,12 +827,14 @@ class ApplicationLedger:
             return {
                 "schema_version": 1,
                 "active_phase": "提前批",
+                "active_phases": ["提前批"],
                 "updated_at": today_string(),
                 "applications": [],
             }
         payload = load_yaml_unique(self.path)
         payload.setdefault("schema_version", 1)
         payload.setdefault("active_phase", "提前批")
+        payload.setdefault("active_phases", [payload["active_phase"]])
         payload.setdefault("updated_at", today_string())
         payload.setdefault("applications", [])
         if not isinstance(payload["applications"], list):
@@ -855,6 +872,16 @@ class ApplicationLedger:
                 errors.append(f"updated_at 日期无效: {updated_at}")
         if self.data.get("active_phase") not in ACTIVE_PHASES:
             errors.append(f"active_phase 非法: {self.data.get('active_phase')}")
+        active_phases = enabled_phases(self.data)
+        if not active_phases:
+            errors.append("active_phases 不能为空")
+        if len(active_phases) != len(set(active_phases)):
+            errors.append("active_phases 不能包含重复批次")
+        invalid_phases = sorted(set(active_phases) - ACTIVE_PHASES)
+        if invalid_phases:
+            errors.append(f"active_phases 包含非法批次: {', '.join(invalid_phases)}")
+        if self.data.get("active_phase") not in active_phases:
+            errors.append("active_phase 必须包含在 active_phases 中")
         seen_ids: set[str] = set()
         for index, item in enumerate(self.applications, start=1):
             prefix = f"applications[{index}]"
@@ -911,32 +938,8 @@ class ApplicationLedger:
         os.replace(temp_path, self.path)
 
 
-def render_summary(ledger: ApplicationLedger, output_path: Path = DEFAULT_SUMMARY) -> str:
-    applications = sorted(
-        ledger.applications,
-        key=lambda item: (stringify(item.get("applied_at")), stringify(item.get("id"))),
-        reverse=True,
-    )
-    applied = [item for item in applications if item.get("status") in {"applied", "screening", "interview", "offer"}]
-    companies = {item.get("company") for item in applied if item.get("company")}
-    status_counts = Counter(item.get("status") for item in applications)
-    policy_counts = Counter(item.get("policy_status") for item in applications)
-
+def application_table_lines(applications: list[dict[str, Any]]) -> list[str]:
     lines = [
-        "# 2027 届投递汇总",
-        "",
-        "> 本文件由 `python3 skills/job-hunter/scripts/jobctl.py render` 自动生成，请修改 `data/applications.yaml`，不要手工维护本表。",
-        "",
-        f"- 已投递：**{len(applied)} 个岗位 / {len(companies)} 家公司**",
-        f"- 当前批次：**{ledger.data.get('active_phase')}**",
-        "- 状态：" + "；".join(
-            f"{STATUS_LABELS.get(key, key)} {value}" for key, value in sorted(status_counts.items())
-        ),
-        "- 批次政策：" + "；".join(
-            f"{POLICY_LABELS.get(key, key)} {value}" for key, value in sorted(policy_counts.items())
-        ),
-        f"- 更新时间：{stringify(ledger.data.get('updated_at'))}",
-        "",
         "| 公司 | 岗位 | 批次 | 政策口径 | 状态 | 投递日期 | 渠道 | 城市 | 简历 | 核验 |",
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
@@ -957,8 +960,178 @@ def render_summary(ledger: ApplicationLedger, output_path: Path = DEFAULT_SUMMAR
                 verified=verified,
             )
         )
-    lines.append("")
-    content = "\n".join(lines)
+    return lines
+
+
+def load_company_categories(path: Path = DEFAULT_COMPANY_CATEGORIES) -> dict[str, Any]:
+    if not path.exists():
+        return {
+            "default_category": "私企",
+            "category_order": ["央国企及科研院所", "外企", "私企"],
+            "overrides": {},
+        }
+    payload = load_yaml_unique(path)
+    default = stringify(payload.get("default_category")).strip()
+    order = payload.get("category_order")
+    overrides = payload.get("overrides") or {}
+    if not default or not isinstance(order, list) or not order:
+        raise LedgerError(f"公司分类配置缺少 default_category/category_order: {path}")
+    if default not in order:
+        raise LedgerError(f"公司分类默认值不在 category_order 中: {default}")
+    if not isinstance(overrides, dict):
+        raise LedgerError(f"公司分类 overrides 必须是映射: {path}")
+    invalid = sorted({stringify(value) for value in overrides.values()} - set(order))
+    if invalid:
+        raise LedgerError(f"公司分类包含未声明类别: {', '.join(invalid)}")
+    return payload
+
+
+def company_category(company: str, config: dict[str, Any]) -> str:
+    return stringify(config.get("overrides", {}).get(company)) or stringify(
+        config.get("default_category")
+    )
+
+
+def write_categorized_summaries(
+    applications: list[dict[str, Any]],
+    config: dict[str, Any],
+    output_dir: Path = DEFAULT_CATEGORY_SUMMARY_DIR,
+) -> dict[str, dict[str, int]]:
+    lifecycle_groups = {
+        "已投递与进行中": {"applied", "screening", "interview", "offer"},
+        "待投递与暂缓": {"draft", "prepared", "held"},
+        "已结束": {"rejected", "withdrawn"},
+    }
+    category_order = [stringify(item) for item in config["category_order"]]
+    stats: dict[str, dict[str, int]] = {}
+    output_dir.mkdir(parents=True, exist_ok=True)
+    root_lines = [
+        "# 2027 届投递分类汇总",
+        "",
+        "> 本目录由 `python3 skills/job-hunter/scripts/jobctl.py render` 从统一账本自动生成。公司性质由 `../data/company_categories.yaml` 管理，请勿手工修改分类表。",
+        "",
+        "| 类别 | 已投递与进行中 | 待投递与暂缓 | 已结束 | 公司数 |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for category in category_order:
+        category_records = [
+            item for item in applications if company_category(stringify(item.get("company")), config) == category
+        ]
+        category_dir = output_dir / category
+        category_dir.mkdir(parents=True, exist_ok=True)
+        counts: dict[str, int] = {}
+        category_lines = [
+            f"# {category}",
+            "",
+            "> 自动生成的分类导航；事实以 `../../data/applications.yaml` 为准。",
+            "",
+            "| 状态组 | 岗位数 | 入口 |",
+            "|---|---:|---|",
+        ]
+        for group_name, statuses in lifecycle_groups.items():
+            records = [item for item in category_records if item.get("status") in statuses]
+            counts[group_name] = len(records)
+            group_path = category_dir / f"{group_name}.md"
+            group_lines = [
+                f"# {category}｜{group_name}",
+                "",
+                "> 本文件由统一账本自动生成，请勿手工维护。返回 [分类首页](README.md) 或 [全部分类](../README.md)。",
+                "",
+                f"共 **{len(records)}** 个岗位。",
+                "",
+            ]
+            group_lines.extend(application_table_lines(records))
+            group_lines.append("")
+            group_path.write_text("\n".join(group_lines), encoding="utf-8")
+            category_lines.append(f"| {group_name} | {len(records)} | [{group_name}]({group_name}.md) |")
+        companies = {stringify(item.get("company")) for item in category_records}
+        counts["公司数"] = len(companies)
+        stats[category] = counts
+        category_lines.extend(
+            [
+                "",
+                f"共 **{len(category_records)}** 条岗位记录，涉及 **{len(companies)}** 家公司。",
+                "",
+            ]
+        )
+        (category_dir / "README.md").write_text("\n".join(category_lines), encoding="utf-8")
+        root_lines.append(
+            f"| [{category}]({category}/README.md) | {counts['已投递与进行中']} | "
+            f"{counts['待投递与暂缓']} | {counts['已结束']} | {counts['公司数']} |"
+        )
+    root_lines.extend(
+        [
+            "",
+            "## 分类口径",
+            "",
+            "- **央国企及科研院所**：中央/地方国有主体，以及明确隶属公共或国有体系的研究院所。",
+            "- **外企**：外资跨国公司或其中国研发主体。",
+            "- **私企**：默认类别，包含中国民营、上市商业公司与具身智能创业公司。",
+            "",
+            "边界或股权发生变化时，只修改分类配置并重新运行 `render`。",
+            "",
+        ]
+    )
+    (output_dir / "README.md").write_text("\n".join(root_lines), encoding="utf-8")
+    return stats
+
+
+def render_summary(ledger: ApplicationLedger, output_path: Path = DEFAULT_SUMMARY) -> str:
+    applications = sorted(
+        ledger.applications,
+        key=lambda item: (stringify(item.get("applied_at")), stringify(item.get("id"))),
+        reverse=True,
+    )
+    applied = [item for item in applications if item.get("status") in {"applied", "screening", "interview", "offer"}]
+    companies = {item.get("company") for item in applied if item.get("company")}
+    status_counts = Counter(item.get("status") for item in applications)
+    policy_counts = Counter(item.get("policy_status") for item in applications)
+
+    summary_lines = [
+        "# 2027 届投递汇总",
+        "",
+        "> 本文件由 `python3 skills/job-hunter/scripts/jobctl.py render` 自动生成，请修改 `data/applications.yaml`，不要手工维护本表。",
+        "",
+        f"- 已投递：**{len(applied)} 个岗位 / {len(companies)} 家公司**",
+        f"- 可投批次：**{' + '.join(enabled_phases(ledger.data))}**（默认检索：{ledger.data.get('active_phase')}）",
+        "- 状态：" + "；".join(
+            f"{STATUS_LABELS.get(key, key)} {value}" for key, value in sorted(status_counts.items())
+        ),
+        "- 批次政策：" + "；".join(
+            f"{POLICY_LABELS.get(key, key)} {value}" for key, value in sorted(policy_counts.items())
+        ),
+        f"- 更新时间：{stringify(ledger.data.get('updated_at'))}",
+        "",
+    ]
+    if output_path.resolve() == DEFAULT_SUMMARY.resolve():
+        config = load_company_categories()
+        stats = write_categorized_summaries(applications, config)
+        summary_lines.extend(
+            [
+                "## 按公司性质查看",
+                "",
+                "| 类别 | 已投递与进行中 | 待投递与暂缓 | 已结束 | 公司数 |",
+                "|---|---:|---:|---:|---:|",
+            ]
+        )
+        for category in config["category_order"]:
+            counts = stats[stringify(category)]
+            summary_lines.append(
+                f"| [{category}](分类汇总/{category}/README.md) | {counts['已投递与进行中']} | "
+                f"{counts['待投递与暂缓']} | {counts['已结束']} | {counts['公司数']} |"
+            )
+        summary_lines.extend(
+            [
+                "",
+                "详细岗位已按公司性质和生命周期拆分，参见 [分类汇总](分类汇总/README.md)。",
+                "",
+            ]
+        )
+    else:
+        # Keep custom one-off exports self-contained for callers and tests.
+        summary_lines.extend(application_table_lines(applications))
+        summary_lines.append("")
+    content = "\n".join(summary_lines)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(content, encoding="utf-8")
     return content
@@ -975,7 +1148,10 @@ def cmd_status(args: argparse.Namespace) -> int:
     status_counts = Counter(item.get("status") for item in ledger.applications)
     applied = [item for item in ledger.applications if item.get("status") in {"applied", "screening", "interview", "offer"}]
     print(f"账本: {ledger.path}")
-    print(f"当前批次: {ledger.data.get('active_phase')}")
+    print(
+        f"可投批次: {' + '.join(enabled_phases(ledger.data))}；"
+        f"默认检索: {ledger.data.get('active_phase')}"
+    )
     print(f"记录: {len(ledger.applications)}；已投递: {len(applied)}；公司: {len({item.get('company') for item in applied})}")
     for status, count in sorted(status_counts.items()):
         print(f"  {STATUS_LABELS.get(status, status)}: {count}")
@@ -996,9 +1172,19 @@ def cmd_validate(args: argparse.Namespace) -> int:
         for error in monitor_errors:
             print(f"- {error}", file=sys.stderr)
         return 1
+    category_config = load_company_categories()
+    category_counts = Counter(
+        company_category(stringify(item.get("company")), category_config)
+        for item in ledger.applications
+    )
     print(
         f"[jobctl] 校验通过：投递账本 {len(ledger.applications)} 条；"
-        f"监测项 {len(monitoring.get('monitors', []))} 条"
+        f"监测项 {len(monitoring.get('monitors', []))} 条；"
+        "分类 "
+        + " / ".join(
+            f"{category} {category_counts.get(stringify(category), 0)}"
+            for category in category_config["category_order"]
+        )
     )
     return 0
 
@@ -1124,9 +1310,10 @@ def cmd_monitor_record_check(args: argparse.Namespace) -> int:
 
 def cmd_prepare(args: argparse.Namespace) -> int:
     ledger = ApplicationLedger(Path(args.ledger))
-    if args.phase != ledger.data.get("active_phase"):
+    active_phases = enabled_phases(ledger.data)
+    if args.phase not in active_phases:
         raise LedgerError(
-            f"当前批次是 {ledger.data.get('active_phase')}，不能准备 {args.phase} 岗位"
+            f"当前允许批次是 {' + '.join(active_phases)}，不能准备 {args.phase} 岗位"
         )
     if args.update:
         try:
@@ -1172,10 +1359,13 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 
 def cmd_set_phase(args: argparse.Namespace) -> int:
     ledger = ApplicationLedger(Path(args.ledger))
-    previous = ledger.data.get("active_phase")
-    ledger.data["active_phase"] = args.phase
+    previous = enabled_phases(ledger.data)
+    phases = list(dict.fromkeys(args.phase))
+    ledger.data["active_phases"] = phases
+    # The last phase is the default for discovery commands that omit --phase.
+    ledger.data["active_phase"] = phases[-1]
     ledger.save()
-    print(f"[jobctl] 当前批次: {previous} → {args.phase}")
+    print(f"[jobctl] 可投批次: {' + '.join(previous)} → {' + '.join(phases)}")
     return 0
 
 
@@ -1213,10 +1403,10 @@ def print_preflight(ledger: ApplicationLedger, application: dict[str, Any]) -> N
 
 
 def ensure_submittable(ledger: ApplicationLedger, application: dict[str, Any]) -> None:
-    active_phase = ledger.data.get("active_phase")
-    if application.get("phase") != active_phase:
+    active_phases = enabled_phases(ledger.data)
+    if application.get("phase") not in active_phases:
         raise LedgerError(
-            f"当前只投 {active_phase}，该岗位属于 {application.get('phase')}，已阻止进入提交流程"
+            f"当前只投 {' + '.join(active_phases)}，该岗位属于 {application.get('phase')}，已阻止进入提交流程"
         )
     conflicts = submission_conflicts(ledger, application)
     if conflicts:
@@ -1536,7 +1726,9 @@ def build_parser() -> argparse.ArgumentParser:
     monitor_record_parser.add_argument("--next-check", required=True, help="下一次检查日 YYYY-MM-DD")
     monitor_record_parser.add_argument("--date", default="", help="本次核验日；默认北京时间当天")
     monitor_record_parser.add_argument(
-        "--status", choices=("watching", "open", "prepared", "tracking"), default=""
+        "--status",
+        choices=("watching", "open", "prepared", "tracking", "applied", "paused"),
+        default="",
     )
     monitor_record_parser.add_argument(
         "--safe-date", default=None, help="可选更新安全日；传空字符串可清除"
@@ -1547,8 +1739,8 @@ def build_parser() -> argparse.ArgumentParser:
     monitor_record_parser.add_argument("--monitoring", default=str(DEFAULT_MONITORING))
     monitor_record_parser.set_defaults(handler=cmd_monitor_record_check)
 
-    phase_parser = subparsers.add_parser("set-phase", help="切换当前允许投递的招聘批次")
-    phase_parser.add_argument("phase", choices=("提前批", "秋招", "春招"))
+    phase_parser = subparsers.add_parser("set-phase", help="设置一个或多个当前允许投递的招聘批次")
+    phase_parser.add_argument("phase", nargs="+", choices=("提前批", "秋招", "春招"))
     phase_parser.set_defaults(handler=cmd_set_phase)
 
     prepare_parser = subparsers.add_parser("prepare", help="创建投递草稿并生成确认令牌")

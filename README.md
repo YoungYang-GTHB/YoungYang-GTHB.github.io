@@ -61,6 +61,7 @@ GitHub Pages 部署真实个人站点时，在公开仓库的 Actions secrets �
 | [AGENTS.md](AGENTS.md) | Agent 接手入口与强制操作规则 |
 | [PLAN.md](PLAN.md) | 项目计划与进度 |
 | [skills/job-hunter/SKILL.md](skills/job-hunter/SKILL.md) | 求职工具使用说明 |
+| [career/求职投递/2027届/分类汇总](career/求职投递/2027届/分类汇总/README.md) | 私有投递记录的央国企、外企、私企分类视图 |
 
 ## 环境要求
 

@@ -100,6 +100,7 @@ skills/job-hunter/
 
 ## 使用边界
 
+- 当前提交门禁允许 `提前批 + 秋招` 并行；`applications.yaml` 的 `active_phases` 是权威值，`active_phase` 只是同步/扫描命令未指定 `--phase` 时的默认批次。切换可用批次必须由本人明确授权
 - 不自动投递，不自动私信 HR
 - 不批量爬取招聘平台
 - 不编造经历

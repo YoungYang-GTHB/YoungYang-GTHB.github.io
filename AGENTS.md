@@ -24,6 +24,9 @@ resume builds, job discovery, and application tracking. Personal data and the li
   offer terms, or unpublished internship details into the public repository.
 - `career/求职投递/2027届/data/applications.yaml` is the canonical application
   ledger. Generated Markdown summaries and browser tabs are not sources of truth.
+- `career/求职投递/2027届/data/company_categories.yaml` controls the generated
+  state-owned/research, foreign, and private-company views. Do not hand-edit
+  `投递汇总.md` or `分类汇总/`.
 
 ## Non-negotiable recruiting rules
 

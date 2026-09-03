@@ -15,7 +15,9 @@ from scripts.jobctl import (
     LedgerError,
     confirmation_token,
     deadline_display,
+    enabled_phases,
     ensure_submittable,
+    company_category,
     monitor_due_reasons,
     reminder_urgency,
     history_records,
@@ -27,6 +29,7 @@ from scripts.jobctl import (
     load_monitoring,
     validate_monitor_coverage,
     validate_monitoring,
+    write_categorized_summaries,
 )
 
 
@@ -126,6 +129,27 @@ class JobctlTests(unittest.TestCase):
             self.assertIn("待确认", content)
             self.assertTrue(summary_path.exists())
 
+    def test_categorized_summary_splits_company_type_and_lifecycle(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            private = self.make_application()
+            private.update(status="applied", applied_at="2026-09-03")
+            foreign = self.make_application()
+            foreign.update(id="foreign-role", company="示例外企", status="held")
+            config = {
+                "default_category": "私企",
+                "category_order": ["央国企及科研院所", "外企", "私企"],
+                "overrides": {"示例外企": "外企"},
+            }
+
+            stats = write_categorized_summaries(
+                [private, foreign], config, Path(temp_dir) / "分类汇总"
+            )
+
+            self.assertEqual(company_category("示例机器人", config), "私企")
+            self.assertEqual(stats["私企"]["已投递与进行中"], 1)
+            self.assertEqual(stats["外企"]["待投递与暂缓"], 1)
+            self.assertTrue((Path(temp_dir) / "分类汇总" / "外企" / "README.md").exists())
+
     def test_submission_gate_enforces_phase_and_policy(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             ledger_path = Path(temp_dir) / "applications.yaml"
@@ -150,6 +174,30 @@ class JobctlTests(unittest.TestCase):
             application["policy_status"] = "unknown"
             with self.assertRaises(LedgerError):
                 ensure_submittable(ledger, application)
+
+    def test_submission_gate_allows_parallel_early_and_autumn_phases(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "applications.yaml"
+            early = self.make_application()
+            autumn = self.make_application()
+            autumn.update(id="example-autumn-role", phase="秋招")
+            payload = {
+                "schema_version": 1,
+                "active_phase": "秋招",
+                "active_phases": ["提前批", "秋招"],
+                "updated_at": "2026-09-03",
+                "applications": [early, autumn],
+            }
+            ledger_path.write_text(
+                yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
+
+            ledger = ApplicationLedger(ledger_path)
+            self.assertEqual(enabled_phases(ledger.data), ["提前批", "秋招"])
+            self.assertEqual(ledger.validate(), [])
+            ensure_submittable(ledger, early)
+            ensure_submittable(ledger, autumn)
 
     def test_submission_window_blocks_a_second_company_program_application(self):
         with tempfile.TemporaryDirectory() as temp_dir:
