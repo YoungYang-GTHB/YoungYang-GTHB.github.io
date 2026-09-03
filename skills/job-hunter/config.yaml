@@ -8,14 +8,15 @@ api:
 # 目标数据源：导航ID和名称
 # 可通过 fetch_jobs.py --list-navigations 查看所有可用数据源
 navigations:
-  - id: 61
-    name: "27届秋招"
+  - id: 68
+    name: "27秋招"
+    graduation_year: "2027"
     enabled: true
-  - id: 60
+  - id: 67
     name: "信息总表"
     enabled: true
-  - id: 57
-    name: "实习信息汇总"
+  - id: 65
+    name: "校招实习内推合集"
     enabled: false
 
 # 筛选条件（AND 逻辑，留空表示不做限制）
@@ -109,7 +110,7 @@ filters:
 output:
   directory: "output"
   format: "jsonl"  # jsonl 用于 Job OK 流程
-  max_per_source: 1000  # 单个用户选择的数据源上限，覆盖当前 719 条导航
+  max_per_source: 2500  # 覆盖当前 27 秋招导航的 2200 条记录；全量模式不截断
 
 # 缓存配置
 cache:
@@ -121,8 +122,8 @@ workflow:
   generate_job_specific_resume: false
   ask_before_resume_customization: false
   resume_templates:
-    embodied_ai: "public/resume.pdf"
-    embedded: "public/resume-embedded.pdf"
+    embodied_ai: "public/resume-vla-zh.pdf"
+    embedded: "public/resume-embedded-zh.pdf"
   referral_channel_first: true
   final_submission_requires_confirmation: true
   early_batch_policy:

@@ -65,6 +65,16 @@ def normalize_update_time(value: Any) -> str:
     """将平台常见的 ``YYYY/MM/DD`` 与 ISO 日期统一为可比较文本。"""
     return str(value or "").strip().replace("/", "-")
 
+
+def normalize_platform_record(record: dict, nav: dict) -> dict:
+    """Bridge stable internal field names across Offer 情报局 navigation revisions."""
+    normalized = dict(record)
+    if not str(normalized.get("企业名称", "")).strip():
+        normalized["企业名称"] = str(normalized.get("招聘公告", "")).strip()
+    if not str(normalized.get("毕业年份", "")).strip() and nav.get("graduation_year"):
+        normalized["毕业年份"] = str(nav["graduation_year"])
+    return normalized
+
 # ============================================================
 # 筛选模块
 # ============================================================
@@ -168,6 +178,9 @@ class JobFilter:
             return True
         graduation = str(job.get(self.FIELD_MAP["graduation"], "") or "")
         # 平台常以“2026,2027”或“2027届”表达多届可投，不能要求整串精确相等。
+        # 部分新版导航只在导航名称中标注届别，单条记录缺字段时不可误判为不匹配。
+        if not graduation.strip():
+            return True
         return str(year) in graduation
 
     @staticmethod
@@ -291,7 +304,7 @@ def fetch_navigation(
                 stopped_early = True
                 break
 
-        all_records.extend(records)
+        all_records.extend(normalize_platform_record(record, nav) for record in records)
 
         # 检查是否还有下一页
         pagination = resp.get("pagination", {})

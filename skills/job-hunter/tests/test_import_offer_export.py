@@ -7,7 +7,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_ROOT))
 
-from scripts.fetch_jobs import JobFilter, normalize_update_time
+from scripts.fetch_jobs import JobFilter, normalize_platform_record, normalize_update_time
 from scripts.import_offer_export import build_phase_pool, detect_phase
 from scripts.state import FetcherState
 
@@ -125,6 +125,18 @@ class OfferExportImportTests(unittest.TestCase):
         self.assertTrue(job_filter.passes({"毕业年份": "2026,2027"}))
         self.assertTrue(job_filter.passes({"毕业年份": "2027届"}))
         self.assertFalse(job_filter.passes({"毕业年份": "2026"}))
+
+    def test_new_navigation_record_uses_announcement_company_and_nav_year(self):
+        record = normalize_platform_record(
+            {"招聘公告": "机器人公司", "职位": "VLA算法工程师"},
+            {"id": 68, "graduation_year": "2027"},
+        )
+        self.assertEqual(record["企业名称"], "机器人公司")
+        self.assertEqual(record["毕业年份"], "2027")
+        self.assertTrue(JobFilter(self.config).passes(record))
+
+    def test_missing_graduation_field_does_not_drop_new_platform_records(self):
+        self.assertTrue(JobFilter(self.config).passes({"职位": "嵌入式工程师"}))
 
     def test_seen_record_version_changes_with_content(self):
         with tempfile.TemporaryDirectory() as temp_dir:
