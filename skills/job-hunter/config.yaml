@@ -8,12 +8,12 @@ api:
 # 目标数据源：导航ID和名称
 # 可通过 fetch_jobs.py --list-navigations 查看所有可用数据源
 navigations:
-  - id: 68
-    name: "27秋招"
+  - id: 71
+    name: "秋招汇总"
     graduation_year: "2027"
     enabled: true
-  - id: 67
-    name: "信息总表"
+  - id: 70
+    name: "校招总表"
     enabled: true
   - id: 65
     name: "校招实习内推合集"
