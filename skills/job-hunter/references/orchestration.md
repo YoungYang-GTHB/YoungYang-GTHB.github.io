@@ -49,6 +49,12 @@ Audit pass
 四个并发槽位时保留一个 Coordinator，最多并行两个官网 Research；剩余槽位在
 Ranking、Form-prep 和 Audit 之间复用。不要让多个 Worker 同时写共享 Chrome。
 
+本人已授权多浏览器时，可采用 Coordinator + 两个 Form-prep + 一个 Research/Audit。
+各浏览器必须有独立用户档案、Display、CDP/noVNC 端口和租约目录。同一实例仍独占；
+任务明确记录实例、端口、精确 target 和租约目录，queue complete 使用对应的
+`--browser-state-dir`。不同租约目录不能用于绕过同一实例的锁。每个实例复用已登录
+档案，不复制会话；公司完成后保留空白页，避免关闭最后标签导致浏览器退出。
+
 ## 3. 运行目录
 
 Task 与 artifact 分别遵守：
@@ -124,7 +130,7 @@ python3 skills/job-hunter/scripts/jobqueue.py status --run-id RUN_ID
 2. Worker 只写自己的唯一 artifact 路径，不共享临时文件。
 3. Coordinator 消费 artifact 前必须验证 Schema、`input_digest`、`run_epoch` 和证据时效。
 4. 用户改变岗位、地点或简历后增加 `run_epoch`，忽略旧 epoch 的迟到结果。
-5. Form-prep 使用 `scripts/browser_lease.py` 获取全局浏览器租约；操作前再次核对
+5. Form-prep 使用 `scripts/browser_lease.py` 获取所分配实例的独占浏览器租约；操作前再次核对
    target ID、域名、公司和岗位 ID，完成或阻断后释放租约。
 6. Research 可通过普通联网工具并行；需要共享登录态/CDP 时也必须申请浏览器租约。
 7. 最终提交不进入队列自动动作。用户当前交互中的明确确认不能被 Worker 缓存或复用。

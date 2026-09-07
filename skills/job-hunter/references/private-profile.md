@@ -13,6 +13,19 @@ Use this contract only when a form needs fields that do not belong in the public
   merely because it exists.
 - Record unknown values as absent. Do not invent fallback values unless the user has
   already approved that exact fallback in the private profile.
+- A reduced profile or a missing mapping is not evidence that the user's information
+  is absent. Before reporting a missing field, consult the explicitly supplied
+  authoritative field library, the relevant structured profile section, and any
+  referenced document index. Resolve conflicts through the coordinator.
+- Existing user authorization applies to later workers within its stated scope.
+  Authorized identity/contact fields may be read from explicit private references
+  directly into the browser process; do not embed their values in task JSON, tool
+  output, messages, screenshots, or artifacts. Never dump a private source before
+  redacting it: parse in memory and output field names and presence checks only.
+- For attachments, distinguish a missing index entry from a missing file. Follow
+  explicit library references, verify the education stage, document type and form
+  requirements, then apply the upload authorization. A degree certificate is not an
+  enrollment report; a document for one education row must not be reused for another.
 - Do not write field values, document contents, access tokens, or complete addresses
   to runtime logs or worker artifacts.
 
