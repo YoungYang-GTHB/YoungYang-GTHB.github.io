@@ -13,6 +13,9 @@ resume builds, job discovery, and application tracking. Personal data and the li
 4. Read `career/求职投递/2027届/投递执行规范.md` before opening a new application.
 5. Run `python3 skills/job-hunter/scripts/jobctl.py validate` before and after
    changing recruiting data.
+6. For multi-company work, read `skills/job-hunter/references/orchestration.md`
+   and use the SQLite runtime queue. Workers produce artifacts; the coordinator
+   is the only canonical-ledger writer.
 
 ## Repository boundary
 
@@ -42,6 +45,9 @@ resume builds, job discovery, and application tracking. Personal data and the li
   current interaction.
 - After a verified successful submission, use `jobctl.py record-applied`, validate
   the ledgers, and close that company's browser tabs.
+- Never let multiple agents mutate the shared Chrome profile. Acquire the
+  `browser_lease.py` lease and bind actions to an exact CDP target ID; research
+  workers should use read-only HTTP or isolated browser contexts.
 - Prefer Suzhou, then Hangzhou, then other non-Beijing locations when role fit is
   comparable. Beijing is the fallback unless it is the only materially suitable role.
 

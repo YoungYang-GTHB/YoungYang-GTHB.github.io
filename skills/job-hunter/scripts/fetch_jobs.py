@@ -120,8 +120,17 @@ class JobFilter:
         preferred_cities = self._filters.get("preferred_cities", []) or self._filters.get(
             "cities", []
         )
-        if self._contains_any(loc, preferred_cities):
-            s += 10
+        location_bonus = 0
+        matched_city = ""
+        for index, city in enumerate(preferred_cities):
+            if city and str(city).lower() in str(loc).lower():
+                candidate_bonus = max(2, 10 - index)
+                if candidate_bonus > location_bonus:
+                    location_bonus = candidate_bonus
+                    matched_city = str(city)
+        s += location_bonus
+        job["_preferred_city"] = matched_city
+        job["_location_score"] = location_bonus
         if self._contains_any(ind, self._filters.get("industries", [])):
             s += 5
         if job.get(self.FIELD_MAP["graduation"], "") == "2027":

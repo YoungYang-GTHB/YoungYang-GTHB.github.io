@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://youngyang.local/job-hunter/task.schema.json",
+  "title": "Job Hunter worker task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_epoch",
+    "task_id",
+    "role",
+    "idempotency_key",
+    "input_digest",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "run_epoch": {"type": "integer", "minimum": 1},
+    "task_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "role": {
+      "enum": ["discovery", "research", "ranking", "form_prep", "audit"]
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,255}$"
+    },
+    "input_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "company_key": {"type": "string", "maxLength": 160, "default": ""},
+    "phase": {
+      "enum": ["", "提前批", "秋招", "春招", "实习", "未知"],
+      "default": ""
+    },
+    "priority": {"type": "integer", "minimum": 0, "maximum": 1000, "default": 100},
+    "max_attempts": {"type": "integer", "minimum": 1, "maximum": 10, "default": 3},
+    "created_at": {"type": "string", "format": "date-time"},
+    "input_refs": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "payload": {"type": "object"}
+  }
+}

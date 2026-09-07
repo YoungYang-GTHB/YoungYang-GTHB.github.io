@@ -33,6 +33,18 @@ if command -v curl >/dev/null 2>&1 && curl -fsS --max-time 2 http://127.0.0.1:92
   python3 - <<'PY'
 import json
 from urllib.request import urlopen
+from urllib.parse import urlsplit, urlunsplit
+
+
+def redact_url(value):
+    """Keep navigation context without printing tokens or form identifiers."""
+    try:
+        parsed = urlsplit(str(value or ""))
+    except ValueError:
+        return "(invalid-url)"
+    if not parsed.scheme:
+        return "(non-url)"
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
 
 with urlopen("http://127.0.0.1:9222/json/list", timeout=2) as response:
     targets = json.load(response)
@@ -40,7 +52,7 @@ pages = [item for item in targets if item.get("type") == "page"]
 print(f"CDP ready: {len(pages)} page target(s)")
 for item in pages[:8]:
     title = (item.get("title") or "(untitled)").replace("\n", " ")[:80]
-    url = (item.get("url") or "")[:120]
+    url = redact_url(item.get("url"))[:120]
     print(f"- {title}: {url}")
 if len(pages) > 8:
     print(f"- ... {len(pages) - 8} more")
@@ -71,6 +83,9 @@ fi
 section "next commands"
 printf '%s\n' \
   "Read: $CAREER_ROOT/AGENT_HANDOFF.md" \
-  "Due checks: python3 skills/job-hunter/scripts/jobctl.py monitor-due --brief --date YYYY-MM-DD" \
+  "Applications: python3 skills/job-hunter/scripts/jobctl.py monitor-due --kind apply --brief --date YYYY-MM-DD" \
+  "Process: python3 skills/job-hunter/scripts/jobctl.py monitor-due --kind process --brief --date YYYY-MM-DD" \
+  "Queue: python3 skills/job-hunter/scripts/jobqueue.py status" \
+  "Browser: ./scripts/browser-services.sh --status" \
   "Build site: ./scripts/prepare-private-site.sh && RESUME_DATA_PATH=content/resume.public.yaml npm run build" \
   "Build resumes: ./scripts/build-private-resumes.sh"

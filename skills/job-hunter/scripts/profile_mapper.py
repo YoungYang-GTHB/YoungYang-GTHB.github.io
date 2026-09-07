@@ -18,17 +18,68 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+PRIVATE_PROFILE_ENV = "JOB_HUNTER_PRIVATE_PROFILE"
+PRIVATE_PROFILE_KEYS = {"schema_version", "resume_overrides", "form_profile", "documents"}
 
 
-def load_resume_yaml() -> dict:
+def _load_yaml(path: Path) -> dict:
+    with path.open("r", encoding="utf-8") as handle:
+        loaded = yaml.safe_load(handle) or {}
+    if not isinstance(loaded, dict):
+        raise ValueError(f"YAML root must be an object: {path}")
+    return loaded
+
+
+def _deep_merge(base: dict, overlay: dict) -> dict:
+    """Return a recursive merge without mutating either input."""
+    result = dict(base)
+    for key, value in overlay.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def load_private_profile(path: str | Path | None = None) -> dict:
+    """Load explicitly-authorized private form data.
+
+    Private fields are never auto-discovered. Callers must pass a path or set
+    JOB_HUNTER_PRIVATE_PROFILE so an ordinary public resume export cannot
+    accidentally include identity or family data.
+    """
+    configured = str(path or os.environ.get(PRIVATE_PROFILE_ENV, "")).strip()
+    if not configured:
+        return {}
+    private_path = Path(configured).expanduser()
+    if not private_path.is_absolute():
+        private_path = PROJECT_ROOT / private_path
+    if not private_path.exists():
+        raise FileNotFoundError(f"private profile does not exist: {private_path}")
+    profile = _load_yaml(private_path)
+    unknown = set(profile) - PRIVATE_PROFILE_KEYS
+    if unknown:
+        raise ValueError(f"unsupported private profile keys: {', '.join(sorted(unknown))}")
+    if profile.get("schema_version") != 1:
+        raise ValueError("private profile schema_version must be 1")
+    for key in ("resume_overrides", "form_profile"):
+        if key in profile and not isinstance(profile[key], dict):
+            raise ValueError(f"private profile {key} must be an object")
+    if "documents" in profile and not isinstance(profile["documents"], list):
+        raise ValueError("private profile documents must be a list")
+    return profile
+
+
+def load_resume_yaml(private_profile: dict | None = None) -> dict:
     configured = os.environ.get("RESUME_DATA_PATH", "")
     yaml_path = Path(configured).expanduser() if configured else PROJECT_ROOT / "career" / "site" / "content" / "resume.yaml"
     if not yaml_path.is_absolute():
         yaml_path = PROJECT_ROOT / yaml_path
     if not yaml_path.exists():
         return {}
-    with open(yaml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+    data = _load_yaml(yaml_path)
+    overrides = (private_profile or {}).get("resume_overrides", {})
+    return _deep_merge(data, overrides)
 
 
 def normalize_date(value: str) -> str:
@@ -65,8 +116,9 @@ def join_description(exp: dict) -> str:
     return " ".join(part.replace("\n", " ") for part in parts if part).strip()
 
 
-def build_profile(compact: bool = False) -> dict:
-    data = load_resume_yaml()
+def build_profile(compact: bool = False, private_profile_path: str | Path | None = None) -> dict:
+    private_profile = load_private_profile(private_profile_path)
+    data = load_resume_yaml(private_profile)
     personal = data.get("personal", {})
     application = data.get("application", {})
     education = data.get("education", [])
@@ -277,6 +329,13 @@ def build_profile(compact: bool = False) -> dict:
         "additional": additional,
     }
 
+    # The private file uses the form-filler output schema directly for fields
+    # that do not belong in a public resume (identity, family, document index,
+    # exact addresses, and similar ATS-only data).
+    profile = _deep_merge(profile, private_profile.get("form_profile", {}))
+    if private_profile.get("documents"):
+        profile["documents"] = private_profile["documents"]
+
     if compact:
         return _compact(profile)
     return profile
@@ -306,9 +365,16 @@ def _not_empty(v):
 def main():
     parser = argparse.ArgumentParser(description="生成 form-filler 标准简历 JSON")
     parser.add_argument("--compact", action="store_true", help="去除空字段")
+    parser.add_argument(
+        "--private-profile",
+        help=(
+            "显式加载私有表单 YAML；也可设置 JOB_HUNTER_PRIVATE_PROFILE。"
+            "未指定时绝不自动加载敏感字段"
+        ),
+    )
     args = parser.parse_args()
 
-    profile = build_profile(compact=args.compact)
+    profile = build_profile(compact=args.compact, private_profile_path=args.private_profile)
     json.dump(profile, sys.stdout, ensure_ascii=False, indent=2)
     print()
 

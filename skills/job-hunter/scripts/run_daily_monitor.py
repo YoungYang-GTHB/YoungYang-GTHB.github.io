@@ -100,20 +100,44 @@ def run_daily(
     skip_liepin: bool = False,
 ) -> tuple[dict[str, Any], int]:
     output_dir.mkdir(parents=True, exist_ok=True)
-    reminder = run_command(
-        [
-            sys.executable,
-            str(SCRIPT_DIR / "jobctl.py"),
-            "monitor-due",
-            "--date",
-            date,
-            "--brief",
-            "--brief-limit",
-            str(brief_limit),
-        ]
-    )
+    reminder_results: dict[str, dict[str, Any]] = {}
+    for kind in ("apply", "process"):
+        result = run_command(
+            [
+                sys.executable,
+                str(SCRIPT_DIR / "jobctl.py"),
+                "monitor-due",
+                "--date",
+                date,
+                "--kind",
+                kind,
+                "--brief",
+                "--brief-limit",
+                str(brief_limit),
+            ]
+        )
+        kind_path = output_dir / f"{date}-{kind}-reminders.txt"
+        kind_path.write_text(result["stdout"] + result["stderr"], encoding="utf-8")
+        reminder_results[kind] = {
+            "exit_code": result["exit_code"],
+            "output": str(kind_path),
+            "stderr": result["stderr"],
+        }
+
+    # Keep the historic combined file for downstream consumers while making
+    # the application and post-application queues independently actionable.
     reminder_path = output_dir / f"{date}-reminders.txt"
-    reminder_path.write_text(reminder["stdout"] + reminder["stderr"], encoding="utf-8")
+    reminder_path.write_text(
+        "[applications]\n"
+        + Path(reminder_results["apply"]["output"]).read_text(encoding="utf-8")
+        + "\n[process]\n"
+        + Path(reminder_results["process"]["output"]).read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    reminder_exit_code = max(
+        reminder_results["apply"]["exit_code"],
+        reminder_results["process"]["exit_code"],
+    )
 
     liepin: dict[str, Any] = {
         "skipped": skip_liepin,
@@ -179,9 +203,10 @@ def run_daily(
         "read_only_sources": True,
         "application_submission": False,
         "reminders": {
-            "exit_code": reminder["exit_code"],
+            "exit_code": reminder_exit_code,
             "output": str(reminder_path),
-            "stderr": reminder["stderr"],
+            "application": reminder_results["apply"],
+            "process": reminder_results["process"],
         },
         "liepin_discovery": liepin,
     }
@@ -192,7 +217,7 @@ def run_daily(
     # Deadline reminders are the critical path. Liepin failure is surfaced as
     # a degraded run, while preserving the reminder artifact.
     exit_code = 0
-    if reminder["exit_code"] != 0:
+    if reminder_exit_code != 0:
         exit_code = 2
     elif not skip_liepin and liepin["exit_code"] != 0:
         exit_code = 1

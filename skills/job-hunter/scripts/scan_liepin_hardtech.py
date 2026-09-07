@@ -122,11 +122,12 @@ def rank_lead(record: dict[str, Any]) -> dict[str, Any]:
 
 
 class CDPClient:
-    def __init__(self, websocket_url: str):
+    def __init__(self, websocket_url: str, *, target_id: str = ""):
         if websocket is None:
             raise RuntimeError("missing websocket-client; install requirements-optional.txt")
         self.ws = websocket.create_connection(websocket_url, timeout=20, suppress_origin=True)
         self.sequence = 0
+        self.target_id = target_id
 
     def close(self) -> None:
         self.ws.close()
@@ -156,7 +157,28 @@ def open_target(cdp: str, topic_url: str) -> CDPClient:
     request = Request(f"{cdp.rstrip('/')}/json/new?{quote(topic_url, safe=':/?=&')}", method="PUT")
     with urlopen(request, timeout=10) as response:
         target = json.load(response)
-    return CDPClient(target["webSocketDebuggerUrl"])
+    return CDPClient(
+        target["webSocketDebuggerUrl"],
+        target_id=str(target.get("id") or ""),
+    )
+
+
+def close_target(cdp: str, target_id: str) -> None:
+    """Close a target created by this scanner instead of leaving a stale tab."""
+
+    target_id = str(target_id or "").strip()
+    if not target_id:
+        raise RuntimeError("created CDP target did not include an id")
+    with urlopen(f"{cdp.rstrip('/')}/json/version", timeout=10) as response:
+        version = json.load(response)
+    browser_ws = str(version.get("webSocketDebuggerUrl") or "").strip()
+    if not browser_ws:
+        raise RuntimeError("CDP version response did not include browser websocket URL")
+    browser = CDPClient(browser_ws)
+    try:
+        browser.command("Target.closeTarget", {"targetId": target_id})
+    finally:
+        browser.close()
 
 
 def scan_topic(cdp: str, topic_url: str, wait_seconds: float = 2.0) -> list[dict[str, Any]]:
@@ -234,7 +256,12 @@ def scan_topic(cdp: str, topic_url: str, wait_seconds: float = 2.0) -> list[dict
             )
             page += 1
     finally:
-        client.close()
+        try:
+            close_target(cdp, client.target_id)
+        except Exception as exc:
+            print(f"[liepin-hardtech] target cleanup failed: {exc}", file=sys.stderr)
+        finally:
+            client.close()
     return list(records.values())
 
 

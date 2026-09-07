@@ -35,14 +35,18 @@ class DailyMonitorTests(unittest.TestCase):
     @patch("scripts.run_daily_monitor.run_command")
     def test_writes_reminders_and_manifest_when_liepin_succeeds(self, command):
         command.side_effect = [
-            {"exit_code": 0, "stdout": "urgent reminders\n", "stderr": "", "command": []},
+            {"exit_code": 0, "stdout": "urgent applications\n", "stderr": "", "command": []},
+            {"exit_code": 0, "stdout": "process follow-up\n", "stderr": "", "command": []},
             {"exit_code": 0, "stdout": "{}\n", "stderr": "", "command": []},
         ]
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             manifest, exit_code = run_daily("2026-08-18", output)
             self.assertEqual(exit_code, 0)
-            self.assertEqual((output / "2026-08-18-reminders.txt").read_text(), "urgent reminders\n")
+            self.assertIn("urgent applications", (output / "2026-08-18-reminders.txt").read_text())
+            self.assertIn("process follow-up", (output / "2026-08-18-reminders.txt").read_text())
+            self.assertTrue((output / "2026-08-18-apply-reminders.txt").exists())
+            self.assertTrue((output / "2026-08-18-process-reminders.txt").exists())
             self.assertTrue((output / "2026-08-18-manifest.json").exists())
             self.assertFalse(manifest["application_submission"])
             generated_at = datetime.fromisoformat(manifest["generated_at"])
@@ -88,6 +92,7 @@ class DailyMonitorTests(unittest.TestCase):
     def test_preserves_reminders_and_marks_degraded_liepin_run(self, command):
         command.side_effect = [
             {"exit_code": 0, "stdout": "reminders\n", "stderr": "", "command": []},
+            {"exit_code": 0, "stdout": "process\n", "stderr": "", "command": []},
             {"exit_code": 2, "stdout": "", "stderr": "browser unavailable", "command": []},
         ]
         with tempfile.TemporaryDirectory() as directory:
@@ -109,7 +114,7 @@ class DailyMonitorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             manifest, exit_code = run_daily("2026-08-18", Path(directory), skip_liepin=True)
             self.assertEqual(exit_code, 0)
-            self.assertEqual(command.call_count, 1)
+            self.assertEqual(command.call_count, 2)
             self.assertTrue(manifest["liepin_discovery"]["skipped"])
 
 

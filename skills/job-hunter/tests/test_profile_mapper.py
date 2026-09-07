@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_ROOT))
 
-from scripts.profile_mapper import build_profile, normalize_date, split_period
+from scripts.profile_mapper import build_profile, load_private_profile, normalize_date, split_period
 
 
 class ProfileMapperTests(unittest.TestCase):
@@ -29,6 +30,48 @@ class ProfileMapperTests(unittest.TestCase):
         partner = next(item for item in work if item["company"].startswith("中秦禾瑞"))
         self.assertEqual(partner["title"], "技术合伙人")
         self.assertEqual(partner["employmentType"], "兼职")
+
+    def test_private_profile_requires_explicit_path_and_merges_form_fields(self):
+        with tempfile.TemporaryDirectory() as directory:
+            private_path = Path(directory) / "profile.private.yaml"
+            private_path.write_text(
+                """\
+schema_version: 1
+resume_overrides:
+  application:
+    expectedCity: 苏州
+form_profile:
+  personal:
+    maritalStatus: 未婚
+  familyMembers:
+    - relationship: 父亲
+      name: 已脱敏
+documents:
+  - type: degree-certificate
+    path: /private/degree.pdf
+    allowed_use: explicit-form-upload
+""",
+                encoding="utf-8",
+            )
+
+            public_only = build_profile(compact=True)
+            merged = build_profile(compact=True, private_profile_path=private_path)
+
+        self.assertNotIn("maritalStatus", public_only["personal"])
+        self.assertEqual(merged["personal"]["maritalStatus"], "未婚")
+        self.assertEqual(merged["jobPreferences"]["expectedCity"], "苏州")
+        self.assertEqual(merged["familyMembers"][0]["relationship"], "父亲")
+        self.assertEqual(merged["documents"][0]["type"], "degree-certificate")
+
+    def test_private_profile_rejects_unknown_top_level_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            private_path = Path(directory) / "profile.private.yaml"
+            private_path.write_text(
+                "schema_version: 1\nunexpected: true\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "unsupported private profile keys"):
+                load_private_profile(private_path)
 
 
 if __name__ == "__main__":

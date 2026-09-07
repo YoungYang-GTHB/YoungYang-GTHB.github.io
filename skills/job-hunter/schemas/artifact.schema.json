@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://youngyang.local/job-hunter/artifact.schema.json",
+  "title": "Job Hunter worker artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "run_epoch",
+    "task_id",
+    "role",
+    "idempotency_key",
+    "input_digest",
+    "generated_at",
+    "status",
+    "facts",
+    "evidence",
+    "blockers",
+    "warnings",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "run_epoch": {"type": "integer", "minimum": 1},
+    "task_id": {"type": "string", "minLength": 1, "maxLength": 160},
+    "role": {
+      "enum": ["discovery", "research", "ranking", "form_prep", "audit"]
+    },
+    "idempotency_key": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,255}$"
+    },
+    "input_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["succeeded", "blocked", "failed"]},
+    "facts": {"type": "object"},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "url", "source_type", "observed_at", "summary"],
+        "properties": {
+          "field": {"type": "string", "minLength": 1},
+          "url": {"type": "string"},
+          "source_type": {
+            "enum": [
+              "official",
+              "official_api",
+              "official_candidate_center",
+              "official_email",
+              "third_party",
+              "user_provided",
+              "local_snapshot"
+            ]
+          },
+          "observed_at": {"type": "string", "minLength": 10},
+          "summary": {"type": "string", "minLength": 1},
+          "content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "next_action": {"type": "string"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["role", "status"],
+        "properties": {"role": {"const": "discovery"}, "status": {"const": "succeeded"}}
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": ["leads"],
+            "properties": {"leads": {"type": "array"}}
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["role", "status"],
+        "properties": {"role": {"const": "research"}, "status": {"const": "succeeded"}}
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": ["pool_scan", "jobs"],
+            "properties": {
+              "pool_scan": {"type": "object"},
+              "jobs": {"type": "array"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["role", "status"],
+        "properties": {"role": {"const": "ranking"}, "status": {"const": "succeeded"}}
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": ["ranking", "recommendation"],
+            "properties": {
+              "ranking": {"type": "array"},
+              "recommendation": {"type": "object"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["role", "status"],
+        "properties": {"role": {"const": "form_prep"}, "status": {"const": "succeeded"}}
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": ["form_snapshot", "missing_fields", "resume"],
+            "properties": {
+              "form_snapshot": {"type": "object"},
+              "missing_fields": {"type": "array"},
+              "resume": {"type": "object"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["role", "status"],
+        "properties": {"role": {"const": "audit"}, "status": {"const": "succeeded"}}
+      },
+      "then": {
+        "properties": {
+          "facts": {
+            "type": "object",
+            "required": ["decision", "checks"],
+            "properties": {
+              "decision": {"enum": ["pass", "blocked", "needs_user_action"]},
+              "checks": {"type": "array"}
+            }
+          }
+        }
+      }
+    }
+  ]
+}

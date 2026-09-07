@@ -54,6 +54,31 @@
       return text ? `"${text}"` : "(empty)";
     }
 
+    function summarizePrivateValue(value) {
+      if (value === null || value === undefined || value === "") {
+        return "(empty)";
+      }
+      if (Array.isArray(value)) {
+        return value.length ? "[redacted:array]" : "(empty)";
+      }
+      if (typeof value === "object") {
+        return Object.keys(value).length ? "[redacted:object]" : "(empty)";
+      }
+      return `[redacted:${typeof value}]`;
+    }
+
+    function sanitizeDiagnosticText(value) {
+      return compactText(value)
+        .replace(/[1-9]\d{5}(?:18|19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[0-9Xx]/g, "[redacted:id]")
+        .replace(/(?<!\d)1[3-9]\d{9}(?!\d)/g, "[redacted:phone]")
+        .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted:email]")
+        .replace(/([?&](?:access_)?token=)[^&#\s]+/gi, "$1[redacted]");
+    }
+
+    function summarizeDiagnosticDetail(value) {
+      return summarizeValue(sanitizeDiagnosticText(value));
+    }
+
     function summarizeOptions(options, { maxItems = DEFAULT_MAX_OPTIONS } = {}) {
       const list = Array.isArray(options)
         ? options.map((item) => truncateText(item, 24)).filter(Boolean)
@@ -125,8 +150,8 @@
         "[取值]",
         compactText(field?.fieldId) || "(no-field-id)",
         compactText(mapping?.resumePath) || "(unmapped)",
-        `raw=${summarizeValue(rawValue)}`,
-        `final=${summarizeValue(finalValue)}`,
+        `raw=${summarizePrivateValue(rawValue)}`,
+        `final=${summarizePrivateValue(finalValue)}`,
       ].join(" ");
     }
 
@@ -137,9 +162,9 @@
         `${summarizeValue(field?.label)} -> ${
           compactText(mapping?.resumePath) || "(unmapped)"
         }`,
-        `raw=${summarizeValue(rawValue)}`,
-        `final=${summarizeValue(finalValue)}`,
-        `detail=${summarizeValue(detail)}`,
+        `raw=${summarizePrivateValue(rawValue)}`,
+        `final=${summarizePrivateValue(finalValue)}`,
+        `detail=${summarizeDiagnosticDetail(detail)}`,
       ].join(" ");
     }
 
@@ -157,9 +182,9 @@
         `${summarizeValue(field?.label)} -> ${
           compactText(mapping?.resumePath) || "(unmapped)"
         }`,
-        `raw=${summarizeValue(rawValue)}`,
-        `final=${summarizeValue(finalValue)}`,
-        `detail=${summarizeValue(fillResult?.message)}`,
+        `raw=${summarizePrivateValue(rawValue)}`,
+        `final=${summarizePrivateValue(finalValue)}`,
+        `detail=${summarizeDiagnosticDetail(fillResult?.message)}`,
       ].join(" ");
     }
 
@@ -171,6 +196,8 @@
       formatFillSummary,
       formatTransform,
       summarizeValue,
+      summarizePrivateValue,
+      sanitizeDiagnosticText,
       summarizeOptions,
       truncateText,
     };

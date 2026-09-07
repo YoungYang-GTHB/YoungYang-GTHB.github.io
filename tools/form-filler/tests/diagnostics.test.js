@@ -47,7 +47,7 @@ test("formatMappingSummary shows source, reason, and transform", () => {
   assert.match(summary, /reason="字段明确询问可入职日期"/);
 });
 
-test("formatFillSummary surfaces failure reason and final value", () => {
+test("formatFillSummary surfaces failure reason without logging field values", () => {
   const summary = diagnostics.formatFillSummary({
     field: {
       fieldId: "f_8",
@@ -67,6 +67,48 @@ test("formatFillSummary surfaces failure reason and final value", () => {
   assert.match(summary, /\[填充:失败\]/);
   assert.match(summary, /f_8/);
   assert.match(summary, /personal.gender/);
-  assert.match(summary, /final="男"/);
+  assert.match(summary, /raw=\[redacted:string\]/);
+  assert.match(summary, /final=\[redacted:string\]/);
+  assert.doesNotMatch(summary, /男/);
   assert.match(summary, /detail="未找到可匹配的下拉选项"/);
+});
+
+test("value and skip diagnostics redact common PII values", () => {
+  const secret = "11010519491231002X";
+  const valueSummary = diagnostics.formatValueSummary(
+    { fieldId: "f_9" },
+    { resumePath: "personal.idNumber" },
+    secret,
+    secret
+  );
+  const skipSummary = diagnostics.formatSkipSummary(
+    { fieldId: "f_10", label: "手机号" },
+    { resumePath: "personal.phone" },
+    "字段已有内容",
+    "13912345678",
+    "13912345678"
+  );
+
+  assert.doesNotMatch(valueSummary, /11010519491231002X/);
+  assert.doesNotMatch(skipSummary, /13912345678/);
+  assert.match(valueSummary, /raw=\[redacted:string\]/);
+  assert.match(skipSummary, /final=\[redacted:string\]/);
+});
+
+test("fill diagnostic detail redacts PII embedded in an error message", () => {
+  const summary = diagnostics.formatFillSummary({
+    field: { fieldId: "f_11", label: "证件" },
+    mapping: { resumePath: "personal.idNumber" },
+    rawValue: "secret",
+    finalValue: "secret",
+    fillResult: {
+      success: false,
+      message: "身份证11010519491231002X，电话13912345678，邮箱user@example.com",
+    },
+  });
+
+  assert.doesNotMatch(summary, /11010519491231002X|13912345678|user@example\.com/);
+  assert.match(summary, /\[redacted:id\]/);
+  assert.match(summary, /\[redacted:phone\]/);
+  assert.match(summary, /\[redacted:email\]/);
 });

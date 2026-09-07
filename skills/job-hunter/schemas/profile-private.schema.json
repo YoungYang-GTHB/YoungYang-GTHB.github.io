@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://youngyang.dev/schemas/job-hunter/profile-private.schema.json",
+  "title": "Job Hunter private form profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "resume_overrides": {
+      "type": "object",
+      "description": "Private overrides merged into the public resume source before mapping."
+    },
+    "form_profile": {
+      "type": "object",
+      "description": "ATS-only fields merged into the mapped form-filler profile."
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "path", "allowed_use"],
+        "properties": {
+          "type": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "holder": {"type": "string"},
+          "issuer": {"type": "string"},
+          "issued_at": {"type": "string"},
+          "expires_at": {"type": ["string", "null"]},
+          "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+          "allowed_use": {
+            "enum": ["explicit-form-upload", "resume-attachment", "manual-only"]
+          },
+          "notes": {"type": "string"}
+        }
+      }
+    }
+  }
+}

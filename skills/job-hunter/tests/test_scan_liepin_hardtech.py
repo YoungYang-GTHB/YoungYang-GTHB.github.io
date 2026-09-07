@@ -1,7 +1,9 @@
 import sys
 import tempfile
 import unittest
+from io import BytesIO
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import yaml
 
@@ -11,14 +13,52 @@ sys.path.insert(0, str(SKILL_ROOT))
 
 from scripts.scan_liepin_hardtech import (
     build_report,
+    close_target,
     is_known_company,
     load_known_companies,
     normalize_company,
     parse_card,
+    scan_topic,
 )
 
 
 class LiepinHardtechScannerTests(unittest.TestCase):
+    def test_close_target_uses_browser_cdp_connection(self):
+        response = MagicMock()
+        response.__enter__.return_value = BytesIO(
+            b'{"webSocketDebuggerUrl":"ws://127.0.0.1:9222/devtools/browser/browser-1"}'
+        )
+        browser = MagicMock()
+        with patch(
+            "scripts.scan_liepin_hardtech.urlopen", return_value=response
+        ) as mocked_urlopen, patch(
+            "scripts.scan_liepin_hardtech.CDPClient", return_value=browser
+        ) as mocked_client:
+            close_target("http://127.0.0.1:9222", "target-123")
+
+        mocked_urlopen.assert_called_once_with(
+            "http://127.0.0.1:9222/json/version", timeout=10
+        )
+        mocked_client.assert_called_once_with(
+            "ws://127.0.0.1:9222/devtools/browser/browser-1"
+        )
+        browser.command.assert_called_once_with(
+            "Target.closeTarget", {"targetId": "target-123"}
+        )
+        browser.close.assert_called_once_with()
+
+    def test_scan_topic_closes_created_target_after_failure(self):
+        page = MagicMock(target_id="target-456")
+        page.evaluate.side_effect = RuntimeError("render failed")
+        with patch(
+            "scripts.scan_liepin_hardtech.open_target", return_value=page
+        ), patch("scripts.scan_liepin_hardtech.close_target") as mocked_close:
+            with self.assertRaisesRegex(RuntimeError, "render failed"):
+                scan_topic("http://127.0.0.1:9222", "https://example.test/topic")
+
+        mocked_close.assert_called_once_with("http://127.0.0.1:9222", "target-456")
+        page.close.assert_called_once_with()
+
     def test_parse_card_extracts_name_id_and_count(self):
         card = {
             "text": "星海图\n具身智能与机器人B轮100-499人\n专注具身智能基础模型\n60个在招职位",

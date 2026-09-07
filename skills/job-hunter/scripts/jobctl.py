@@ -9,14 +9,18 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 from collections import Counter
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -35,6 +39,9 @@ DEFAULT_MONITORING = (
 DEFAULT_COMPANY_CATEGORIES = (
     PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "company_categories.yaml"
 )
+DEFAULT_COMPANY_ALIASES = (
+    PROJECT_ROOT / "career" / "求职投递" / "2027届" / "data" / "company_aliases.yaml"
+)
 DEFAULT_CATEGORY_SUMMARY_DIR = (
     PROJECT_ROOT / "career" / "求职投递" / "2027届" / "分类汇总"
 )
@@ -44,6 +51,12 @@ sys.path.insert(0, str(SKILL_ROOT))
 from scripts.state import FetcherState
 from scripts.tracker import ApplicationTracker
 from scripts.exclusions import ExclusionStore
+from scripts.canonicalize_job import (
+    canonical_company_key,
+    canonical_url,
+    load_company_aliases,
+    logical_job_key,
+)
 
 
 PHASES = {"提前批", "秋招", "春招", "实习", "未知"}
@@ -101,6 +114,76 @@ class LedgerError(ValueError):
     pass
 
 
+def _lock_file_for(path: Path) -> Path:
+    """Return a stable out-of-tree lock path for one persisted data file."""
+    digest = hashlib.sha256(str(Path(path).resolve()).encode("utf-8")).hexdigest()
+    lock_dir = Path(tempfile.gettempdir()) / f"youngyang-jobctl-locks-{os.getuid()}"
+    lock_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if lock_dir.is_symlink() or not lock_dir.is_dir():
+        raise LedgerError(f"锁目录不安全: {lock_dir}")
+    os.chmod(lock_dir, 0o700)
+    return lock_dir / f"{digest}.lock"
+
+
+@contextmanager
+def file_locks(paths: list[Path], *, exclusive: bool):
+    """Lock data files in deterministic order to avoid cross-process deadlocks.
+
+    Lock files live outside the repository so normal CLI use never dirties the
+    worktree.  Callers that already hold these locks must pass ``lock_held`` to
+    lower-level load/save helpers instead of acquiring the same lock again.
+    """
+    handles = []
+    unique_paths = sorted({Path(path).resolve() for path in paths}, key=str)
+    try:
+        for path in unique_paths:
+            lock_path = _lock_file_for(path)
+            flags = os.O_RDWR | os.O_CREAT
+            if hasattr(os, "O_CLOEXEC"):
+                flags |= os.O_CLOEXEC
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            descriptor = os.open(lock_path, flags, 0o600)
+            os.fchmod(descriptor, 0o600)
+            handle = os.fdopen(descriptor, "a+")
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
+            handles.append(handle)
+        yield
+    finally:
+        for handle in reversed(handles):
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+            handle.close()
+
+
+def atomic_write_text(path: Path, content: str) -> None:
+    """Durably replace ``path`` using a unique same-directory temporary file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        if path.exists():
+            os.fchmod(descriptor, path.stat().st_mode & 0o777)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            descriptor = -1
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        directory_descriptor = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(directory_descriptor)
+        finally:
+            os.close(directory_descriptor)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+        if temporary.exists():
+            temporary.unlink()
+
+
 def resume_file_exists(resume: str) -> bool:
     """Return whether a current or documented legacy resume path is available."""
     candidate = stringify(resume).strip()
@@ -138,7 +221,13 @@ def load_yaml_unique(path: Path) -> dict[str, Any]:
     return yaml.load(path.read_text(encoding="utf-8"), Loader=UniqueKeyLoader) or {}
 
 
-def load_monitoring(path: Path = DEFAULT_MONITORING) -> dict[str, Any]:
+def load_monitoring(
+    path: Path = DEFAULT_MONITORING, *, lock_held: bool = False
+) -> dict[str, Any]:
+    path = Path(path)
+    if not lock_held:
+        with file_locks([path], exclusive=False):
+            return load_monitoring(path, lock_held=True)
     if not path.exists():
         raise LedgerError(f"监测清单不存在: {path}")
     payload = load_yaml_unique(path)
@@ -147,15 +236,17 @@ def load_monitoring(path: Path = DEFAULT_MONITORING) -> dict[str, Any]:
     return payload
 
 
-def save_monitoring(payload: dict[str, Any], path: Path = DEFAULT_MONITORING) -> None:
+def save_monitoring(
+    payload: dict[str, Any], path: Path = DEFAULT_MONITORING, *, lock_held: bool = False
+) -> None:
     path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        yaml.safe_dump(payload, allow_unicode=True, sort_keys=False, width=1000),
-        encoding="utf-8",
+    if not lock_held:
+        with file_locks([path], exclusive=True):
+            save_monitoring(payload, path, lock_held=True)
+        return
+    atomic_write_text(
+        path, yaml.safe_dump(payload, allow_unicode=True, sort_keys=False, width=1000)
     )
-    temporary.replace(path)
 
 
 def validate_monitoring(payload: dict[str, Any]) -> list[str]:
@@ -517,6 +608,68 @@ def select_brief_rows(
     return detailed, compact_mandatory
 
 
+def monitor_work_kind(item: dict[str, Any]) -> str:
+    """Classify a monitor as pre-application work or post-application follow-up."""
+    if item.get("status") in {"tracking", "applied"}:
+        return "process"
+    if item.get("status") in {"watching", "open", "prepared"}:
+        return "apply"
+    return "other"
+
+
+def select_monitor_rows(
+    payload: dict[str, Any],
+    target: date,
+    *,
+    kind: str = "all",
+    include_not_due: bool = False,
+) -> list[tuple[dict[str, Any], list[str]]]:
+    """Select and order monitor rows for one independently actionable queue."""
+    rows = []
+    for item in payload["monitors"]:
+        item_kind = monitor_work_kind(item)
+        if kind != "all" and item_kind != kind:
+            continue
+        reasons = monitor_due_reasons(item, target)
+        if include_not_due or reasons:
+            rows.append((item, reasons))
+    rows.sort(
+        key=lambda row: (
+            reminder_urgency(row[1]),
+            {"P0": 0, "P1": 1, "P2": 2}[row[0]["priority"]],
+            row[0].get("hard_deadline") or "9999-12-31",
+            row[0].get("safe_date") or "9999-12-31",
+            row[0]["next_check"],
+            row[0]["company"],
+        )
+    )
+    return rows
+
+
+def monitor_row_payload(
+    item: dict[str, Any], reasons: list[str], default_resume: str
+) -> dict[str, Any]:
+    return {
+        "id": item.get("id"),
+        "kind": monitor_work_kind(item),
+        "priority": item.get("priority"),
+        "reasons": reasons,
+        "next_check": item.get("next_check"),
+        "safe_date": item.get("safe_date"),
+        "deadline": deadline_display(item),
+        "company": item.get("company"),
+        "status": item.get("status"),
+        "last_checked": item.get("last_checked"),
+        "evidence_status": item.get("evidence_status"),
+        "target": item.get("target"),
+        "resume": item.get("resume") or default_resume,
+        "resume_advice": resume_guidance(item),
+        "action": item.get("action"),
+        "application_ids": item.get("application_ids", []) or [],
+        "official_urls": item.get("official_urls", []) or [],
+    }
+
+
 def resume_guidance(item: dict[str, Any]) -> str:
     """Return concise, evidence-bounded resume advice for a selected target."""
     explicit = stringify(item.get("resume_advice"))
@@ -580,6 +733,44 @@ def normalized_identity(value: Any) -> str:
     return re.sub(r"\s+", "", stringify(value)).casefold()
 
 
+@lru_cache(maxsize=8)
+def _cached_company_aliases(path: str, mtime_ns: int) -> dict[str, str]:
+    del mtime_ns  # part of the cache key; loader only needs the path
+    return load_company_aliases(path)
+
+
+def configured_company_aliases() -> dict[str, str]:
+    if not DEFAULT_COMPANY_ALIASES.exists():
+        return {}
+    return _cached_company_aliases(
+        str(DEFAULT_COMPANY_ALIASES.resolve()), DEFAULT_COMPANY_ALIASES.stat().st_mtime_ns
+    )
+
+
+def application_company_key(application: dict[str, Any]) -> str:
+    stored = stringify(application.get("company_key")).strip()
+    if stored:
+        return stored
+    return canonical_company_key(
+        stringify(application.get("company")), configured_company_aliases()
+    )
+
+
+def application_job_key(application: dict[str, Any]) -> str:
+    stored = stringify(application.get("job_key")).strip()
+    if stored:
+        return stored
+    return logical_job_key(
+        company_key=application_company_key(application),
+        program=stringify(application.get("program")),
+        phase=stringify(application.get("phase")),
+        official_job_id=stringify(application.get("job_id")),
+        official_url=stringify(application.get("job_url")),
+        title=stringify(application.get("position")),
+        locations=parse_locations(application.get("locations", [])),
+    )
+
+
 def applied_date(application: dict[str, Any]) -> date | None:
     value = stringify(application.get("applied_at")).strip()
     if not value:
@@ -621,8 +812,7 @@ def same_submission_scope(
     if scope != "company_program":
         return False
     return (
-        normalized_identity(candidate.get("company"))
-        == normalized_identity(previous.get("company"))
+        application_company_key(candidate) == application_company_key(previous)
         and normalized_identity(candidate.get("program"))
         == normalized_identity(previous.get("program"))
     )
@@ -671,7 +861,7 @@ def submission_conflicts(
     verified company/project rule impossible to overlook.
     """
     conflicts: list[str] = []
-    company = normalized_identity(candidate.get("company"))
+    company = application_company_key(candidate)
     candidate_job_id = normalized_identity(candidate.get("job_id"))
     candidate_url = stringify(candidate.get("job_url")).strip().rstrip("/")
     for previous in ledger.applications:
@@ -679,13 +869,13 @@ def submission_conflicts(
             continue
         if previous.get("status") not in ACTIVE_APPLICATION_STATUSES:
             continue
-        if normalized_identity(previous.get("company")) != company:
+        if application_company_key(previous) != company:
             continue
         same_job_id = bool(candidate_job_id) and (
             candidate_job_id == normalized_identity(previous.get("job_id"))
         )
-        previous_url = stringify(previous.get("job_url")).strip().rstrip("/")
-        same_url = bool(candidate_url) and candidate_url == previous_url
+        previous_url = canonical_url(stringify(previous.get("job_url")))
+        same_url = bool(candidate_url) and canonical_url(candidate_url) == previous_url
         if same_job_id or same_url:
             conflicts.append(
                 "已存在同一岗位的有效投递："
@@ -736,19 +926,25 @@ def history_records(
     active_only: bool = False,
 ) -> list[dict[str, Any]]:
     """Filter all ledger records for the pre-submission history table."""
-    company_key = normalized_identity(company)
+    company_name_key = normalized_identity(company)
+    company_canonical_key = (
+        canonical_company_key(company, configured_company_aliases()) if company else ""
+    )
     program_key = normalized_identity(program)
     job_key = normalized_identity(job_id)
     url_key = stringify(url).strip().rstrip("/")
     records: list[dict[str, Any]] = []
     for item in ledger.applications:
-        if company_key and company_key not in normalized_identity(item.get("company")):
+        if company_name_key and (
+            company_name_key not in normalized_identity(item.get("company"))
+            and company_canonical_key != application_company_key(item)
+        ):
             continue
         if program_key and program_key not in normalized_identity(item.get("program")):
             continue
         if job_key and job_key != normalized_identity(item.get("job_id")):
             continue
-        if url_key and url_key != stringify(item.get("job_url")).strip().rstrip("/"):
+        if url_key and canonical_url(url_key) != canonical_url(stringify(item.get("job_url"))):
             continue
         if active_only and item.get("status") not in ACTIVE_APPLICATION_STATUSES:
             continue
@@ -791,15 +987,24 @@ def confirmation_token(application: dict[str, Any]) -> str:
         for key in (
             "id",
             "company",
+            "company_key",
             "program",
             "position",
             "job_id",
+            "job_key",
             "phase",
             "policy_status",
+            "policy_evidence",
+            "deadline",
             "job_url",
             "resume",
             "locations",
             "channel",
+            "referral_code",
+            "submission_window",
+            "research_artifact_sha256",
+            "form_snapshot_sha256",
+            "resume_sha256",
         )
     }
     digest = hashlib.sha256(
@@ -818,9 +1023,13 @@ def enabled_phases(data: dict[str, Any]) -> list[str]:
 
 
 class ApplicationLedger:
-    def __init__(self, path: Path = DEFAULT_LEDGER):
+    def __init__(self, path: Path = DEFAULT_LEDGER, *, lock_held: bool = False):
         self.path = Path(path)
-        self.data = self._load()
+        if lock_held:
+            self.data = self._load()
+        else:
+            with file_locks([self.path], exclusive=False):
+                self.data = self._load()
 
     def _load(self) -> dict[str, Any]:
         if not self.path.exists():
@@ -919,23 +1128,32 @@ class ApplicationLedger:
                 errors.append(f"{prefix}.resume 文件不存在: {resume}")
         return errors
 
-    def save(self) -> None:
+    def save(self, *, lock_held: bool = False) -> None:
+        if not lock_held:
+            with file_locks([self.path], exclusive=True):
+                self.save(lock_held=True)
+            return
+        self.data["updated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
         errors = self.validate()
         if errors:
             raise LedgerError("账本校验失败:\n- " + "\n- ".join(errors))
-        self.data["updated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temp_path = self.path.with_suffix(self.path.suffix + ".tmp")
-        temp_path.write_text(
+        atomic_write_text(
+            self.path,
             yaml.safe_dump(
                 self.data,
                 allow_unicode=True,
                 sort_keys=False,
                 width=120,
             ),
-            encoding="utf-8",
         )
-        os.replace(temp_path, self.path)
+
+
+@contextmanager
+def locked_application_ledger(path: Path = DEFAULT_LEDGER):
+    """Yield a freshly loaded ledger while holding its exclusive file lock."""
+    path = Path(path)
+    with file_locks([path], exclusive=True):
+        yield ApplicationLedger(path, lock_held=True)
 
 
 def application_table_lines(applications: list[dict[str, Any]]) -> list[str]:
@@ -1159,13 +1377,16 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
-    ledger = ApplicationLedger(Path(args.ledger))
+    ledger_path = Path(args.ledger)
+    monitoring_path = Path(args.monitoring)
+    with file_locks([ledger_path, monitoring_path], exclusive=False):
+        ledger = ApplicationLedger(ledger_path, lock_held=True)
+        monitoring = load_monitoring(monitoring_path, lock_held=True)
     errors = ledger.validate()
     if errors:
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
-    monitoring = load_monitoring(Path(args.monitoring))
     monitor_errors = validate_monitoring(monitoring)
     monitor_errors.extend(validate_monitor_coverage(ledger, monitoring))
     if monitor_errors:
@@ -1202,25 +1423,47 @@ def cmd_monitor_due(args: argparse.Namespace) -> int:
         else datetime.now(ZoneInfo(timezone_name)).date()
     )
     monitors = payload["monitors"]
-    with_reasons = [(item, monitor_due_reasons(item, target)) for item in monitors]
-    selected = with_reasons if args.all else [
-        (item, reasons) for item, reasons in with_reasons if reasons
-    ]
-    selected.sort(
-        key=lambda row: (
-            reminder_urgency(row[1]),
-            {"P0": 0, "P1": 1, "P2": 2}[row[0]["priority"]],
-            row[0].get("hard_deadline") or "9999-12-31",
-            row[0].get("safe_date") or "9999-12-31",
-            row[0]["next_check"],
-            row[0]["company"],
-        )
+    matching_kind_count = sum(
+        args.kind == "all" or monitor_work_kind(item) == args.kind for item in monitors
+    )
+    selected = select_monitor_rows(
+        payload, target, kind=args.kind, include_not_due=args.all
     )
     total_selected = len(selected)
     compact_mandatory: list[tuple[dict[str, Any], list[str]]] = []
     if args.brief and total_selected > args.brief_limit:
         selected, compact_mandatory = select_brief_rows(selected, args.brief_limit)
-    print(f"监测日期: {target.isoformat()}；到期 {total_selected} / {len(monitors)}")
+    default_resume = stringify(payload.get("default_resume"))
+    if args.json:
+        hidden = total_selected - len(selected) - len(compact_mandatory)
+        print(
+            json.dumps(
+                {
+                    "date": target.isoformat(),
+                    "kind": args.kind,
+                    "total_monitors": len(monitors),
+                    "matching_kind": matching_kind_count,
+                    "due_count": total_selected,
+                    "detailed": [
+                        monitor_row_payload(item, reasons, default_resume)
+                        for item, reasons in selected
+                    ],
+                    "compact_strong": [
+                        monitor_row_payload(item, reasons, default_resume)
+                        for item, reasons in compact_mandatory
+                    ],
+                    "hidden_count": hidden,
+                },
+                ensure_ascii=False,
+                indent=2,
+                default=stringify,
+            )
+        )
+        return 0
+    print(
+        f"监测日期: {target.isoformat()}；队列 {args.kind}；"
+        f"到期 {total_selected} / {matching_kind_count}（全部 {len(monitors)}）"
+    )
     if args.brief:
         hidden = total_selected - len(selected) - len(compact_mandatory)
         print(
@@ -1237,7 +1480,6 @@ def cmd_monitor_due(args: argparse.Namespace) -> int:
                         for item, reasons in chunk
                     )
                 )
-    default_resume = stringify(payload.get("default_resume"))
     print(
         "优先级\t提醒原因\t下次检查\t安全日\t截止节点\t公司\t状态\t"
         "最后核验\t官网证据状态\t推荐岗位\t简历\t简历建议\t动作"
@@ -1258,49 +1500,50 @@ def cmd_monitor_due(args: argparse.Namespace) -> int:
 def cmd_monitor_record_check(args: argparse.Namespace) -> int:
     """Record one evidence-backed website check and move its recurrence date."""
     path = Path(args.monitoring)
-    payload = load_monitoring(path)
-    errors = validate_monitoring(payload)
-    if errors:
-        raise LedgerError("监测清单校验失败:\n- " + "\n- ".join(errors))
-    timezone_name = stringify(payload.get("timezone")) or "Asia/Shanghai"
-    checked = (
-        date.fromisoformat(args.date)
-        if args.date
-        else datetime.now(ZoneInfo(timezone_name)).date()
-    )
-    next_check = date.fromisoformat(args.next_check)
-    if next_check <= checked:
-        raise LedgerError("--next-check 必须晚于本次核验日期，避免任务立即再次逾期")
-    monitor = next(
-        (item for item in payload["monitors"] if stringify(item.get("id")) == args.id),
-        None,
-    )
-    if monitor is None:
-        raise LedgerError(f"监测项不存在: {args.id}")
-    monitor["last_checked"] = checked.isoformat()
-    monitor["evidence_status"] = args.evidence.strip()
-    monitor["next_check"] = next_check.isoformat()
-    if args.status:
-        monitor["status"] = args.status
-    if args.safe_date is not None:
-        monitor["safe_date"] = args.safe_date
-    if args.expected_open is not None:
-        monitor["expected_open"] = args.expected_open
-    if monitor["status"] == "open":
-        if not stringify(monitor.get("open_confirmed_at")).strip():
-            monitor["open_confirmed_at"] = checked.isoformat()
-        if next_check > checked + timedelta(days=3):
-            raise LedgerError(
-                "状态为 open 时 --next-check 最迟为开放后 3 日，"
-                "以保证及时完成全量筛岗"
-            )
-        if args.safe_date is None and not stringify(monitor.get("safe_date")).strip():
-            monitor["safe_date"] = (checked + timedelta(days=7)).isoformat()
-    payload["updated_at"] = datetime.now(ZoneInfo(timezone_name)).isoformat(timespec="seconds")
-    errors = validate_monitoring(payload)
-    if errors:
-        raise LedgerError("更新后监测清单校验失败:\n- " + "\n- ".join(errors))
-    save_monitoring(payload, path)
+    with file_locks([path], exclusive=True):
+        payload = load_monitoring(path, lock_held=True)
+        errors = validate_monitoring(payload)
+        if errors:
+            raise LedgerError("监测清单校验失败:\n- " + "\n- ".join(errors))
+        timezone_name = stringify(payload.get("timezone")) or "Asia/Shanghai"
+        checked = (
+            date.fromisoformat(args.date)
+            if args.date
+            else datetime.now(ZoneInfo(timezone_name)).date()
+        )
+        next_check = date.fromisoformat(args.next_check)
+        if next_check <= checked:
+            raise LedgerError("--next-check 必须晚于本次核验日期，避免任务立即再次逾期")
+        monitor = next(
+            (item for item in payload["monitors"] if stringify(item.get("id")) == args.id),
+            None,
+        )
+        if monitor is None:
+            raise LedgerError(f"监测项不存在: {args.id}")
+        monitor["last_checked"] = checked.isoformat()
+        monitor["evidence_status"] = args.evidence.strip()
+        monitor["next_check"] = next_check.isoformat()
+        if args.status:
+            monitor["status"] = args.status
+        if args.safe_date is not None:
+            monitor["safe_date"] = args.safe_date
+        if args.expected_open is not None:
+            monitor["expected_open"] = args.expected_open
+        if monitor["status"] == "open":
+            if not stringify(monitor.get("open_confirmed_at")).strip():
+                monitor["open_confirmed_at"] = checked.isoformat()
+            if next_check > checked + timedelta(days=3):
+                raise LedgerError(
+                    "状态为 open 时 --next-check 最迟为开放后 3 日，"
+                    "以保证及时完成全量筛岗"
+                )
+            if args.safe_date is None and not stringify(monitor.get("safe_date")).strip():
+                monitor["safe_date"] = (checked + timedelta(days=7)).isoformat()
+        payload["updated_at"] = datetime.now(ZoneInfo(timezone_name)).isoformat(timespec="seconds")
+        errors = validate_monitoring(payload)
+        if errors:
+            raise LedgerError("更新后监测清单校验失败:\n- " + "\n- ".join(errors))
+        save_monitoring(payload, path, lock_held=True)
     print(
         f"[jobctl] 已记录官网核验: {monitor['company']} ({args.id})；"
         f"{checked.isoformat()} → 下次 {next_check.isoformat()}；状态 {monitor['status']}"
@@ -1309,43 +1552,45 @@ def cmd_monitor_record_check(args: argparse.Namespace) -> int:
 
 
 def cmd_prepare(args: argparse.Namespace) -> int:
-    ledger = ApplicationLedger(Path(args.ledger))
-    active_phases = enabled_phases(ledger.data)
-    if args.phase not in active_phases:
-        raise LedgerError(
-            f"当前允许批次是 {' + '.join(active_phases)}，不能准备 {args.phase} 岗位"
-        )
-    if args.update:
-        try:
-            existing = ledger.get(args.id)
-        except LedgerError:
-            existing = None
-        if existing and existing.get("status") in {"applied", "screening", "interview", "offer"}:
-            raise LedgerError(f"{args.id} 已进入投递流程，不能用 prepare 覆盖")
+    with locked_application_ledger(Path(args.ledger)) as ledger:
+        active_phases = enabled_phases(ledger.data)
+        if args.phase not in active_phases:
+            raise LedgerError(
+                f"当前允许批次是 {' + '.join(active_phases)}，不能准备 {args.phase} 岗位"
+            )
+        if args.update:
+            try:
+                existing = ledger.get(args.id)
+            except LedgerError:
+                existing = None
+            if existing and existing.get("status") in {"applied", "screening", "interview", "offer"}:
+                raise LedgerError(f"{args.id} 已进入投递流程，不能用 prepare 覆盖")
 
-    application = {
-        "id": args.id,
-        "company": args.company,
-        "program": args.program or "",
-        "position": args.position,
-        "job_id": args.job_id or "",
-        "phase": args.phase,
-        "policy_status": args.policy_status,
-        "policy_evidence": args.policy_evidence or "",
-        "status": (
-            "prepared" if args.policy_status in SUBMITTABLE_POLICY_STATUSES else "held"
-        ),
-        "deadline": args.deadline or "",
-        "job_url": args.job_url or "",
-        "locations": parse_locations(args.locations),
-        "resume": args.resume,
-        "channel": args.channel,
-        "referral_code": args.referral_code or "",
-        "record_verified": False,
-        "notes": args.notes or "",
-    }
-    ledger.upsert(application, allow_update=args.update)
-    ledger.save()
+        application = {
+            "id": args.id,
+            "company": args.company,
+            "program": args.program or "",
+            "position": args.position,
+            "job_id": args.job_id or "",
+            "phase": args.phase,
+            "policy_status": args.policy_status,
+            "policy_evidence": args.policy_evidence or "",
+            "status": (
+                "prepared" if args.policy_status in SUBMITTABLE_POLICY_STATUSES else "held"
+            ),
+            "deadline": args.deadline or "",
+            "job_url": args.job_url or "",
+            "locations": parse_locations(args.locations),
+            "resume": args.resume,
+            "channel": args.channel,
+            "referral_code": args.referral_code or "",
+            "record_verified": False,
+            "notes": args.notes or "",
+        }
+        application["company_key"] = application_company_key(application)
+        application["job_key"] = application_job_key(application)
+        ledger.upsert(application, allow_update=args.update)
+        ledger.save(lock_held=True)
     print(f"[jobctl] 已准备: {application['id']}")
     if application["status"] == "prepared":
         print(f"[jobctl] 确认令牌: {confirmation_token(application)}")
@@ -1358,37 +1603,65 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 
 
 def cmd_set_phase(args: argparse.Namespace) -> int:
-    ledger = ApplicationLedger(Path(args.ledger))
-    previous = enabled_phases(ledger.data)
-    phases = list(dict.fromkeys(args.phase))
-    ledger.data["active_phases"] = phases
-    # The last phase is the default for discovery commands that omit --phase.
-    ledger.data["active_phase"] = phases[-1]
-    ledger.save()
+    with locked_application_ledger(Path(args.ledger)) as ledger:
+        previous = enabled_phases(ledger.data)
+        phases = list(dict.fromkeys(args.phase))
+        ledger.data["active_phases"] = phases
+        # The last phase is the default for discovery commands that omit --phase.
+        ledger.data["active_phase"] = phases[-1]
+        ledger.save(lock_held=True)
     print(f"[jobctl] 可投批次: {' + '.join(previous)} → {' + '.join(phases)}")
     return 0
 
 
-def print_preflight(ledger: ApplicationLedger, application: dict[str, Any]) -> None:
-    print("=== 投递前检查 ===")
-    print(f"记录 ID: {application.get('id')}")
-    print(f"公司 / 项目: {application.get('company')} / {application.get('program') or '—'}")
-    print(f"岗位: {application.get('position')} ({application.get('job_id') or '无岗位 ID'})")
-    print(f"批次: {application.get('phase')}")
-    print(f"政策: {POLICY_LABELS.get(application.get('policy_status'), application.get('policy_status'))}")
-    print(f"简历: {application.get('resume')}")
-    print(f"城市: {'、'.join(parse_locations(application.get('locations', []))) or '—'}")
-    print(f"渠道: {application.get('channel') or '—'}")
-    print(f"内推码: {application.get('referral_code') or '无'}")
-    print(f"岗位链接: {application.get('job_url') or '—'}")
+def preflight_payload(
+    ledger: ApplicationLedger, application: dict[str, Any]
+) -> dict[str, Any]:
     rule = effective_submission_window(ledger, application)
+    history = active_history(ledger, application, "company_program")
+    return {
+        "id": application.get("id"),
+        "company": application.get("company"),
+        "program": application.get("program") or "",
+        "position": application.get("position"),
+        "job_id": application.get("job_id") or "",
+        "phase": application.get("phase"),
+        "policy_status": application.get("policy_status"),
+        "policy_label": POLICY_LABELS.get(
+            application.get("policy_status"), application.get("policy_status")
+        ),
+        "resume": application.get("resume"),
+        "locations": parse_locations(application.get("locations", [])),
+        "channel": application.get("channel") or "",
+        "referral_code": application.get("referral_code") or "",
+        "job_url": application.get("job_url") or "",
+        "submission_window": rule,
+        "active_company_program_history": history,
+        "confirmation_token": confirmation_token(application),
+    }
+
+
+def print_preflight(ledger: ApplicationLedger, application: dict[str, Any]) -> None:
+    snapshot = preflight_payload(ledger, application)
+    print("=== 投递前检查 ===")
+    print(f"记录 ID: {snapshot['id']}")
+    print(f"公司 / 项目: {snapshot['company']} / {snapshot['program'] or '—'}")
+    print(f"岗位: {snapshot['position']} ({snapshot['job_id'] or '无岗位 ID'})")
+    print(f"批次: {snapshot['phase']}")
+    print(f"政策: {snapshot['policy_label']}")
+    print(f"简历: {snapshot['resume']}")
+    print(f"城市: {'、'.join(snapshot['locations']) or '—'}")
+    print(f"渠道: {snapshot['channel'] or '—'}")
+    print(f"内推码: {snapshot['referral_code'] or '无'}")
+    print(f"岗位链接: {snapshot['job_url'] or '—'}")
+    rule = snapshot["submission_window"]
     if rule:
         print(
             "公司/项目窗口: "
             f"{rule.get('scope')}，{rule.get('window_days')} 天内最多 "
             f"{rule.get('max_applications')} 个职位"
         )
-    history = active_history(ledger, application, "company_program")
+    history = snapshot["active_company_program_history"]
     if history:
         print("同公司同项目有效投递:")
         for item in history:
@@ -1398,7 +1671,7 @@ def print_preflight(ledger: ApplicationLedger, application: dict[str, Any]) -> N
             )
     else:
         print("同公司同项目有效投递: 无")
-    print(f"确认令牌: {confirmation_token(application)}")
+    print(f"确认令牌: {snapshot['confirmation_token']}")
     print("说明: 此令牌只用于记录本人已确认；验证码和招聘网站最终提交仍由浏览器流程处理。")
 
 
@@ -1428,7 +1701,17 @@ def cmd_preflight(args: argparse.Namespace) -> int:
     ledger = ApplicationLedger(Path(args.ledger))
     application = ledger.get(args.id)
     ensure_submittable(ledger, application)
-    print_preflight(ledger, application)
+    if args.json:
+        print(
+            json.dumps(
+                preflight_payload(ledger, application),
+                ensure_ascii=False,
+                indent=2,
+                default=stringify,
+            )
+        )
+    else:
+        print_preflight(ledger, application)
     return 0
 
 
@@ -1446,6 +1729,9 @@ def cmd_history(args: argparse.Namespace) -> int:
     )
     if args.limit:
         records = records[: args.limit]
+    if args.json:
+        print(json.dumps(records, ensure_ascii=False, indent=2, default=stringify))
+        return 0
     content = render_history_table(records)
     if args.output:
         output = Path(args.output)
@@ -1457,24 +1743,113 @@ def cmd_history(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_record_applied(args: argparse.Namespace) -> int:
-    ledger = ApplicationLedger(Path(args.ledger))
-    application = ledger.get(args.id)
-    ensure_submittable(ledger, application)
-    expected = confirmation_token(application)
-    if args.confirmation != expected:
-        raise LedgerError("确认令牌不匹配；请重新运行 preflight 获取当前令牌")
-    if application.get("status") not in {"draft", "prepared"}:
-        raise LedgerError(f"当前状态不允许记录提交: {application.get('status')}")
+def sync_monitors_after_application(
+    payload: dict[str, Any],
+    application: dict[str, Any],
+    *,
+    checked: date,
+    proof: str = "",
+) -> list[str]:
+    """Move monitors related to a verified application into process tracking.
 
-    application["status"] = "applied"
-    application["applied_at"] = args.applied_at or today_string()
-    application["channel"] = args.channel or application.get("channel") or "官网投递"
-    application["record_verified"] = bool(args.verified)
-    application["proof"] = args.proof or ""
-    if args.notes:
-        application["notes"] = args.notes
-    ledger.save()
+    Explicit ``application_ids`` links take precedence.  For a newly prepared
+    record that has not yet been linked, an exact normalized company match is
+    used only when it identifies one monitor unambiguously.
+    """
+    application_id = stringify(application.get("id"))
+    explicit = [
+        item
+        for item in payload.get("monitors", [])
+        if application_id in [stringify(value) for value in item.get("application_ids", []) or []]
+    ]
+    matches = explicit
+    if not matches:
+        company = normalized_identity(application.get("company"))
+        company_matches = [
+            item
+            for item in payload.get("monitors", [])
+            if normalized_identity(item.get("company")) == company
+        ]
+        if len(company_matches) == 1:
+            matches = company_matches
+
+    checked_text = checked.isoformat()
+    next_check = (checked + timedelta(days=7)).isoformat()
+    position = stringify(application.get("position"))
+    job_id = stringify(application.get("job_id"))
+    proof_text = stringify(proof).strip()
+    submission_summary = f"{checked_text}已核验提交{position}"
+    if job_id:
+        submission_summary += f"（{job_id}）"
+    if proof_text:
+        submission_summary += f"；{proof_text}"
+
+    updated_ids = []
+    for monitor in matches:
+        application_ids = [
+            stringify(value) for value in monitor.get("application_ids", []) or []
+        ]
+        if application_id not in application_ids:
+            application_ids.append(application_id)
+        monitor["application_ids"] = application_ids
+        monitor["status"] = "tracking"
+        monitor["last_checked"] = checked_text
+        monitor["next_check"] = next_check
+        previous_evidence = stringify(monitor.get("evidence_status")).strip()
+        if submission_summary not in previous_evidence:
+            monitor["evidence_status"] = (
+                f"{previous_evidence}；{submission_summary}"
+                if previous_evidence
+                else submission_summary
+            )
+        monitor["action"] = "跟踪简历筛选、邮件、短信及官网候选人中心；当前流程结束前不重复投递"
+        updated_ids.append(stringify(monitor.get("id")))
+    return updated_ids
+
+
+def cmd_record_applied(args: argparse.Namespace) -> int:
+    ledger_path = Path(args.ledger)
+    monitoring_path = Path(args.monitoring)
+    with file_locks([ledger_path, monitoring_path], exclusive=True):
+        ledger = ApplicationLedger(ledger_path, lock_held=True)
+        monitoring = load_monitoring(monitoring_path, lock_held=True)
+        application = ledger.get(args.id)
+        ensure_submittable(ledger, application)
+        expected = confirmation_token(application)
+        if args.confirmation != expected:
+            raise LedgerError("确认令牌不匹配；请重新运行 preflight 获取当前令牌")
+        if application.get("status") not in {"draft", "prepared"}:
+            raise LedgerError(f"当前状态不允许记录提交: {application.get('status')}")
+
+        application["status"] = "applied"
+        application["applied_at"] = args.applied_at or today_string()
+        application["channel"] = args.channel or application.get("channel") or "官网投递"
+        application["record_verified"] = bool(args.verified)
+        application["proof"] = args.proof or ""
+        if args.notes:
+            application["notes"] = args.notes
+
+        applied_day = applied_date(application)
+        if applied_day is None:
+            raise LedgerError(f"--applied-at 日期无效: {application['applied_at']}")
+        updated_monitors = sync_monitors_after_application(
+            monitoring,
+            application,
+            checked=applied_day,
+            proof=application["proof"],
+        )
+        timezone_name = stringify(monitoring.get("timezone")) or "Asia/Shanghai"
+        monitoring["updated_at"] = datetime.now(ZoneInfo(timezone_name)).isoformat(
+            timespec="seconds"
+        )
+        ledger.data["updated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+        errors = ledger.validate()
+        errors.extend(validate_monitoring(monitoring))
+        errors.extend(validate_monitor_coverage(ledger, monitoring))
+        if errors:
+            raise LedgerError("提交后联动校验失败:\n- " + "\n- ".join(errors))
+        ledger.save(lock_held=True)
+        save_monitoring(monitoring, monitoring_path, lock_held=True)
 
     tracker = ApplicationTracker()
     tracker.log(
@@ -1490,7 +1865,11 @@ def cmd_record_applied(args: argparse.Namespace) -> int:
     if application.get("job_url"):
         FetcherState().mark_applied_job(application["job_url"])
     render_summary(ledger, Path(args.summary))
-    print(f"[jobctl] 已记录投递成功: {application['id']}")
+    monitor_text = "、".join(updated_monitors) if updated_monitors else "未找到唯一关联项"
+    print(
+        f"[jobctl] 已记录投递成功: {application['id']}；"
+        f"监测联动: {monitor_text}"
+    )
     return 0
 
 
@@ -1715,6 +2094,13 @@ def build_parser() -> argparse.ArgumentParser:
     monitor_parser.add_argument(
         "--brief-limit", type=int, default=12, help="简报的常规目标条数，默认 12"
     )
+    monitor_parser.add_argument(
+        "--kind",
+        choices=("apply", "process", "all"),
+        default="all",
+        help="apply=待开放/筛岗/投递，process=已投后跟进，all=兼容原全队列",
+    )
+    monitor_parser.add_argument("--json", action="store_true", help="输出机器可读 JSON")
     monitor_parser.add_argument("--monitoring", default=str(DEFAULT_MONITORING))
     monitor_parser.set_defaults(handler=cmd_monitor_due)
 
@@ -1764,6 +2150,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     preflight_parser = subparsers.add_parser("preflight", help="显示最终提交前快照和确认令牌")
     preflight_parser.add_argument("id")
+    preflight_parser.add_argument("--json", action="store_true", help="输出机器可读 JSON")
     preflight_parser.set_defaults(handler=cmd_preflight)
 
     history_parser = subparsers.add_parser(
@@ -1778,6 +2165,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     history_parser.add_argument("--limit", type=int, default=0, help="最多显示的记录数；0 表示全部")
     history_parser.add_argument("--output", default="", help="可选 Markdown 表格输出路径")
+    history_parser.add_argument("--json", action="store_true", help="输出机器可读 JSON")
     history_parser.set_defaults(handler=cmd_history)
 
     applied_parser = subparsers.add_parser("record-applied", help="浏览器提交成功后统一落档")
@@ -1789,6 +2177,7 @@ def build_parser() -> argparse.ArgumentParser:
     applied_parser.add_argument("--proof", default="")
     applied_parser.add_argument("--notes", default="")
     applied_parser.add_argument("--summary", default=str(DEFAULT_SUMMARY))
+    applied_parser.add_argument("--monitoring", default=str(DEFAULT_MONITORING))
     applied_parser.set_defaults(handler=cmd_record_applied)
 
     reconcile_parser = subparsers.add_parser("reconcile", help="从统一账本幂等回填追踪器、去重状态和汇总")

@@ -1,8 +1,14 @@
+import argparse
+import contextlib
+import io
+import json
+import subprocess
 import sys
 import tempfile
 import unittest
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
@@ -13,12 +19,16 @@ sys.path.insert(0, str(SKILL_ROOT))
 from scripts.jobctl import (
     ApplicationLedger,
     LedgerError,
+    build_parser,
+    cmd_monitor_due,
+    cmd_record_applied,
     confirmation_token,
     deadline_display,
     enabled_phases,
     ensure_submittable,
     company_category,
     monitor_due_reasons,
+    monitor_work_kind,
     reminder_urgency,
     history_records,
     render_history_table,
@@ -26,6 +36,8 @@ from scripts.jobctl import (
     submission_conflicts,
     resume_guidance,
     render_summary,
+    select_monitor_rows,
+    sync_monitors_after_application,
     load_monitoring,
     validate_monitor_coverage,
     validate_monitoring,
@@ -60,9 +72,55 @@ class JobctlTests(unittest.TestCase):
         first = confirmation_token(application)
         application["locations"] = ["上海"]
         second = confirmation_token(application)
+        application["referral_code"] = "NEW-CODE"
+        third = confirmation_token(application)
+        application["deadline"] = "2026-08-29"
+        fourth = confirmation_token(application)
 
         self.assertTrue(first.startswith("CONFIRM:example-robot-role:"))
         self.assertNotEqual(first, second)
+        self.assertNotEqual(second, third)
+        self.assertNotEqual(third, fourth)
+
+    def test_duplicate_url_ignores_referral_tracking_parameters(self):
+        previous = self.make_application()
+        previous.update(
+            status="applied",
+            applied_at="2026-08-20",
+            job_id="",
+            job_url="https://jobs.example/campus?jobId=42&recommendCode=OLD",
+        )
+        candidate = self.make_application()
+        candidate.update(
+            id="candidate",
+            job_id="",
+            job_url="https://jobs.example/campus?jobId=42&recommendCode=NEW&utm_source=share",
+        )
+        ledger = mock.Mock(applications=[previous])
+
+        conflicts = submission_conflicts(ledger, candidate)
+
+        self.assertTrue(any("同一岗位" in item for item in conflicts))
+
+    def test_company_aliases_share_one_submission_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            aliases = Path(directory) / "aliases.yaml"
+            aliases.write_text(
+                "schema_version: 1\ncompanies:\n"
+                "  - id: agibot\n"
+                "    canonical_name: 智元机器人\n"
+                "    aliases: [AGIBOT]\n",
+                encoding="utf-8",
+            )
+            previous = self.make_application()
+            previous.update(company="AGIBOT", status="applied", applied_at="2026-08-20")
+            candidate = self.make_application()
+            candidate.update(id="candidate", company="智元机器人")
+            ledger = mock.Mock(applications=[previous])
+            with mock.patch("scripts.jobctl.DEFAULT_COMPANY_ALIASES", aliases):
+                conflicts = submission_conflicts(ledger, candidate)
+
+        self.assertTrue(any("同一岗位" in item for item in conflicts))
 
     def test_deadline_display_preserves_precise_time_and_timezone(self):
         self.assertEqual(
@@ -668,6 +726,332 @@ class JobctlTests(unittest.TestCase):
             monitoring["monitors"][0].pop("hard_deadline")
             errors = validate_monitor_coverage(ApplicationLedger(ledger_path), monitoring)
             self.assertTrue(any("缺少 hard_deadline" in error for error in errors))
+
+    def test_monitor_queue_splits_application_and_process_work(self):
+        target = date(2026, 9, 7)
+        apply_monitor = {
+            "id": "apply",
+            "company": "待投公司",
+            "status": "prepared",
+            "priority": "P0",
+            "next_check": "2026-09-07",
+        }
+        process_monitor = {
+            "id": "process",
+            "company": "已投公司",
+            "status": "tracking",
+            "priority": "P0",
+            "next_check": "2026-09-07",
+        }
+        paused_monitor = {
+            "id": "paused",
+            "company": "暂停公司",
+            "status": "paused",
+            "priority": "P2",
+            "next_check": "2026-09-07",
+        }
+        payload = {"monitors": [process_monitor, paused_monitor, apply_monitor]}
+
+        self.assertEqual(monitor_work_kind(apply_monitor), "apply")
+        self.assertEqual(monitor_work_kind(process_monitor), "process")
+        self.assertEqual(monitor_work_kind(paused_monitor), "other")
+        self.assertEqual(
+            [item["id"] for item, _ in select_monitor_rows(payload, target, kind="apply")],
+            ["apply"],
+        )
+        self.assertEqual(
+            [item["id"] for item, _ in select_monitor_rows(payload, target, kind="process")],
+            ["process"],
+        )
+        self.assertEqual(
+            {item["id"] for item, _ in select_monitor_rows(payload, target, kind="all")},
+            {"apply", "process", "paused"},
+        )
+
+    def test_monitor_due_json_emits_only_requested_queue(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            monitoring_path = Path(temp_dir) / "monitoring.yaml"
+            base = {
+                "priority": "P1",
+                "last_checked": "2026-09-06",
+                "next_check": "2026-09-07",
+                "evidence_status": "官网证据",
+                "action": "处理当前队列",
+                "official_urls": ["https://jobs.example.com"],
+                "submit_gate": "user_confirmation",
+            }
+            payload = {
+                "schema_version": 1,
+                "timezone": "Asia/Shanghai",
+                "updated_at": "2026-09-07",
+                "default_resume": "public/resume.pdf",
+                "monitors": [
+                    {**base, "id": "apply", "company": "待投公司", "status": "watching"},
+                    {**base, "id": "process", "company": "已投公司", "status": "tracking"},
+                ],
+            }
+            monitoring_path.write_text(
+                yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
+                encoding="utf-8",
+            )
+            args = argparse.Namespace(
+                monitoring=str(monitoring_path),
+                date="2026-09-07",
+                all=False,
+                brief=False,
+                brief_limit=12,
+                kind="apply",
+                json=True,
+            )
+
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(cmd_monitor_due(args), 0)
+            result = json.loads(output.getvalue())
+
+            self.assertEqual(result["kind"], "apply")
+            self.assertEqual(result["matching_kind"], 1)
+            self.assertEqual(result["due_count"], 1)
+            self.assertEqual(result["detailed"][0]["id"], "apply")
+            self.assertEqual(result["detailed"][0]["kind"], "apply")
+
+    def test_record_applied_moves_linked_monitor_to_process_tracking(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "applications.yaml"
+            monitoring_path = Path(temp_dir) / "monitoring.yaml"
+            summary_path = Path(temp_dir) / "summary.md"
+            application = self.make_application()
+            today = date.today()
+            ledger_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "schema_version": 1,
+                        "active_phase": "提前批",
+                        "active_phases": ["提前批"],
+                        "updated_at": today.isoformat(),
+                        "applications": [application],
+                    },
+                    allow_unicode=True,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            monitoring_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "schema_version": 1,
+                        "timezone": "Asia/Shanghai",
+                        "updated_at": today.isoformat(),
+                        "default_resume": "public/resume.pdf",
+                        "monitors": [
+                            {
+                                "id": "example-monitor",
+                                "company": application["company"],
+                                "status": "prepared",
+                                "priority": "P1",
+                                "last_checked": today.isoformat(),
+                                "next_check": (today + timedelta(days=1)).isoformat(),
+                                "safe_date": (today + timedelta(days=2)).isoformat(),
+                                "target": application["position"],
+                                "resume": application["resume"],
+                                "evidence_status": "已完成全量筛岗",
+                                "action": "等待最终确认",
+                                "official_urls": [application["job_url"]],
+                                "application_ids": [application["id"]],
+                                "submit_gate": "user_confirmation",
+                            }
+                        ],
+                    },
+                    allow_unicode=True,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            args = argparse.Namespace(
+                ledger=str(ledger_path),
+                monitoring=str(monitoring_path),
+                id=application["id"],
+                confirmation=confirmation_token(application),
+                applied_at=today.isoformat(),
+                channel="",
+                verified=True,
+                proof="官网成功页",
+                notes="",
+                summary=str(summary_path),
+            )
+
+            with mock.patch("scripts.jobctl.ApplicationTracker") as tracker, mock.patch(
+                "scripts.jobctl.FetcherState"
+            ) as state, mock.patch("scripts.jobctl.render_summary"):
+                self.assertEqual(cmd_record_applied(args), 0)
+                tracker.return_value.log.assert_called_once()
+                state.return_value.mark_applied_job.assert_called_once()
+
+            saved_application = ApplicationLedger(ledger_path).get(application["id"])
+            saved_monitor = load_monitoring(monitoring_path)["monitors"][0]
+            self.assertEqual(saved_application["status"], "applied")
+            self.assertTrue(saved_application["record_verified"])
+            self.assertEqual(saved_monitor["status"], "tracking")
+            self.assertIn(application["id"], saved_monitor["application_ids"])
+            self.assertEqual(saved_monitor["last_checked"], today.isoformat())
+            self.assertEqual(
+                saved_monitor["next_check"],
+                (today + timedelta(days=7)).isoformat(),
+            )
+            self.assertEqual(validate_monitoring(load_monitoring(monitoring_path)), [])
+
+    def test_preflight_and_history_support_json(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "applications.yaml"
+            application = self.make_application()
+            ledger_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "schema_version": 1,
+                        "active_phase": "提前批",
+                        "updated_at": date.today().isoformat(),
+                        "applications": [application],
+                    },
+                    allow_unicode=True,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            parser = build_parser()
+
+            for argv in (
+                ["--ledger", str(ledger_path), "preflight", application["id"], "--json"],
+                ["--ledger", str(ledger_path), "history", "--company", application["company"], "--json"],
+            ):
+                args = parser.parse_args(argv)
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(args.handler(args), 0)
+                result = json.loads(output.getvalue())
+                self.assertTrue(result)
+
+    def test_concurrent_prepare_commands_do_not_lose_updates(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger_path = Path(temp_dir) / "applications.yaml"
+            ledger_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "schema_version": 1,
+                        "active_phase": "提前批",
+                        "active_phases": ["提前批"],
+                        "updated_at": date.today().isoformat(),
+                        "applications": [],
+                    },
+                    allow_unicode=True,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            script = SKILL_ROOT / "scripts" / "jobctl.py"
+            processes = []
+            for index in range(8):
+                processes.append(
+                    subprocess.Popen(
+                        [
+                            sys.executable,
+                            str(script),
+                            "--ledger",
+                            str(ledger_path),
+                            "prepare",
+                            "--id",
+                            f"concurrent-{index}",
+                            "--company",
+                            f"并发公司{index}",
+                            "--position",
+                            "VLA工程师",
+                            "--phase",
+                            "提前批",
+                            "--policy-status",
+                            "current_year_safe",
+                            "--resume",
+                            "public/resume.pdf",
+                        ],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                    )
+                )
+            results = [process.communicate(timeout=15) + (process.returncode,) for process in processes]
+
+            self.assertTrue(all(returncode == 0 for _, _, returncode in results), results)
+            saved = ApplicationLedger(ledger_path)
+            self.assertEqual(len(saved.applications), 8)
+            self.assertEqual({item["id"] for item in saved.applications}, {f"concurrent-{i}" for i in range(8)})
+            self.assertEqual(list(Path(temp_dir).glob(".*.tmp")), [])
+
+    def test_concurrent_monitor_updates_do_not_lose_changes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            monitoring_path = Path(temp_dir) / "monitoring.yaml"
+            monitors = []
+            for index in range(6):
+                monitors.append(
+                    {
+                        "id": f"monitor-{index}",
+                        "company": f"监测公司{index}",
+                        "status": "watching",
+                        "priority": "P1",
+                        "last_checked": "2026-09-06",
+                        "next_check": "2026-09-07",
+                        "evidence_status": "旧证据",
+                        "action": "复核官网",
+                        "official_urls": [f"https://jobs.example.com/{index}"],
+                        "submit_gate": "user_confirmation",
+                    }
+                )
+            monitoring_path.write_text(
+                yaml.safe_dump(
+                    {
+                        "schema_version": 1,
+                        "timezone": "Asia/Shanghai",
+                        "updated_at": "2026-09-07",
+                        "default_resume": "public/resume.pdf",
+                        "monitors": monitors,
+                    },
+                    allow_unicode=True,
+                    sort_keys=False,
+                ),
+                encoding="utf-8",
+            )
+            script = SKILL_ROOT / "scripts" / "jobctl.py"
+            processes = [
+                subprocess.Popen(
+                    [
+                        sys.executable,
+                        str(script),
+                        "monitor-record-check",
+                        f"monitor-{index}",
+                        "--monitoring",
+                        str(monitoring_path),
+                        "--date",
+                        "2026-09-07",
+                        "--next-check",
+                        "2026-09-08",
+                        "--evidence",
+                        f"新证据{index}",
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                for index in range(6)
+            ]
+            results = [
+                process.communicate(timeout=15) + (process.returncode,)
+                for process in processes
+            ]
+
+            self.assertTrue(all(returncode == 0 for _, _, returncode in results), results)
+            saved = load_monitoring(monitoring_path)
+            self.assertEqual(
+                {item["evidence_status"] for item in saved["monitors"]},
+                {f"新证据{index}" for index in range(6)},
+            )
+            self.assertEqual(list(Path(temp_dir).glob(".*.tmp")), [])
 
 
 if __name__ == "__main__":

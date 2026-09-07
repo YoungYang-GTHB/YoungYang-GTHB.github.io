@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://youngyang.dev/schemas/job-hunter/company-aliases.schema.json",
+  "title": "Canonical recruiting company aliases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "companies"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "companies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "canonical_name", "aliases"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"},
+          "canonical_name": {"type": "string", "minLength": 1},
+          "aliases": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
+}

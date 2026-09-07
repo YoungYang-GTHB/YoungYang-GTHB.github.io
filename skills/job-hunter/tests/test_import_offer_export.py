@@ -119,6 +119,23 @@ class OfferExportImportTests(unittest.TestCase):
 
         self.assertTrue(JobFilter(config).passes(job))
 
+    def test_preferred_city_order_affects_score(self):
+        config = {
+            "filters": {
+                "cities": [],
+                "industries": [],
+                "graduation_year": "2027",
+                "preferred_cities": ["苏州", "杭州", "北京"],
+            }
+        }
+        job_filter = JobFilter(config)
+        suzhou = {"职位": "算法工程师", "工作地点": "苏州", "毕业年份": "2027"}
+        beijing = {"职位": "算法工程师", "工作地点": "北京", "毕业年份": "2027"}
+
+        self.assertGreater(job_filter.score(suzhou), job_filter.score(beijing))
+        self.assertEqual(suzhou["_preferred_city"], "苏州")
+        self.assertEqual(beijing["_preferred_city"], "北京")
+
     def test_multi_year_graduation_field_includes_target_year(self):
         job_filter = JobFilter(self.config)
 
