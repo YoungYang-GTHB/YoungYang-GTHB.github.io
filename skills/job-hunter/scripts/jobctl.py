@@ -1109,7 +1109,21 @@ class ApplicationLedger:
                 errors.append(f"{prefix}.policy_status 非法: {item.get('policy_status')}")
             errors.extend(validate_submission_window(item.get("submission_window"), prefix))
             if item.get("status") in {"applied", "screening", "interview", "offer"}:
+                # Historical offline reports may not identify the date or file.
+                # Preserve unknown facts rather than inventing submission evidence.
+                offline_report = (
+                    item.get("evidence_source") == "user_reported"
+                    and item.get("channel") == "线下投递"
+                    and item.get("record_verified") is False
+                    and bool(stringify(item.get("proof")).strip())
+                )
+                try:
+                    date.fromisoformat(stringify(item.get("reported_at")))
+                except ValueError:
+                    offline_report = False
                 for field in ("applied_at", "channel", "resume"):
+                    if offline_report and field in {"applied_at", "resume"}:
+                        continue
                     if not stringify(item.get(field)).strip():
                         errors.append(f"{prefix}.{field} 在已投递状态下不能为空")
             applied_at = stringify(item.get("applied_at")).strip()
@@ -1967,8 +1981,25 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
 
 def cmd_shortlist(args: argparse.Namespace) -> int:
     phase = args.phase or ApplicationLedger(Path(args.ledger)).data.get("active_phase")
-    input_path = Path(args.input) if args.input else find_latest_pool(phase)
+    if getattr(args, "companies", False) and not args.input:
+        suffix = {"提前批": "advance", "秋招": "autumn", "春招": "spring"}[phase]
+        input_path = PROJECT_ROOT / "output" / f"company-review-{suffix}.jsonl"
+    else:
+        input_path = Path(args.input) if args.input else find_latest_pool(phase)
     records = load_jsonl(input_path)
+    if getattr(args, "companies", False):
+        # Keyword thresholds must not silently erase the second recall channel.
+        records.sort(key=lambda item: (-int(item.get("priority_score", 0)),
+                                       str(item.get("company_key_candidate", ""))))
+        selected = records[:args.limit] if args.limit > 0 else records
+        if args.json:
+            print(json.dumps(selected, ensure_ascii=False, indent=2))
+        else:
+            print(f"公司官网待核: {input_path}；共 {len(records)} 条；非可投清单；不应用 min-score")
+            print("优先分\t状态\t公司\t下一步")
+            for item in selected:
+                print(f"{item.get('priority_score', 0)}\t{item.get('review_status')}\t{item.get('company')}\t{item.get('next_action')}")
+        return 0
     records.sort(
         key=lambda item: (
             int(item.get("_match_score", 0) or 0),
@@ -2191,7 +2222,8 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser = subparsers.add_parser(
         "sync", help="同步 Offer 情报局；支持会话直连或浏览器导出兜底"
     )
-    sync_parser.add_argument("--nav", type=int, default=61)
+    sync_parser.add_argument("--nav", type=int, default=None,
+                             help="指定导航；默认使用 config.yaml 中启用的数据源")
     sync_parser.add_argument(
         "--phase", choices=("提前批", "秋招", "春招"), default="",
         help="默认读取统一账本的 active_phase",
@@ -2209,7 +2241,8 @@ def build_parser() -> argparse.ArgumentParser:
     scan_parser = subparsers.add_parser(
         "scan", help="低 Token 增量检索：同步 Offer 情报局并只输出高匹配新岗位"
     )
-    scan_parser.add_argument("--nav", type=int, default=61)
+    scan_parser.add_argument("--nav", type=int, default=None,
+                             help="指定导航；默认使用 config.yaml 中启用的数据源")
     scan_parser.add_argument("--phase", choices=("提前批", "秋招", "春招"), default="")
     scan_parser.add_argument(
         "--limit", type=int, default=0,
@@ -2257,6 +2290,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     shortlist_parser.add_argument("--min-score", type=int, default=0)
     shortlist_parser.add_argument("--json", action="store_true")
+    shortlist_parser.add_argument("--companies", action="store_true", help="查看独立公司官网待核通道（不按关键词分数排除公司；非可投清单）")
     shortlist_parser.set_defaults(handler=cmd_shortlist)
     return parser
 

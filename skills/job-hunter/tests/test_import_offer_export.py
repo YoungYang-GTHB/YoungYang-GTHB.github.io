@@ -152,6 +152,16 @@ class OfferExportImportTests(unittest.TestCase):
         self.assertEqual(record["毕业年份"], "2027")
         self.assertTrue(JobFilter(self.config).passes(record))
 
+    def test_cohort_in_company_column_is_not_a_company_or_upgraded_year(self):
+        record = normalize_platform_record(
+            {"企业名称": "26", "招聘公告": "示例机器人2026校园招聘"},
+            {"graduation_year": "2027"},
+        )
+        self.assertEqual(record["企业名称"], "示例机器人")
+        self.assertEqual(record["毕业年份"], "2026")
+        self.assertFalse(JobFilter(self.config).passes(record))
+        self.assertEqual(record["_raw_company_field"], "26")
+
     def test_missing_graduation_field_does_not_drop_new_platform_records(self):
         self.assertTrue(JobFilter(self.config).passes({"职位": "嵌入式工程师"}))
 

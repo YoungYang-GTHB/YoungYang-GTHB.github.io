@@ -46,6 +46,24 @@ from scripts.jobctl import (
 
 
 class JobctlTests(unittest.TestCase):
+    def test_offline_report_preserves_unknown_date_and_resume(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ledger = ApplicationLedger(Path(temp_dir) / "applications.yaml")
+            application = self.make_application()
+            application.update(status="applied", applied_at="", resume="",
+                               channel="线下投递", evidence_source="user_reported",
+                               reported_at="2026-09-13", proof="本人确认线下已投递")
+            ledger.data = {"schema_version": 1, "active_phase": "提前批",
+                           "applications": [application]}
+            self.assertEqual(ledger.validate(), [])
+            for field, value in (("channel", "官网投递"), ("proof", ""),
+                                 ("reported_at", "unknown"), ("record_verified", True)):
+                original = application[field]
+                application[field] = value
+                self.assertTrue(any("applied_at 在已投递状态下不能为空" in e
+                                    for e in ledger.validate()))
+                application[field] = original
+
     def make_application(self):
         return {
             "id": "example-robot-role",

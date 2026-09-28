@@ -20,6 +20,8 @@
 
 使用仓库根目录的 `scripts/build-private-resumes.sh` 完成构建。
 
+仓库根目录 `public/resume-*.pdf` 是不含个人身份和雇主内部细节的公开示例，由 `bash scripts/build-public-resumes.sh` 根据 `public-anonymized.tex` 单独生成；它们不是求职投递用的实名简历。请勿从 `career/site/public/` 直接复制 PDF 到根目录 `public/`。
+
 ## 文件说明
 
 | 文件 | 说明 |

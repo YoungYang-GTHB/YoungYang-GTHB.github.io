@@ -24,6 +24,7 @@ fetch_jobs — 从 offer情报局 增量拉取校招岗位。
 import sys
 import json
 import argparse
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -40,6 +41,7 @@ from scripts.api import OfferAPI
 from scripts.exclusions import ExclusionStore
 from scripts.state import FetcherState
 from scripts.tracker import ApplicationTracker
+from scripts.company_recall import build_company_review_queue, merge_company_review_queue
 
 
 PHASE_KEYWORDS = {
@@ -69,6 +71,17 @@ def normalize_update_time(value: Any) -> str:
 def normalize_platform_record(record: dict, nav: dict) -> dict:
     """Bridge stable internal field names across Offer 情报局 navigation revisions."""
     normalized = dict(record)
+    company = str(normalized.get("企业名称", "")).strip()
+    # Some current navigation exports put cohort codes in the company column.
+    # Keep the raw value and label the announcement-derived identity as a lead,
+    # not a verified legal employer. Never turn a 2026-only row into 2027.
+    if re.fullmatch(r"(?:20)?\d{2}(?:\s*[,，、/]\s*(?:20)?\d{2})*", company):
+        normalized["_raw_company_field"] = company
+        title = str(normalized.get("招聘公告", "")).strip()
+        normalized["企业名称"] = re.split(r"20\d{2}", title, maxsplit=1)[0].strip() or title
+        normalized["_company_identity_source"] = "announcement_title_unverified"
+        years = re.split(r"\s*[,，、/]\s*", company)
+        normalized["毕业年份"] = ",".join(y if len(y) == 4 else "20" + y for y in years)
     if not str(normalized.get("企业名称", "")).strip():
         normalized["企业名称"] = str(normalized.get("招聘公告", "")).strip()
     if not str(normalized.get("毕业年份", "")).strip() and nav.get("graduation_year"):
@@ -157,8 +170,14 @@ class JobFilter:
 
     def classify_track(self, text: str) -> str:
         matching = self._filters.get("matching", {})
-        if self._matched_keywords(text, matching.get("primary_keywords", [])):
+        # Broad recall terms (RL, multimodal, world models) are not evidence
+        # that a role concerns robots. Keep their priority without mislabelling.
+        if re.search(r"具身|机器人学习|世界动作模型|(?<![a-z])(?:vla|wam)(?![a-z])|robot\s+learning|embodied", str(text), re.I):
             return "具身智能"
+        if re.search(r"多模态|强化学习|世界模型|大模型|(?<![a-z])(?:ai|rl|llm|vlm|agent)(?![a-z])", str(text), re.I):
+            return "AI/多模态待核"
+        if self._matched_keywords(text, matching.get("primary_keywords", [])):
+            return "AI/多模态待核"
         if self._matched_keywords(text, matching.get("secondary_keywords", [])):
             return "嵌入式/机器人系统"
         return "通用/观察"
@@ -271,7 +290,9 @@ def fetch_navigation(
     stopped_early = False
     seen_newest_update = None
 
-    while len(all_records) < max_records:
+    # 首次、周期性与异常升级的 FULL 都必须遍历完，不能被展示预算截断。
+    # cutoff 为空是最终模式判断，不能只检查调用方的 force_full。
+    while cutoff is None or len(all_records) < max_records:
         if page == 1:
             resp = first_page
         else:
@@ -354,6 +375,11 @@ def fetch_navigation(
 
     # 筛选
     recent_companies = tracker.get_recent_companies(days=30)
+    # Independent company recall must see ALL fetched rows, including old
+    # fingerprints, low keyword scores and shared/already-applied URLs.
+    company_reviews = build_company_review_queue(
+        all_records, job_filter, exclusions, recent_companies
+    )
     matched = []
     excluded_count = 0
     for job in candidate_records:
@@ -403,6 +429,7 @@ def fetch_navigation(
         "deduped": len(deduped),
         "excluded": excluded_count,
         "records": deduped,
+        "company_reviews": company_reviews,
         "mode": mode,
         "total_rows": current_total,
     }
@@ -493,7 +520,29 @@ def run_fetch(
             output_path = output_dir / f"{date_str}-jobs.jsonl"
         # 0 条增量也写空文件，避免 shortlist 误读上一轮结果。
         write_jsonl(all_records, output_path)
+        company_path = output_path.with_name(output_path.stem + "-companies.jsonl")
+        # Preserve per-navigation provenance instead of silently merging
+        # similarly named employers or assuming two programs share quotas.
+        company_reviews = [
+            dict(company, source_navigation_id=result["nav"]["id"],
+                 source_navigation_name=result["nav"]["name"],
+                 coverage_mode=result["mode"], fetched_rows=result["fetched"],
+                 source_total_rows=result["total_rows"])
+            for result in all_results for company in result["company_reviews"]
+        ]
+        write_jsonl(company_reviews, company_path)
+        queue_phase = {"提前批": "advance", "秋招": "autumn", "春招": "spring"}.get(phase, "all")
+        queue_path = output_dir / f"company-review-{queue_phase}.jsonl"
+        previous = []
+        if queue_path.exists():
+            previous = [json.loads(line) for line in queue_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        persistent_queue = merge_company_review_queue(
+            previous, company_reviews, exclusions, phase=phase or ""
+        )
+        write_jsonl(persistent_queue, queue_path)
         print(f"[fetch] ✔ 已写入: {output_path} ({len(all_records)} 条)", file=sys.stderr)
+        print(f"[fetch] ✔ 公司官网待核: {company_path} ({len(company_reviews)} 条；非可投清单)", file=sys.stderr)
+        print(f"[fetch] ✔ 跨次公司队列: {queue_path} ({len(persistent_queue)} 条；历史未见不等于停招)", file=sys.stderr)
     elif dry_run:
         print(f"[fetch] 🔍 预览模式: {len(all_records)} 条（未写入）", file=sys.stderr)
 

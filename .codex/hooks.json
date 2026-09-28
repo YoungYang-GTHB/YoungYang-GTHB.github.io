@@ -1,0 +1,8 @@
+{
+  "description": "Bounded subagent follow-through; metadata only, no automatic application submissions.",
+  "hooks": {
+    "SubagentStart": [{"hooks": [{"type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/subagent-followthrough.py\" hook", "timeout": 5}]}],
+    "SubagentStop": [{"hooks": [{"type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/subagent-followthrough.py\" hook", "timeout": 5}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/subagent-followthrough.py\" hook", "timeout": 5}] }]
+  }
+}

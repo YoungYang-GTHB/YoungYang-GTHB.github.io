@@ -32,6 +32,8 @@ next-env.d.ts
 # ============================================================
 /output/
 output/
+/temp/
+/.browser-lease/
 /media-source/
 /content/resume.yaml
 /content/resume.public.yaml

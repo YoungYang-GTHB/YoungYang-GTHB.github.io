@@ -4,6 +4,8 @@ import stat
 import sys
 import tempfile
 import unittest
+import io
+from unittest.mock import patch
 from pathlib import Path
 
 
@@ -11,10 +13,23 @@ SKILL_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_ROOT))
 
 from scripts.auth import TokenManager
-from scripts.wechat_login import decode_data_image, extract_auth_payload
+from scripts.wechat_login import decode_data_image, extract_auth_payload, render_terminal_image
 
 
 class WechatLoginTests(unittest.TestCase):
+    def test_pillow_terminal_fallback(self):
+        from PIL import Image
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "qr.png"
+            picture = Image.new("L", (40, 2), 255)
+            picture.putpixel((0, 0), 0)
+            picture.putpixel((1, 1), 0)
+            picture.save(path)
+            with patch("scripts.wechat_login.shutil.which", return_value=None), patch("sys.stdout", new_callable=io.StringIO) as output:
+                self.assertTrue(render_terminal_image(path))
+                self.assertIn("▀▄", output.getvalue())
+                self.assertIn("\033[0m", output.getvalue())
+
     def test_extract_auth_payload_accepts_nested_api_response(self):
         payload = {
             "code": 0,

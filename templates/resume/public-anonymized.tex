@@ -1,0 +1,63 @@
+% Public, anonymized sample only. Do not import private resume sources here.
+\documentclass[10.5pt,a4paper]{ctexart}
+\usepackage[margin=1.8cm]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\pagestyle{empty}
+\setlist[itemize]{nosep,leftmargin=1.5em}
+\definecolor{accent}{HTML}{245682}
+\def\zh{zh}
+\def\vla{vla}
+\begin{document}
+\ifx\ResumeLanguage\zh
+  {\LARGE\bfseries 匿名简历示例}\par
+  \vspace{0.2em}
+  {\color{accent}\large\ifx\ResumeTrack\vla 具身智能与机器人学习\else 嵌入式与机器人系统\fi}\par
+  \vspace{0.5em}
+  \noindent 控制工程硕士（2027 届）｜机器人与人工智能方向\par
+  \section*{研究与工程方向}
+  \ifx\ResumeTrack\vla
+    关注视觉—语言—动作模型的模仿学习、离线后训练、评测和机器人系统集成。具有 PyTorch、ROS2 与双臂操作系统的研究和工程实践。
+  \else
+    关注嵌入式 Linux、机器人控制与软硬件集成。具有 C/C++、Python、ROS2、STM32 与实时系统相关的项目实践。
+  \fi
+  \section*{代表性实践}
+  \begin{itemize}
+    \item 参与机器人学习系统的数据处理、模型评测与真机联调，重视跨场景验证与部署安全。
+    \item 完成移动机器人建图导航、传感器集成及控制软件相关项目。
+    \item 使用 Linux、Git 与自动化测试流程组织实验和工程交付。
+  \end{itemize}
+  \section*{科研成果（概括表述）}
+  \begin{itemize}
+    \item 机器人后训练研究论文：第一作者，已投稿评审，结果待定。
+    \item 长时程机器人操作价值学习研究：论文手稿，第三作者。
+  \end{itemize}
+  \vfill
+  {\footnotesize\color{gray}公开脱敏示例：不包含姓名、联系方式、未公开稿件标题、投稿链接或雇主内部信息。正式求职请使用私有资料库中的实名版本。}
+\else
+  {\LARGE\bfseries Anonymous Resume Sample}\par
+  \vspace{0.2em}
+  {\color{accent}\large\ifx\ResumeTrack\vla Embodied AI and Robot Learning\else Embedded and Robotics Systems\fi}\par
+  \vspace{0.5em}
+  \noindent MSc candidate in Control Engineering (Class of 2027)\par
+  \section*{Research and Engineering Focus}
+  \ifx\ResumeTrack\vla
+    Research and engineering practice in vision-language-action models, imitation learning, offline post-training, evaluation, and robot integration. Familiar with PyTorch, ROS2, and dual-arm manipulation systems.
+  \else
+    Engineering practice in embedded Linux, robot control, and hardware-software integration. Familiar with C/C++, Python, ROS2, STM32, and real-time systems.
+  \fi
+  \section*{Selected Experience}
+  \begin{itemize}
+    \item Worked on data processing, model evaluation, and real-robot integration for robot-learning systems, with attention to cross-domain validation and deployment safety.
+    \item Built mobile-robot mapping, navigation, sensor-integration, and control-software projects.
+    \item Used Linux, Git, and automated tests to organize experiments and engineering delivery.
+  \end{itemize}
+  \section*{Research Output (Summary)}
+  \begin{itemize}
+    \item First-author paper on robot post-training, submitted for review; decision pending.
+    \item Manuscript on value learning for long-horizon robot manipulation, third author.
+  \end{itemize}
+  \vfill
+  {\footnotesize\color{gray}Public anonymized sample. It omits identity, contact details, unpublished manuscript titles, submission links, and employer-internal information. Use the private named resume for applications.}
+\fi
+\end{document}

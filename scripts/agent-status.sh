@@ -5,6 +5,10 @@ set -u
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
 CAREER_ROOT="$REPO_ROOT/career"
+AGENT_PYTHON="$REPO_ROOT/.runtime/.venv/bin/python"
+if [ ! -x "$AGENT_PYTHON" ]; then
+  AGENT_PYTHON="python3"
+fi
 
 section() {
   printf '\n[%s]\n' "$1"
@@ -30,7 +34,7 @@ fi
 
 section "browser targets"
 if command -v curl >/dev/null 2>&1 && curl -fsS --max-time 2 http://127.0.0.1:9222/json/version >/dev/null 2>&1; then
-  python3 - <<'PY'
+  "$AGENT_PYTHON" - <<'PY'
 import json
 from urllib.request import urlopen
 from urllib.parse import urlsplit, urlunsplit
@@ -70,8 +74,8 @@ fi
 
 section "job ledger"
 if [ -f "$CAREER_ROOT/求职投递/2027届/data/applications.yaml" ]; then
-  python3 "$REPO_ROOT/skills/job-hunter/scripts/jobctl.py" status || true
-  if python3 "$REPO_ROOT/skills/job-hunter/scripts/jobctl.py" validate; then
+  "$AGENT_PYTHON" "$REPO_ROOT/skills/job-hunter/scripts/jobctl.py" status || true
+  if "$AGENT_PYTHON" "$REPO_ROOT/skills/job-hunter/scripts/jobctl.py" validate; then
     printf 'validation: passed\n'
   else
     printf 'validation: FAILED; repair before changing application state\n'
@@ -79,6 +83,9 @@ if [ -f "$CAREER_ROOT/求职投递/2027届/data/applications.yaml" ]; then
 else
   printf 'private ledger unavailable\n'
 fi
+
+section "worker result follow-through"
+"$AGENT_PYTHON" "$SCRIPT_DIR/agent-results-check.py" || true
 
 section "next commands"
 printf '%s\n' \

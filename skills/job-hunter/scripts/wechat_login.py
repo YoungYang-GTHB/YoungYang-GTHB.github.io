@@ -55,7 +55,31 @@ def render_terminal_image(image_path: Path) -> bool:
     if img2txt:
         subprocess.run([img2txt, "--width", "60", str(image_path)], check=False)
         return True
-    return False
+    # Two vertical pixels per terminal cell; explicit colours work on both
+    # light and dark terminal themes. Pillow is optional for minimal installs.
+    try:
+        from PIL import Image, ImageOps
+    except ImportError:
+        return False
+    with Image.open(image_path) as source:
+        pixels = ImageOps.grayscale(source)
+        width = min(pixels.width, shutil.get_terminal_size((120, 40)).columns - 2)
+        if width < 40:
+            return False
+        height = max(1, round(pixels.height * width / pixels.width))
+        pixels = pixels.resize((width, height), Image.Resampling.NEAREST)
+        pixels = pixels.point(lambda value: 255 if value >= 128 else 0)
+        print("\033[30;107m" + " " * (width + 2) + "\033[0m")
+        for y in range(0, height, 2):
+            row = []
+            for x in range(width):
+                top = pixels.getpixel((x, y)) == 0
+                bottom = y + 1 < height and pixels.getpixel((x, y + 1)) == 0
+                row.append({(False, False): " ", (True, False): "▀",
+                            (False, True): "▄", (True, True): "█"}[top, bottom])
+            print("\033[30;107m " + "".join(row) + " \033[0m")
+        print("\033[30;107m" + " " * (width + 2) + "\033[0m")
+    return True
 
 
 def terminal_login(
@@ -92,7 +116,7 @@ def terminal_login(
         rendered = render_terminal_image(qr_path)
         if not rendered:
             print(
-                "[login] 当前终端缺少 chafa/img2txt，二维码图片已暂存于："
+                "[login] 无可用终端图片渲染器或终端过窄，二维码图片已暂存于："
                 f"{qr_path}\n请用 scp 下载图片后扫码。",
                 file=sys.stderr,
             )

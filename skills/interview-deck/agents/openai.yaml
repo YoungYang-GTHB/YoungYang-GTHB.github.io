@@ -1,0 +1,4 @@
+interface:
+  display_name: "Interview Deck"
+  short_description: "Build evidence-based bilingual interview presentations"
+  default_prompt: "Use $interview-deck to build and validate an editable interview presentation."
